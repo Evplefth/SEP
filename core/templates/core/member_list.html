@@ -1,0 +1,183 @@
+{% extends 'core/base.html' %}
+{% block title %}Μέλη{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">Μέλη</h1>
+    <p class="text-gray-500 text-sm mt-1">Σύνολο: <span class="font-semibold text-blue-600">{{ members|length }}</span> μέλη</p>
+  </div>
+  <a href="#"
+    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    Νέο Μέλος
+  </a>
+</div>
+
+<!-- Search & Filters -->
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 mb-5">
+  <form method="get" class="flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Αναζήτηση με όνομα, ΑΔΤ, ΑΦΜ, ΑΜΚΑ..."
+        class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+    </div>
+    <select name="idiotita"
+      class="text-sm border border-gray-200 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-600">
+      <option value="">Όλες οι Ιδιότητες</option>
+      <option value="melos">Μέλος</option>
+      <option value="proedros">Πρόεδρος</option>
+      <option value="antiproedros">Αντιπρόεδρος</option>
+      <option value="grammateas">Γραμματέας</option>
+      <option value="tamias">Ταμίας</option>
+      <option value="symvoylos">Σύμβουλος</option>
+    </select>
+    <select name="mitroo"
+      class="text-sm border border-gray-200 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-600">
+      <option value="">Μητρώο Α & Β</option>
+      <option value="A">Μητρώο Α</option>
+      <option value="B">Μητρώο Β</option>
+    </select>
+    <button type="submit"
+      class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">
+      Φίλτρο
+    </button>
+    <a href="?"
+      class="text-sm text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2.5 rounded-lg transition text-center">
+      Καθαρισμός
+    </a>
+  </form>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+  {% if members %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-100 text-left">
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Μέλος</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Μητρώο</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ιδιότητα</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Επικοινωνία</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Εταιρεία</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ομαδικό</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ενέργειες</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for member in members %}
+        <tr class="hover:bg-blue-50/30 transition">
+
+          <!-- Μέλος -->
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                <span class="text-blue-600 font-semibold text-sm">{{ member.last_name|first|upper }}</span>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">{{ member.last_name }} {{ member.first_name }}</p>
+                <p class="text-xs text-gray-400">του {{ member.patronymo }}</p>
+              </div>
+            </div>
+          </td>
+
+          <!-- Μητρώο -->
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+              {% if member.mitroo_typos == 'A' %}bg-blue-100 text-blue-700{% else %}bg-purple-100 text-purple-700{% endif %}">
+              {{ member.mitroo_typos }}-{{ member.mitroo_arithmos }}
+            </span>
+            {% if member.mitroo_expired %}
+              <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
+                Ληγμένο
+              </span>
+            {% endif %}
+            <p class="text-xs text-gray-400 mt-0.5">Λήξη: {{ member.mitroo_lixis|date:"d/m/Y"|default:"—" }}</p>
+          </td>
+
+          <!-- Ιδιότητα -->
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+              {{ member.get_idiotita_display }}
+            </span>
+          </td>
+
+          <!-- Επικοινωνία -->
+          <td class="px-5 py-4 hidden md:table-cell">
+            <p class="text-gray-700">{{ member.phone1|default:"—" }}</p>
+            <p class="text-xs text-gray-400">{{ member.email|default:"" }}</p>
+          </td>
+
+          <!-- Τελευταία Εταιρεία -->
+          <td class="px-5 py-4 hidden lg:table-cell">
+            {% with current=member.companies.first %}
+              {% if current %}
+                <p class="text-gray-700 text-xs font-medium">{{ current.company.name }}</p>
+                <p class="text-gray-400 text-xs">από {{ current.date_from|date:"d/m/Y" }}</p>
+              {% else %}
+                <span class="text-gray-400 text-xs">—</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+
+          <!-- Ομαδικό -->
+          <td class="px-5 py-4 hidden lg:table-cell">
+            {% if member.omadiko_apo %}
+              <p class="text-xs text-gray-700">{{ member.omadiko_apo|date:"d/m/Y" }}</p>
+              <p class="text-xs text-gray-400">έως {{ member.omadiko_eos|date:"d/m/Y"|default:"—" }}</p>
+            {% else %}
+              <span class="text-gray-400 text-xs">—</span>
+            {% endif %}
+          </td>
+
+          <!-- Ενέργειες -->
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-2">
+              <a href="#"
+                class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition" title="Προβολή">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </a>
+              <a href="#"
+                class="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition" title="Επεξεργασία">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </a>
+              <a href="#"
+                class="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition" title="Διαγραφή">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </a>
+            </div>
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="text-center py-16">
+    <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+    </svg>
+    <p class="text-gray-500 font-medium">Δεν βρέθηκαν μέλη</p>
+    <p class="text-gray-400 text-sm mt-1">Δοκιμάστε διαφορετικά φίλτρα ή προσθέστε νέο μέλος.</p>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}
