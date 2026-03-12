@@ -1,0 +1,39 @@
+
+{% extends 'core/base.html' %}
+
+{% block content %}
+
+    <h1>Λίστα Χρηστών</h1>
+
+    <p><a href="{% url 'home' %}">Αρχική</a></p>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>First name</th>
+                <th>Last name</th>
+                <th>Email</th>
+                <th>Staff</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.last_name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.is_staff }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">Δεν υπάρχουν χρήστες.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
