@@ -15,9 +15,6 @@ def user_list(request):
     users = User.objects.all()
     return render(request, 'core/user_list.html', {'users': users})
 
-@login_required
-def user_detail(request, user_id):
-    user = User.objects.get(id=user_id)
-    return render(request, 'core/user_detail.html', {'user': user})
+
     
 
