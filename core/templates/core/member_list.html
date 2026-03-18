@@ -9,7 +9,7 @@
     <h1 class="text-2xl font-bold text-gray-800">Μέλη</h1>
     <p class="text-gray-500 text-sm mt-1">Σύνολο: <span class="font-semibold text-blue-600">{{ members|length }}</span> μέλη</p>
   </div>
-  <a href="#"
+  <a href="{% url 'core:member_create' %}"
     class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -48,7 +48,7 @@
       class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">
       Φίλτρο
     </button>
-    <a href="?"
+    <a href="{% url 'core:members_list' %}"
       class="text-sm text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2.5 rounded-lg transition text-center">
       Καθαρισμός
     </a>
@@ -68,7 +68,7 @@
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Επικοινωνία</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Εταιρεία</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ομαδικό</th>
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ενέργειες</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Ενέργειες</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-50">
@@ -82,8 +82,8 @@
                 <span class="text-blue-600 font-semibold text-sm">{{ member.last_name|first|upper }}</span>
               </div>
               <div>
-                <p class="font-semibold text-gray-800">{{ member.last_name }} {{ member.first_name }}</p>
-                <p class="text-xs text-gray-400">του {{ member.patronymo }}</p>
+                <p class="font-semibold text-gray-800">{{ member.last_name }} {{ member.name }}</p>
+                <p class="text-xs text-gray-400">του {{ member.fathers_name }}</p>
               </div>
             </div>
           </td>
@@ -115,7 +115,7 @@
             <p class="text-xs text-gray-400">{{ member.email|default:"" }}</p>
           </td>
 
-          <!-- Τελευταία Εταιρεία -->
+          <!-- Εταιρεία -->
           <td class="px-5 py-4 hidden lg:table-cell">
             {% with current=member.companies.first %}
               {% if current %}
@@ -139,25 +139,34 @@
 
           <!-- Ενέργειες -->
           <td class="px-5 py-4">
-            <div class="flex items-center gap-2">
-              <a href="#"
-                class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition" title="Προβολή">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center justify-center gap-1.5">
+              <!-- Προβολή -->
+              <a href="{% url 'member_detail' member.pk %}"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
+                title="Προβολή">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
+                <span class="hidden sm:inline">Προβολή</span>
               </a>
-              <a href="#"
-                class="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition" title="Επεξεργασία">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Επεξεργασία -->
+              <a href="{% url 'member_edit' member.pk %}"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                title="Επεξεργασία">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
+                <span class="hidden sm:inline">Επεξεργασία</span>
               </a>
-              <a href="#"
-                class="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition" title="Διαγραφή">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Διαγραφή -->
+              <a href="{% url 'member_delete' member.pk %}"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition"
+                title="Διαγραφή">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
+                <span class="hidden sm:inline">Διαγραφή</span>
               </a>
             </div>
           </td>
@@ -174,10 +183,12 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
     </svg>
     <p class="text-gray-500 font-medium">Δεν βρέθηκαν μέλη</p>
-    <p class="text-gray-400 text-sm mt-1">Δοκιμάστε διαφορετικά φίλτρα ή προσθέστε νέο μέλος.</p>
+    <p class="text-gray-400 text-sm mt-1">
+      Δοκιμάστε διαφορετικά φίλτρα ή
+      {% comment %} <a href="{% url 'member_create' %}" class="text-blue-600 hover:underline">προσθέστε νέο μέλος</a>. {% endcomment %}
+    </p>
   </div>
   {% endif %}
-
 </div>
 
 {% endblock %}
