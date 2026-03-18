@@ -1,5 +1,5 @@
 {% extends 'core/base.html' %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Νέο Μέλος{% endblock %}
 
 {% block content %}
 
@@ -11,10 +11,32 @@
     </svg>
   </a>
   <div>
-    <h1 class="text-2xl font-bold text-gray-800">{{ title }}</h1>
-    <p class="text-gray-500 text-sm mt-0.5">Συμπληρώστε τα στοιχεία του μέλους</p>
+    <h1 class="text-2xl font-bold text-gray-800">Νέο Μέλος</h1>
+    <p class="text-gray-500 text-sm mt-0.5">
+      <span id="live-name-placeholder">Συμπληρώστε τα στοιχεία του μέλους</span>
+      <span id="live-name" class="text-blue-600 font-semibold hidden"></span>
+    </p>
   </div>
 </div>
+
+<!-- Success / Error messages -->
+{% if success %}
+<div class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-5 py-4 mb-6">
+  <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+  {{ success }}
+</div>
+{% endif %}
+
+{% if error %}
+<div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-5 py-4 mb-6">
+  <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+  </svg>
+  {{ error }}
+</div>
+{% endif %}
 
 <form method="post" class="space-y-6">
   {% csrf_token %}
@@ -33,104 +55,62 @@
 
       <!-- Όνομα -->
       <div>
-        <label for="{{ form.name.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
+        <label for="first_name" class="block text-xs font-semibold text-gray-600 mb-1.5">
           Όνομα <span class="text-red-400">*</span>
         </label>
-        <input type="text" name="{{ form.name.html_name }}" id="{{ form.name.id_for_label }}"
-          value="{{ form.name.value|default:'' }}"
+        <input type="text" name="first_name" id="first_name"
+          value="{{ request.POST.first_name|default:'' }}"
           placeholder="π.χ. Γιώργος"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.name.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.name.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <!-- Επίθετο -->
       <div>
-        <label for="{{ form.last_name.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
+        <label for="last_name" class="block text-xs font-semibold text-gray-600 mb-1.5">
           Επίθετο <span class="text-red-400">*</span>
         </label>
-        <input type="text" name="{{ form.last_name.html_name }}" id="{{ form.last_name.id_for_label }}"
-          value="{{ form.last_name.value|default:'' }}"
+        <input type="text" name="last_name" id="last_name"
+          value="{{ request.POST.last_name|default:'' }}"
           placeholder="π.χ. Παπαδόπουλος"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.last_name.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.last_name.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <!-- Πατρώνυμο -->
       <div>
-        <label for="{{ form.patronymo.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
+        <label for="fathers_name" class="block text-xs font-semibold text-gray-600 mb-1.5">
           Πατρώνυμο <span class="text-red-400">*</span>
         </label>
-        <input type="text" name="{{ form.patronymo.html_name }}" id="{{ form.patronymo.id_for_label }}"
-          value="{{ form.patronymo.value|default:'' }}"
+        <input type="text" name="fathers_name" id="fathers_name"
+          value="{{ request.POST.fathers_name|default:'' }}"
           placeholder="π.χ. Δημήτριος"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.patronymo.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.patronymo.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <!-- ΑΔΤ -->
       <div>
-        <label for="{{ form.adt.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          ΑΔΤ <span class="text-red-400">*</span>
-        </label>
-        <input type="text" name="{{ form.adt.html_name }}" id="{{ form.adt.id_for_label }}"
-          value="{{ form.adt.value|default:'' }}"
+        <label for="ADT" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΔΤ</label>
+        <input type="text" name="ADT" id="ADT"
+          value="{{ request.POST.ADT|default:'' }}"
           placeholder="π.χ. ΑΒ123456"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.adt.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.adt.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <!-- ΑΦΜ -->
       <div>
-        <label for="{{ form.afm.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          ΑΦΜ <span class="text-red-400">*</span>
-        </label>
-        <input type="text" name="{{ form.afm.html_name }}" id="{{ form.afm.id_for_label }}"
-          value="{{ form.afm.value|default:'' }}"
+        <label for="AFM" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΦΜ</label>
+        <input type="text" name="AFM" id="AFM"
+          value="{{ request.POST.AFM|default:'' }}"
           placeholder="9 ψηφία"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.afm.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.afm.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <!-- ΑΜΚΑ -->
       <div>
-        <label for="{{ form.amka.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          ΑΜΚΑ <span class="text-red-400">*</span>
-        </label>
-        <input type="text" name="{{ form.amka.html_name }}" id="{{ form.amka.id_for_label }}"
-          value="{{ form.amka.value|default:'' }}"
+        <label for="AMKA" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΜΚΑ</label>
+        <input type="text" name="AMKA" id="AMKA"
+          value="{{ request.POST.AMKA|default:'' }}"
           placeholder="11 ψηφία"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.amka.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.amka.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
     </div>
@@ -148,114 +128,50 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
-      <!-- Τύπος -->
+      <!-- Τύπος Μητρώου -->
       <div>
-        <label for="{{ form.mitroo_typos.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Τύπος (Α/Β) <span class="text-red-400">*</span>
-        </label>
-        <select name="{{ form.mitroo_typos.html_name }}" id="{{ form.mitroo_typos.id_for_label }}"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white {% if form.mitroo_typos.errors %}border-red-400{% else %}border-gray-200{% endif %}">
-          {% for val, lbl in form.mitroo_typos.field.choices %}
-            <option value="{{ val }}" {% if form.mitroo_typos.value == val %}selected{% endif %}>{{ lbl }}</option>
-          {% endfor %}
+        <label for="mitroo_type" class="block text-xs font-semibold text-gray-600 mb-1.5">Τύπος (Α/Β)</label>
+        <select name="mitroo_type" id="mitroo_type"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+          <option value="">— Επιλέξτε —</option>
+          <option value="A" {% if request.POST.mitroo_type == 'A' %}selected{% endif %}>Α</option>
+          <option value="B" {% if request.POST.mitroo_type == 'B' %}selected{% endif %}>Β</option>
         </select>
-        {% for error in form.mitroo_typos.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
       </div>
 
-      <!-- Αριθμός -->
+      <!-- Αριθμός Μητρώου -->
       <div>
-        <label for="{{ form.mitroo_arithmos.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Αριθμός <span class="text-red-400">*</span>
-        </label>
-        <input type="number" name="{{ form.mitroo_arithmos.html_name }}" id="{{ form.mitroo_arithmos.id_for_label }}"
-          value="{{ form.mitroo_arithmos.value|default:'' }}"
+        <label for="mitroo_number" class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός</label>
+        <input type="number" name="mitroo_number" id="mitroo_number"
+          value="{{ request.POST.mitroo_number|default:'' }}"
           placeholder="π.χ. 112"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.mitroo_arithmos.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.mitroo_arithmos.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Ημ. Έναρξης -->
+      <!-- Ημ. Εγγραφής -->
       <div>
-        <label for="{{ form.mitroo_enarxi.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Ημ. Έναρξης <span class="text-red-400">*</span>
-        </label>
-        <input type="date" name="{{ form.mitroo_enarxi.html_name }}" id="{{ form.mitroo_enarxi.id_for_label }}"
-          value="{{ form.mitroo_enarxi.value|date:'Y-m-d'|default:'' }}"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if form.mitroo_enarxi.errors %}border-red-400{% else %}border-gray-200{% endif %}"/>
-        {% for error in form.mitroo_enarxi.errors %}
-          <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            {{ error }}
-          </p>
-        {% endfor %}
+        <label for="date_of_registration" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Εγγραφής</label>
+        <input type="date" name="date_of_registration" id="date_of_registration"
+          value="{{ request.POST.date_of_registration|default:'' }}"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Ημ. Λήξης -->
+      <!-- Ημ. Διαγραφής -->
       <div>
-        <label for="{{ form.mitroo_lixis.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Ημ. Λήξης <span class="text-gray-400 font-normal">(αυτόματη)</span>
+        <label for="date_of_deregistration" class="block text-xs font-semibold text-gray-600 mb-1.5">
+          Ημ. Λήξης
+          <span class="text-gray-400 font-normal">(αυτόματη +5 χρόνια)</span>
         </label>
-        <input type="date" name="{{ form.mitroo_lixis.html_name }}" id="{{ form.mitroo_lixis.id_for_label }}"
-          value="{{ form.mitroo_lixis.value|date:'Y-m-d'|default:'' }}"
-          class="w-full border rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition border-gray-200 bg-gray-50"/>
+        <input type="date" name="date_of_deregistration" id="date_of_deregistration"
+          value="{{ request.POST.date_of_deregistration|default:'' }}"
+          readonly
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 outline-none transition bg-gray-50 cursor-not-allowed"/>
       </div>
 
     </div>
   </div>
-{% comment %} 
-  <!-- ── 3. Ιδιότητα ─────────────────────────────────────────────── -->
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-      <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-      </div>
-      <h2 class="font-semibold text-gray-800 text-sm">Ιδιότητα</h2>
-    </div>
-    <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
 
-      <!-- Ιδιότητα -->
-      <div>
-        <label for="{{ form.idiotita.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Ιδιότητα</label>
-        <select name="{{ form.idiotita.html_name }}" id="{{ form.idiotita.id_for_label }}"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
-          {% for val, lbl in form.idiotita.field.choices %}
-            <option value="{{ val }}" {% if form.idiotita.value == val %}selected{% endif %}>{{ lbl }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Από -->
-      <div>
-        <label for="{{ form.idiotita_apo.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Από</label>
-        <input type="date" name="{{ form.idiotita_apo.html_name }}" id="{{ form.idiotita_apo.id_for_label }}"
-          value="{{ form.idiotita_apo.value|date:'Y-m-d'|default:'' }}"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <!-- Έως -->
-      <div>
-        <label for="{{ form.idiotita_eos.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Έως</label>
-        <input type="date" name="{{ form.idiotita_eos.html_name }}" id="{{ form.idiotita_eos.id_for_label }}"
-          value="{{ form.idiotita_eos.value|date:'Y-m-d'|default:'' }}"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-    </div>
-  </div> {% endcomment %}
-
-  <!-- ── 4. Οδηγός / Χειριστής ──────────────────────────────────── -->
+  <!-- ── 3. Οδηγός & Χειριστής ──────────────────────────────────── -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -265,56 +181,49 @@
       </div>
       <h2 class="font-semibold text-gray-800 text-sm">Οδηγός & Χειριστής Ανυψωτικού</h2>
     </div>
-    <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+    <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-      <!-- Οδηγός checkbox -->
+      <!-- Κατηγορίες Διπλώματος -->
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-2">Οδηγός</label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" name="{{ form.is_odigos.html_name }}"
-            {% if form.is_odigos.value %}checked{% endif %}
-            onchange="toggleField(this, 'diploma-field')"
-            class="w-4 h-4 accent-blue-600 rounded"/>
-          <span class="text-sm text-gray-700">Ναι, είναι οδηγός</span>
-        </label>
+        <label class="block text-xs font-semibold text-gray-600 mb-3">Κατηγορίες Διπλώματος Οδήγησης</label>
+        <div class="space-y-2">
+          <label class="flex items-center gap-2.5 cursor-pointer group">
+            <input type="checkbox" name="driver_A" {% if request.POST.driver_A %}checked{% endif %}
+              class="w-4 h-4 accent-blue-600 rounded"/>
+            <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Α</span>
+          </label>
+          <label class="flex items-center gap-2.5 cursor-pointer group">
+            <input type="checkbox" name="driver_B" {% if request.POST.driver_B %}checked{% endif %}
+              class="w-4 h-4 accent-blue-600 rounded"/>
+            <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Β</span>
+          </label>
+          <label class="flex items-center gap-2.5 cursor-pointer group">
+            <input type="checkbox" name="driver_C" {% if request.POST.driver_C %}checked{% endif %}
+              class="w-4 h-4 accent-blue-600 rounded"/>
+            <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Γ</span>
+          </label>
+          <label class="flex items-center gap-2.5 cursor-pointer group">
+            <input type="checkbox" name="driver_D" {% if request.POST.driver_D %}checked{% endif %}
+              class="w-4 h-4 accent-blue-600 rounded"/>
+            <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Δ</span>
+          </label>
+        </div>
       </div>
 
-      <!-- Κατηγορία Διπλώματος -->
-      <div id="diploma-field" class="{% if not form.is_odigos.value %}hidden{% endif %}">
-        <label for="{{ form.diploma_category.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Κατηγορία Διπλώματος</label>
-        <select name="{{ form.diploma_category.html_name }}" id="{{ form.diploma_category.id_for_label }}"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
-          {% for val, lbl in form.diploma_category.field.choices %}
-            <option value="{{ val }}" {% if form.diploma_category.value == val %}selected{% endif %}>{{ lbl }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Χειριστής checkbox -->
+      <!-- Χειριστής Ανυψωτικού -->
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-2">Χειριστής Ανυψωτικού</label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" name="{{ form.is_xeiristis.html_name }}"
-            {% if form.is_xeiristis.value %}checked{% endif %}
-            onchange="toggleField(this, 'xeiristis-field')"
+        <label class="block text-xs font-semibold text-gray-600 mb-3">Χειριστής Ανυψωτικού</label>
+        <label class="flex items-center gap-2.5 cursor-pointer group">
+          <input type="checkbox" name="lifter" {% if request.POST.lifter %}checked{% endif %}
             class="w-4 h-4 accent-blue-600 rounded"/>
-          <span class="text-sm text-gray-700">Ναι, είναι χειριστής</span>
+          <span class="text-sm text-gray-700 group-hover:text-gray-900">Ναι, είναι χειριστής ανυψωτικού</span>
         </label>
-      </div>
-
-      <!-- Είδος Ανυψωτικού -->
-      <div id="xeiristis-field" class="{% if not form.is_xeiristis.value %}hidden{% endif %}">
-        <label for="{{ form.xeiristis_eidos.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Είδος Ανυψωτικού</label>
-        <input type="text" name="{{ form.xeiristis_eidos.html_name }}" id="{{ form.xeiristis_eidos.id_for_label }}"
-          value="{{ form.xeiristis_eidos.value|default:'' }}"
-          placeholder="π.χ. Ανυψωτικό πλατφόρμας"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
     </div>
   </div>
 
-  <!-- ── 5. Ομαδικό ──────────────────────────────────────────────── -->
+  <!-- ── 4. Ομαδικό ──────────────────────────────────────────────── -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -326,26 +235,24 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-      <!-- Από -->
       <div>
-        <label for="{{ form.omadiko_apo.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Από</label>
-        <input type="date" name="{{ form.omadiko_apo.html_name }}" id="{{ form.omadiko_apo.id_for_label }}"
-          value="{{ form.omadiko_apo.value|date:'Y-m-d'|default:'' }}"
+        <label for="omadiko_from" class="block text-xs font-semibold text-gray-600 mb-1.5">Από</label>
+        <input type="date" name="omadiko_from" id="omadiko_from"
+          value="{{ request.POST.omadiko_from|default:'' }}"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Έως -->
       <div>
-        <label for="{{ form.omadiko_eos.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Έως</label>
-        <input type="date" name="{{ form.omadiko_eos.html_name }}" id="{{ form.omadiko_eos.id_for_label }}"
-          value="{{ form.omadiko_eos.value|date:'Y-m-d'|default:'' }}"
+        <label for="omadiko_to" class="block text-xs font-semibold text-gray-600 mb-1.5">Έως</label>
+        <input type="date" name="omadiko_to" id="omadiko_to"
+          value="{{ request.POST.omadiko_to|default:'' }}"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
     </div>
   </div>
 
-  <!-- ── 6. Τράπεζα ──────────────────────────────────────────────── -->
+  <!-- ── 5. Τράπεζα ──────────────────────────────────────────────── -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -357,20 +264,24 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-      <!-- Τράπεζα -->
+      {% comment %} Drop down {% endcomment %}
       <div>
-        <label for="{{ form.trapeza.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Τράπεζα</label>
-        <input type="text" name="{{ form.trapeza.html_name }}" id="{{ form.trapeza.id_for_label }}"
-          value="{{ form.trapeza.value|default:'' }}"
-          placeholder="π.χ. Εθνική Τράπεζα"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+        <label for="bank" class="block text-xs font-semibold text-gray-600 mb-1.5">Τράπεζα</label>
+        <select name="bank" id="bank"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+          <option value="">— Επιλέξτε —</option>
+          {% for bank in banks %}
+          <option value="{{ bank.id }}" {% if request.POST.bank == bank.id|stringformat:"s" %}selected{% endif %}>
+            {{ bank.name }}
+          </option>
+          {% endfor %}
+        </select>
       </div>
 
-      <!-- IBAN -->
       <div>
-        <label for="{{ form.iban.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">IBAN</label>
-        <input type="text" name="{{ form.iban.html_name }}" id="{{ form.iban.id_for_label }}"
-          value="{{ form.iban.value|default:'' }}"
+        <label for="bank_account_number" class="block text-xs font-semibold text-gray-600 mb-1.5">IBAN</label>
+        <input type="text" name="bank_account_number" id="bank_account_number"
+          value="{{ request.POST.bank_account_number|default:'' }}"
           placeholder="GR00 0000 0000 0000 0000 0000 000"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
@@ -378,7 +289,7 @@
     </div>
   </div>
 
-  <!-- ── 7. Επικοινωνία ──────────────────────────────────────────── -->
+  <!-- ── 6. Επικοινωνία ──────────────────────────────────────────── -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -390,38 +301,34 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-      <!-- Διεύθυνση -->
       <div class="sm:col-span-2">
-        <label for="{{ form.address.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Διεύθυνση</label>
-        <input type="text" name="{{ form.address.html_name }}" id="{{ form.address.id_for_label }}"
-          value="{{ form.address.value|default:'' }}"
+        <label for="address" class="block text-xs font-semibold text-gray-600 mb-1.5">Διεύθυνση</label>
+        <input type="text" name="address" id="address"
+          value="{{ request.POST.address|default:'' }}"
           placeholder="Οδός, Αριθμός, ΤΚ, Πόλη"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Τηλ 1 -->
       <div>
-        <label for="{{ form.phone1.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο 1</label>
-        <input type="text" name="{{ form.phone1.html_name }}" id="{{ form.phone1.id_for_label }}"
-          value="{{ form.phone1.value|default:'' }}"
+        <label for="phone_number1" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο 1</label>
+        <input type="text" name="phone_number1" id="phone_number1"
+          value="{{ request.POST.phone_number1|default:'' }}"
           placeholder="69XXXXXXXX"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Τηλ 2 -->
       <div>
-        <label for="{{ form.phone2.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο 2</label>
-        <input type="text" name="{{ form.phone2.html_name }}" id="{{ form.phone2.id_for_label }}"
-          value="{{ form.phone2.value|default:'' }}"
+        <label for="phone_number2" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο 2</label>
+        <input type="text" name="phone_number2" id="phone_number2"
+          value="{{ request.POST.phone_number2|default:'' }}"
           placeholder="69XXXXXXXX"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Email -->
       <div class="sm:col-span-2">
-        <label for="{{ form.email.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
-        <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
-          value="{{ form.email.value|default:'' }}"
+        <label for="email" class="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
+        <input type="email" name="email" id="email"
+          value="{{ request.POST.email|default:'' }}"
           placeholder="email@example.com"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
@@ -429,7 +336,7 @@
     </div>
   </div>
 
-  <!-- ── 8. Παρατηρήσεις / Εκκρεμότητες ────────────────────────── -->
+  <!-- ── 7. Παρατηρήσεις / Εκκρεμότητες ────────────────────────── -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -441,42 +348,26 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-      <!-- Παρατηρήσεις -->
       <div>
-        <label for="{{ form.paratiriseis.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Παρατηρήσεις</label>
-        <textarea name="{{ form.paratiriseis.html_name }}" id="{{ form.paratiriseis.id_for_label }}" rows="4"
+        <label for="notes" class="block text-xs font-semibold text-gray-600 mb-1.5">Παρατηρήσεις</label>
+        <textarea name="notes" id="notes" rows="4"
           placeholder="Γράψτε παρατηρήσεις..."
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none">{{ form.paratiriseis.value|default:'' }}</textarea>
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none">{{ request.POST.notes|default:'' }}</textarea>
       </div>
 
-      <!-- Εκκρεμότητες -->
       <div>
-        <label for="{{ form.ekkremotites.id_for_label }}" class="block text-xs font-semibold text-gray-600 mb-1.5">Εκκρεμότητες</label>
-        <textarea name="{{ form.ekkremotites.html_name }}" id="{{ form.ekkremotites.id_for_label }}" rows="4"
+        <label for="pending_issues" class="block text-xs font-semibold text-gray-600 mb-1.5">Εκκρεμότητες</label>
+        <textarea name="pending_issues" id="pending_issues" rows="4"
           placeholder="Γράψτε εκκρεμότητες..."
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none">{{ form.ekkremotites.value|default:'' }}</textarea>
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none">{{ request.POST.pending_issues|default:'' }}</textarea>
       </div>
 
     </div>
   </div>
 
-  <!-- Non-field errors -->
-  {% if form.non_field_errors %}
-  <div class="bg-red-50 border border-red-200 rounded-xl px-5 py-4">
-    {% for error in form.non_field_errors %}
-      <p class="text-red-600 text-sm flex items-center gap-2">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-        {{ error }}
-      </p>
-    {% endfor %}
-  </div>
-  {% endif %}
-
   <!-- Action buttons -->
   <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
-    <a href="{% if member %}{% url 'core:member_detail' member.pk %}{% else %}{% url 'core:members_list' %}{% endif %}"
+    <a href="{% url 'core:members_list' %}"
       class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">
       Ακύρωση
     </a>
@@ -485,7 +376,7 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
       </svg>
-      {% if member %}Αποθήκευση Αλλαγών{% else %}Δημιουργία Μέλους{% endif %}
+      Δημιουργία Μέλους
     </button>
   </div>
 
@@ -495,13 +386,43 @@
 
 {% block extra_scripts %}
 <script>
-  function toggleField(checkbox, fieldId) {
-    const field = document.getElementById(fieldId);
-    if (checkbox.checked) {
-      field.classList.remove('hidden');
+  // ── Live full name in header ──────────────────────────────────
+  ['last_name', 'first_name', 'fathers_name'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateName);
+  });
+
+  function updateName() {
+    const last     = document.getElementById('last_name').value.trim();
+    const first    = document.getElementById('first_name').value.trim();
+    const fathers  = document.getElementById('fathers_name').value.trim();
+    const liveName = document.getElementById('live-name');
+    const placeholder = document.getElementById('live-name-placeholder');
+
+    if (last || first) {
+      let full = [last, first].filter(Boolean).join(' ');
+      if (fathers) full += ' του ' + fathers;
+      liveName.textContent = full;
+      liveName.classList.remove('hidden');
+      placeholder.classList.add('hidden');
     } else {
-      field.classList.add('hidden');
+      liveName.classList.add('hidden');
+      placeholder.classList.remove('hidden');
     }
   }
+
+  // ── Auto +5 years on date_of_registration ────────────────────
+  document.getElementById('date_of_registration').addEventListener('change', function () {
+    const val = this.value;
+    if (!val) {
+      document.getElementById('date_of_deregistration').value = '';
+      return;
+    }
+    const d = new Date(val);
+    d.setFullYear(d.getFullYear() + 5);
+    const y  = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const dy = String(d.getDate()).padStart(2, '0');
+    document.getElementById('date_of_deregistration').value = `${y}-${mo}-${dy}`;
+  });
 </script>
 {% endblock %}

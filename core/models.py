@@ -16,13 +16,13 @@ class Members(models.Model):
     first_name = models.CharField(max_length=30, validators=[MinLengthValidator(2)])
     last_name = models.CharField(max_length=30, validators=[MinLengthValidator(2)])
     fathers_name = models.CharField(max_length=30, validators=[MinLengthValidator(2)])
-    ADT = models.CharField(max_length=20, validators=[MinLengthValidator(5)], unique=True)
-    AFM = models.CharField(max_length=20, validators=[MinLengthValidator(9)], unique=True)
-    AMKA = models.CharField(max_length=20, validators=[MinLengthValidator(11)], unique=True)
+    ADT = models.CharField(max_length=20, validators=[MinLengthValidator(5)], blank=True)
+    AFM = models.CharField(max_length=20, validators=[MinLengthValidator(9)], blank=True)
+    AMKA = models.CharField(max_length=20, validators=[MinLengthValidator(11)], blank=True)
 
     #  Mitroo
     mitroo_type = models.CharField(max_length=1, choices=[('A', 'Type A'), ('B', 'Type B')])
-    mitroo_number = models.CharField(max_length=20, validators=[MinLengthValidator(5)], unique=True)
+    mitroo_number = models.CharField(max_length=20, validators=[MinLengthValidator(5)], blank=True)
     date_of_registration = models.DateField(auto_now_add=True)
     date_of_deregistration = models.DateField(auto_now_add=True)
 
@@ -55,4 +55,4 @@ class Members(models.Model):
 
 
     def __str__(self):
-        return self.name
+        return self.first_name + ' ' + self.last_name

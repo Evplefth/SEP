@@ -68,7 +68,7 @@
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Επικοινωνία</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Εταιρεία</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ομαδικό</th>
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Ενέργειες</th>
+          {% comment %} <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Ενέργειες</th> {% endcomment %}
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-50">
@@ -137,7 +137,7 @@
             {% endif %}
           </td>
 
-          <!-- Ενέργειες -->
+          {% comment %} <!-- Ενέργειες -->
           <td class="px-5 py-4">
             <div class="flex items-center justify-center gap-1.5">
               <!-- Προβολή -->
@@ -171,7 +171,7 @@
             </div>
           </td>
 
-        </tr>
+        </tr> {% endcomment %}
         {% endfor %}
       </tbody>
     </table>
