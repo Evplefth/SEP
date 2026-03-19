@@ -1,39 +1,46 @@
+{% extends "core/base.html" %}
 
-{% extends 'core/base.html' %}
+{% block title %}Χρήστες{% endblock %}
 
 {% block content %}
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-gray-800">Χρήστες</h1>
+      <p class="text-sm text-gray-500 mt-1">Σύνολο: {{ users|length }}</p>
+    </div>
+    <a href="{% url 'core:home' %}" class="text-sm text-blue-600 hover:underline">Αρχική</a>
+  </div>
 
-    <h1>Λίστα Χρηστών</h1>
-
-    <p><a href="{% url 'home' %}">Αρχική</a></p>
-
-    <table border="1" cellpadding="8">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>First name</th>
-                <th>Last name</th>
-                <th>Email</th>
-                <th>Staff</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.first_name }}</td>
-                <td>{{ user.last_name }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.is_staff }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6">Δεν υπάρχουν χρήστες.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr class="text-left">
+          <th class="px-6 py-3 font-semibold text-gray-500">ID</th>
+          <th class="px-6 py-3 font-semibold text-gray-500">Username</th>
+          <th class="px-6 py-3 font-semibold text-gray-500">Όνομα</th>
+          <th class="px-6 py-3 font-semibold text-gray-500">Επώνυμο</th>
+          <th class="px-6 py-3 font-semibold text-gray-500">Email</th>
+          <th class="px-6 py-3 font-semibold text-gray-500">Staff</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for user in users %}
+        <tr>
+          <td class="px-6 py-4">{{ user.id }}</td>
+          <td class="px-6 py-4">{{ user.username }}</td>
+          <td class="px-6 py-4">{{ user.first_name|default:"-" }}</td>
+          <td class="px-6 py-4">{{ user.last_name|default:"-" }}</td>
+          <td class="px-6 py-4">{{ user.email|default:"-" }}</td>
+          <td class="px-6 py-4">{{ user.is_staff|yesno:"Ναι,Όχι" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-8 text-center text-gray-500">Δεν υπάρχουν χρήστες.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
-
+  </div>
+</div>
 {% endblock %}
