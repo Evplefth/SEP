@@ -9,7 +9,12 @@
       <h1 class="text-xl font-bold text-gray-800">Χρήστες</h1>
       <p class="text-sm text-gray-500 mt-1">Σύνολο: {{ users|length }}</p>
     </div>
-    <a href="{% url 'core:home' %}" class="text-sm text-blue-600 hover:underline">Αρχική</a>
+    <div class="flex items-center gap-3">
+      {% if user.is_staff %}
+      <a href="{% url 'core:user_create' %}" class="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition">Νέος Χρήστης</a>
+      {% endif %}
+      <a href="{% url 'core:home' %}" class="text-sm text-blue-600 hover:underline">Αρχική</a>
+    </div>
   </div>
 
   <div class="overflow-x-auto">
@@ -21,7 +26,7 @@
           <th class="px-6 py-3 font-semibold text-gray-500">Όνομα</th>
           <th class="px-6 py-3 font-semibold text-gray-500">Επώνυμο</th>
           <th class="px-6 py-3 font-semibold text-gray-500">Email</th>
-          <th class="px-6 py-3 font-semibold text-gray-500">Staff</th>
+          <th class="px-6 py-3 font-semibold text-gray-500">Διαχειριστής</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-50">

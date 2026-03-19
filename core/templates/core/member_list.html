@@ -1,96 +1,42 @@
-{% extends 'core/base.html' %}
-{% block title %}Μέλη{% endblock %}
+{% extends "core/base.html" %}
+{% block title %}Προσωπικό{% endblock %}
 
 {% block content %}
-
-<!-- Header -->
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
   <div>
-    <h1 class="text-2xl font-bold text-gray-800">Μέλη</h1>
-    <p class="text-gray-500 text-sm mt-1">Σύνολο: <span class="font-semibold text-blue-600">{{ members|length }}</span> μέλη</p>
+    <h1 class="text-2xl font-bold text-gray-800">Προσωπικό Φορτοεκφόρτωσης</h1>
+    <p class="text-gray-500 text-sm mt-1">Σύνολο: <span class="font-semibold text-blue-600">{{ members|length }}</span></p>
   </div>
-  <a href="{% url 'core:member_create' %}"
-    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-    </svg>
-    Νέο Μέλος
-  </a>
+  <a href="{% url 'core:member_create' %}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">Νέο Μέλος</a>
 </div>
 
-<!-- Filters -->
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 mb-5">
   <form method="get" class="flex flex-col sm:flex-row gap-3">
-    <div class="relative flex-1">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-      </svg>
-      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Αναζήτηση με όνομα, ΑΔΤ, ΑΦΜ, ΑΜΚΑ..."
-        class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-    </div>
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Αναζήτηση με όνομα, ΑΔΤ, ΑΦΜ, ΑΜΚΑ..." class="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
     <select name="mitroo" class="text-sm border border-gray-200 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-600">
       <option value="">Μητρώο Α & Β</option>
       <option value="A" {% if request.GET.mitroo == "A" %}selected{% endif %}>Μητρώο Α</option>
       <option value="B" {% if request.GET.mitroo == "B" %}selected{% endif %}>Μητρώο Β</option>
     </select>
     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">Φίλτρο</button>
-    <a href="{% url 'core:members_list' %}" class="text-sm text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2.5 rounded-lg transition text-center">Καθαρισμός</a>
   </form>
 </div>
 
-<!-- Table -->
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-  {% if members %}
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
-      <thead>
-        <tr class="bg-gray-50 border-b border-gray-100 text-left">
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Μέλος</th>
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Μητρώο</th>
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Επικοινωνία</th>
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Ομαδικό</th>
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Ενέργειες</th>
+      <thead class="bg-gray-50 border-b border-gray-100 text-left">
+        <tr>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Εργαζόμενος</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Μητρώο</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Εταιρίες</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Επικοινωνία</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase text-center">Ενέργειες</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-50">
         {% for member in members %}
-        <tr class="hover:bg-blue-50/30 transition cursor-pointer"
-            data-id="{{ member.id }}"
-            data-last="{{ member.last_name }}"
-            data-first="{{ member.first_name }}"
-            data-fathers="{{ member.fathers_name }}"
-            data-adt="{{ member.ADT|default:'' }}"
-            data-afm="{{ member.AFM|default:'' }}"
-            data-amka="{{ member.AMKA|default:'' }}"
-            data-ama="{{ member.AMA|default:'' }}"
-            data-gender="{{ member.get_gender_display|default:'—' }}"
-            data-dob="{{ member.date_of_birth|date:'d/m/Y'|default:'—' }}"
-            data-nationality="{{ member.nationality|default:'—' }}"
-            data-mitroo-type="{{ member.mitroo_type|default:'' }}"
-            data-mitroo-number="{{ member.mitroo_number|default:'' }}"
-            data-date-reg="{{ member.date_of_registration|date:'d/m/Y'|default:'—' }}"
-            data-date-dereg="{{ member.date_of_deregistration|date:'d/m/Y'|default:'—' }}"
-            data-driver-a="{{ member.driver_A|yesno:'1,0' }}"
-            data-driver-b="{{ member.driver_B|yesno:'1,0' }}"
-            data-driver-c="{{ member.driver_C|yesno:'1,0' }}"
-            data-driver-d="{{ member.driver_D|yesno:'1,0' }}"
-            data-lifter="{{ member.lifter|yesno:'1,0' }}"
-            data-omadiko="{{ member.omadiko|yesno:'1,0' }}"
-            data-omadiko-from="{{ member.omadiko_from|date:'d/m/Y'|default:'—' }}"
-            data-omadiko-to="{{ member.omadiko_to|date:'d/m/Y'|default:'—' }}"
-            data-omadiko-exartomena="{{ member.omadiko_exartomena|yesno:'1,0' }}"
-            data-bank="{{ member.bank|default:'—' }}"
-            data-iban="{{ member.bank_account_number|default:'—' }}"
-            data-address="{{ member.address|default:'—' }}"
-            data-tk="{{ member.tk|default:'—' }}"
-            data-phone1="{{ member.phone_number1|default:'—' }}"
-            data-phone2="{{ member.phone_number2|default:'—' }}"
-            data-email="{{ member.email|default:'—' }}"
-            data-notes="{{ member.notes|default:'—' }}"
-            data-pending="{{ member.pending_issues|default:'—' }}"
-            onclick="openPanelFromRow(this)">
-
-          <!-- Μέλος -->
+        <tr class="hover:bg-blue-50/30 transition">
           <td class="px-5 py-4">
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
@@ -102,355 +48,44 @@
               </div>
             </div>
           </td>
-
-          <!-- Μητρώο -->
           <td class="px-5 py-4">
             {% if member.mitroo_type %}
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-              {% if member.mitroo_type == 'A' %}bg-blue-100 text-blue-700{% else %}bg-purple-100 text-purple-700{% endif %}">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if member.mitroo_type == 'A' %}bg-blue-100 text-blue-700{% else %}bg-purple-100 text-purple-700{% endif %}">
               {{ member.mitroo_type }}-{{ member.mitroo_number }}
             </span>
             {% else %}
-            <span class="text-gray-400 text-xs">—</span>
-            {% endif %}
-            <p class="text-xs text-gray-400 mt-0.5">Λήξη: {{ member.date_of_deregistration|date:"d/m/Y"|default:"—" }}</p>
-          </td>
-
-          <!-- Επικοινωνία -->
-          <td class="px-5 py-4 hidden md:table-cell">
-            <p class="text-gray-700">{{ member.phone_number1|default:"—" }}</p>
-            <p class="text-xs text-gray-400">{{ member.email|default:"" }}</p>
-          </td>
-
-          <!-- Ομαδικό -->
-          <td class="px-5 py-4 hidden lg:table-cell">
-            {% if member.omadiko_from %}
-              <p class="text-xs text-gray-700">{{ member.omadiko_from|date:"d/m/Y" }}</p>
-              <p class="text-xs text-gray-400">έως {{ member.omadiko_to|date:"d/m/Y"|default:"—" }}</p>
-            {% else %}
-              <span class="text-gray-400 text-xs">—</span>
+            <span class="text-gray-400 text-xs">-</span>
             {% endif %}
           </td>
-
-          <!-- Ενέργειες -->
-          <td class="px-5 py-4" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-center gap-1.5">
-              <button onclick="openPanelFromRow(this.closest('tr'))"
-                class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-                <span class="hidden sm:inline">Προβολή</span>
-              </button>
-              <a href="{% url 'core:member_update' member.id %}"
-                class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-                <span class="hidden sm:inline">Επεξεργασία</span>
-              </a>
+          <td class="px-5 py-4">
+            <div class="flex flex-wrap gap-1.5">
+              {% for relation in member.companies.all %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if relation.active %}bg-green-50 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                {{ relation.company.name }}
+              </span>
+              {% empty %}
+              <span class="text-gray-400 text-xs">-</span>
+              {% endfor %}
             </div>
           </td>
-
+          <td class="px-5 py-4 hidden md:table-cell">
+            <p class="text-gray-700">{{ member.phone_number1|default:"-" }}</p>
+            <p class="text-xs text-gray-400">{{ member.email|default:"" }}</p>
+          </td>
+          <td class="px-5 py-4">
+            <div class="flex items-center justify-center gap-2">
+              <a href="{% url 'core:member_detail' member.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition">Περισσότερες Πληροφορίες</a>
+              <a href="{% url 'core:member_update' member.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Επεξεργασία</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-5 py-10 text-center text-gray-500">Δεν βρέθηκε προσωπικό.</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-
-  {% else %}
-  <div class="text-center py-16">
-    <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-    </svg>
-    <p class="text-gray-500 font-medium">Δεν βρέθηκαν μέλη</p>
-    <p class="text-gray-400 text-sm mt-1">Δοκιμάστε διαφορετικά φίλτρα ή <a href="{% url 'core:member_create' %}" class="text-blue-600 hover:underline">προσθέστε νέο μέλος</a>.</p>
-  </div>
-  {% endif %}
 </div>
-
-
-<!-- ════════════════════════════════════════════
-     SLIDE-OVER PANEL
-════════════════════════════════════════════ -->
-<div id="panel-backdrop" onclick="closePanel()"
-  class="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
-
-<div id="detail-panel"
-  class="fixed top-0 right-0 h-full w-full sm:w-[480px] bg-white shadow-2xl z-50 translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
-
-  <!-- Panel Header -->
-  <div class="flex items-center justify-between px-6 py-5 bg-blue-600 shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-        <span id="p-initial" class="text-white font-bold text-lg"></span>
-      </div>
-      <div>
-        <h2 id="p-fullname" class="text-white font-bold text-lg leading-tight"></h2>
-        <p id="p-fathers" class="text-blue-200 text-xs mt-0.5"></p>
-      </div>
-    </div>
-    <button onclick="closePanel()" class="text-white/70 hover:text-white p-1 transition">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- Panel Body -->
-  <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-
-    <!-- Προσωπικά -->
-    <div>
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Προσωπικά Στοιχεία</p>
-      <div class="grid grid-cols-3 gap-2 mb-2">
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">ΑΔΤ</p>
-          <p id="p-adt" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">ΑΦΜ</p>
-          <p id="p-afm" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">ΑΜΚΑ</p>
-          <p id="p-amka" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">ΑΜΑ</p>
-          <p id="p-ama" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Φύλο</p>
-          <p id="p-gender" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Ημ. Γέννησης</p>
-          <p id="p-dob" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-      </div>
-      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-        <p class="text-xs text-gray-400 mb-0.5">Ιθαγένεια</p>
-        <p id="p-nationality" class="text-sm font-semibold text-gray-800"></p>
-      </div>
-    </div>
-
-    <!-- Μητρώο -->
-    <div>
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Μητρώο</p>
-      <div class="grid grid-cols-3 gap-2">
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Αριθμός</p>
-          <p id="p-mitroo" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Εγγραφή</p>
-          <p id="p-datereg" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Λήξη</p>
-          <p id="p-datedereg" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Οδηγός / Χειριστής -->
-    <div>
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Οδηγός & Χειριστής</p>
-      <div id="p-drivers" class="flex flex-wrap gap-2"></div>
-    </div>
-
-    <!-- Ομαδικό -->
-    <div>
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Ομαδικό</p>
-      <div class="grid grid-cols-3 gap-2 mb-2">
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Κατάσταση</p>
-          <p id="p-omadiko" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Από</p>
-          <p id="p-omadiko-from" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Έως</p>
-          <p id="p-omadiko-to" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-      </div>
-      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-        <p class="text-xs text-gray-400 mb-0.5">Εξαρτώμενα</p>
-        <p id="p-omadiko-exartomena" class="text-sm font-semibold text-gray-800"></p>
-      </div>
-    </div>
-
-    <!-- Τράπεζα -->
-    <div>
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Τράπεζα</p>
-      <div class="space-y-2">
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Τράπεζα</p>
-          <p id="p-bank" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">IBAN</p>
-          <p id="p-iban" class="text-sm font-mono text-gray-800 break-all"></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Επικοινωνία -->
-    <div>
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Επικοινωνία</p>
-      <div class="space-y-2">
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Διεύθυνση</p>
-          <p id="p-address" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-        <div class="grid grid-cols-3 gap-2">
-          <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-            <p class="text-xs text-gray-400 mb-0.5">ΤΚ</p>
-            <p id="p-tk" class="text-sm font-semibold text-gray-800"></p>
-          </div>
-          <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-            <p class="text-xs text-gray-400 mb-0.5">Τηλ. 1</p>
-            <p id="p-phone1" class="text-sm font-semibold text-gray-800"></p>
-          </div>
-          <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-            <p class="text-xs text-gray-400 mb-0.5">Τηλ. 2</p>
-            <p id="p-phone2" class="text-sm font-semibold text-gray-800"></p>
-          </div>
-        </div>
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-0.5">Email</p>
-          <p id="p-email" class="text-sm font-semibold text-gray-800"></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Παρατηρήσεις -->
-    <div>
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Παρατηρήσεις & Εκκρεμότητες</p>
-      <div class="space-y-2">
-        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-gray-400 mb-1">Παρατηρήσεις</p>
-          <p id="p-notes" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"></p>
-        </div>
-        <div class="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
-          <p class="text-xs text-amber-500 font-semibold mb-1">⚠ Εκκρεμότητες</p>
-          <p id="p-pending" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"></p>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Panel Footer -->
-  <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 shrink-0">
-    <a id="p-edit-btn" href="#"
-      class="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-      </svg>
-      Επεξεργασία Μέλους
-    </a>
-  </div>
-
-</div>
-
-{% endblock %}
-
-
-{% block extra_scripts %}
-<script>
-  function openPanelFromRow(row) {
-    const d = row.dataset;
-
-    // ── Header ──────────────────────────────────────────────────
-    document.getElementById('p-initial').textContent  = d.last.charAt(0).toUpperCase();
-    document.getElementById('p-fullname').textContent = d.last + ' ' + d.first;
-    document.getElementById('p-fathers').textContent  = 'του ' + d.fathers;
-
-    // ── Προσωπικά ───────────────────────────────────────────────
-    document.getElementById('p-adt').textContent         = d.adt         || '—';
-    document.getElementById('p-afm').textContent         = d.afm         || '—';
-    document.getElementById('p-amka').textContent        = d.amka        || '—';
-    document.getElementById('p-ama').textContent         = d.ama         || '—';
-    document.getElementById('p-gender').textContent      = d.gender      || '—';
-    document.getElementById('p-dob').textContent         = d.dob         || '—';
-    document.getElementById('p-nationality').textContent = d.nationality || '—';
-
-    // ── Μητρώο ──────────────────────────────────────────────────
-    document.getElementById('p-mitroo').textContent    = (d.mitrooType && d.mitrooNumber) ? d.mitrooType + '-' + d.mitrooNumber : '—';
-    document.getElementById('p-datereg').textContent   = d.dateReg   || '—';
-    document.getElementById('p-datedereg').textContent = d.dateDereg || '—';
-
-    // ── Drivers ─────────────────────────────────────────────────
-    const driversEl = document.getElementById('p-drivers');
-    driversEl.innerHTML = '';
-    [
-      { label: 'Κατηγορία Α',          val: d.driverA },
-      { label: 'Κατηγορία Β',          val: d.driverB },
-      { label: 'Κατηγορία Γ',          val: d.driverC },
-      { label: 'Κατηγορία Δ',          val: d.driverD },
-      { label: 'Χειριστής Ανυψωτικού', val: d.lifter  },
-    ].forEach(b => {
-      const span = document.createElement('span');
-      span.textContent = b.label;
-      span.className = b.val === '1'
-        ? 'px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200'
-        : 'px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-400 line-through';
-      driversEl.appendChild(span);
-    });
-
-    // ── Ομαδικό — χρήση getAttribute για hyphenated keys ────────
-    document.getElementById('p-omadiko').textContent            = d.omadiko === '1' ? '✓ Ενεργό' : '✗ Ανενεργό';
-    document.getElementById('p-omadiko-from').textContent       = row.getAttribute('data-omadiko-from') || '—';
-    document.getElementById('p-omadiko-to').textContent         = row.getAttribute('data-omadiko-to')   || '—';
-    document.getElementById('p-omadiko-exartomena').textContent = row.getAttribute('data-omadiko-exartomena') === '1' ? 'Ναι' : 'Όχι';
-
-    // ── Τράπεζα ─────────────────────────────────────────────────
-    document.getElementById('p-bank').textContent = d.bank || '—';
-    document.getElementById('p-iban').textContent = d.iban || '—';
-
-    // ── Επικοινωνία ─────────────────────────────────────────────
-    document.getElementById('p-address').textContent = d.address || '—';
-    document.getElementById('p-tk').textContent      = d.tk      || '—';
-    document.getElementById('p-phone1').textContent  = d.phone1  || '—';
-    document.getElementById('p-phone2').textContent  = d.phone2  || '—';
-    document.getElementById('p-email').textContent   = d.email   || '—';
-
-    // ── Παρατηρήσεις ────────────────────────────────────────────
-    document.getElementById('p-notes').textContent   = d.notes   || '—';
-    document.getElementById('p-pending').textContent = d.pending || '—';
-
-    // ── Edit button ─────────────────────────────────────────────
-    document.getElementById('p-edit-btn').href = `/members/${d.id}/edit/`;
-
-    // ── Open ────────────────────────────────────────────────────
-    const panel    = document.getElementById('detail-panel');
-    const backdrop = document.getElementById('panel-backdrop');
-    backdrop.classList.remove('hidden');
-    requestAnimationFrame(() => {
-      backdrop.classList.remove('opacity-0');
-      panel.classList.remove('translate-x-full');
-    });
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closePanel() {
-    const panel    = document.getElementById('detail-panel');
-    const backdrop = document.getElementById('panel-backdrop');
-    panel.classList.add('translate-x-full');
-    backdrop.classList.add('opacity-0');
-    setTimeout(() => {
-      backdrop.classList.add('hidden');
-      document.body.style.overflow = '';
-    }, 300);
-  }
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closePanel();
-  });
-</script>
 {% endblock %}

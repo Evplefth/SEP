@@ -1,0 +1,130 @@
+{% extends "core/base.html" %}
+{% block title %}Παραστατικά{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">Παραστατικά Φορτοεκφόρτωσης</h1>
+    <p class="text-gray-500 text-sm mt-1">Διαχείριση τιμολογίων ανά συνεργαζόμενη εταιρία</p>
+  </div>
+  <a href="{% url 'core:invoice_create' %}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">Νέο Παραστατικό</a>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 mb-5">
+  <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Αριθμός ή εργασία" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+    <select name="company" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+      <option value="">Όλες οι εταιρίες</option>
+      {% for company in companies %}
+      <option value="{{ company.id }}" {% if request.GET.company == company.id|stringformat:"s" %}selected{% endif %}>{{ company.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="status" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+      <option value="">Όλες οι καταστάσεις</option>
+      <option value="paid" {% if request.GET.status == "paid" %}selected{% endif %}>Πληρωμένα</option>
+      <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>Απλήρωτα</option>
+    </select>
+    <div class="flex gap-3">
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">Φίλτρο</button>
+      <a href="{% url 'core:invoices_list' %}" class="text-sm text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2.5 rounded-lg transition text-center">Καθαρισμός</a>
+    </div>
+  </form>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b border-gray-100 text-left">
+        <tr>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Παραστατικό</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Εταιρία</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Ημ. Έκδοσης</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Ποσό</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Κατάσταση</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Scan</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase text-center">Ενέργειες</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for invoice in invoices %}
+        <tr>
+          <td class="px-5 py-4">
+            {% if invoice.scan_file %}
+            <button type="button" class="font-semibold text-blue-600 hover:underline" onclick="showInvoicePreview('{{ invoice.invoice_number|escapejs }}', '{% url 'core:media_preview' invoice.scan_file.name %}')">{{ invoice.invoice_number }}</button>
+            {% else %}
+            <p class="font-semibold text-gray-800">{{ invoice.invoice_number }}</p>
+            {% endif %}
+            <p class="text-xs text-gray-400">{{ invoice.service_type|default:"-" }}</p>
+          </td>
+          <td class="px-5 py-4">
+            <a href="{% url 'core:company_detail' invoice.company.id %}" class="text-blue-600 hover:underline">{{ invoice.company.name }}</a>
+          </td>
+          <td class="px-5 py-4">{{ invoice.date_of_issue|date:"d/m/Y" }}</td>
+          <td class="px-5 py-4">{{ invoice.amount }}</td>
+          <td class="px-5 py-4">
+            {% if invoice.status %}
+            <span class="inline-flex px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">Πληρωμένο</span>
+            {% else %}
+            <span class="inline-flex px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">Απλήρωτο</span>
+            {% endif %}
+          </td>
+          <td class="px-5 py-4">
+            {% if invoice.scan_file %}
+            <button type="button" class="text-blue-600 hover:underline" onclick="showInvoicePreview('{{ invoice.invoice_number|escapejs }}', '{% url 'core:media_preview' invoice.scan_file.name %}')">Preview</button>
+            {% else %}
+            <span class="text-gray-400">-</span>
+            {% endif %}
+          </td>
+          <td class="px-5 py-4 text-center">
+            <a href="{% url 'core:invoice_update' invoice.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Επεξεργασία</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="px-5 py-10 text-center text-gray-500">Δεν υπάρχουν παραστατικά.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="invoice-preview-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 id="invoice-preview-title" class="text-lg font-semibold text-gray-800">Preview</h3>
+      <button type="button" onclick="closeInvoicePreview()" class="text-gray-500 hover:text-gray-700">Κλείσιμο</button>
+    </div>
+    <div id="invoice-preview-body" class="flex-1 bg-gray-100 min-h-[70vh] overflow-auto"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function showInvoicePreview(title, url) {
+    const modal = document.getElementById('invoice-preview-modal');
+    const body = document.getElementById('invoice-preview-body');
+    const previewTitle = document.getElementById('invoice-preview-title');
+    previewTitle.textContent = `Preview παραστατικού ${title}`;
+
+    const lower = url.toLowerCase();
+    if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.webp')) {
+      body.innerHTML = `<img src="${url}" alt="${title}" class="max-w-full h-auto mx-auto">`;
+    } else {
+      body.innerHTML = `<iframe src="${url}" class="w-full h-[70vh] bg-white" title="${title}"></iframe>`;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeInvoicePreview() {
+    const modal = document.getElementById('invoice-preview-modal');
+    const body = document.getElementById('invoice-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
+{% endblock %}

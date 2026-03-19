@@ -1,0 +1,67 @@
+{% extends "core/base.html" %}
+{% block title %}{% if invoice %}Επεξεργασία Παραστατικού{% else %}Νέο Παραστατικό{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="flex items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">{% if invoice %}Επεξεργασία Παραστατικού{% else %}Νέο Παραστατικό{% endif %}</h1>
+      <p class="text-gray-500 text-sm mt-1">Καταχώριση τιμολογίου για εργασίες φορτοεκφόρτωσης με scan αρχείο.</p>
+    </div>
+    <a href="{% url 'core:invoices_list' %}" class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Πίσω</a>
+  </div>
+
+  {% if error %}
+  <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-5 py-4 mb-6">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div class="sm:col-span-2">
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Εταιρία</label>
+        <select name="company" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <option value="">Επιλέξτε εταιρία</option>
+          {% for company in companies %}
+          <option value="{{ company.id }}" {% if form_data.company == company.id|stringformat:"s" or request.GET.company == company.id|stringformat:"s" %}selected{% endif %}>{{ company.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός Παραστατικού</label>
+        <input type="text" name="invoice_number" value="{{ form_data.invoice_number|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ποσό</label>
+        <input type="number" step="0.01" name="amount" value="{{ form_data.amount|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Εργασία / Υπηρεσία</label>
+        <input type="text" name="service_type" value="{{ form_data.service_type|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ημερομηνία Έκδοσης</label>
+        <input type="date" name="date_of_issue" value="{{ form_data.date_of_issue|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Scan Παραστατικού</label>
+        <input type="file" name="scan_file" class="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm bg-white">
+        {% if invoice and invoice.scan_file %}
+        <a href="{% url 'core:media_preview' invoice.scan_file.name %}" target="_blank" class="inline-block text-xs text-blue-600 hover:underline mt-2">Τρέχον αρχείο</a>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2 pt-7">
+        <input type="checkbox" name="status" {% if form_data.status %}checked{% endif %} class="w-4 h-4 accent-blue-600">
+        <span class="text-sm text-gray-700">Πληρωμένο</span>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <a href="{% url 'core:invoices_list' %}" class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">Ακύρωση</a>
+      <button type="submit" class="px-8 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+        {% if invoice %}Αποθήκευση Αλλαγών{% else %}Δημιουργία Παραστατικού{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

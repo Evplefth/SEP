@@ -26,6 +26,7 @@ class Invoices(models.Model):
     service_type   = models.CharField(max_length=100, blank=True, null=True)
     date_of_issue  = models.DateField()
     status         = models.BooleanField(default=False)
+    scan_file      = models.FileField(upload_to='invoices/', blank=True, null=True)
     company        = models.ForeignKey('companies', on_delete=models.CASCADE, related_name='invoices')
 
     def __str__(self):
@@ -61,6 +62,10 @@ class companies(models.Model):
 class companies_members(models.Model):
     company = models.ForeignKey(companies, on_delete=models.CASCADE, related_name='members')
     member  = models.ForeignKey('Members', on_delete=models.CASCADE, related_name='companies')
+    active = models.BooleanField(default=True)
+    active_date = models.DateField(blank=True, null=True)
+    inactive_date = models.DateField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
 
     class Meta:
         verbose_name = "Απασχόληση"

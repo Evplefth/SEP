@@ -1,114 +1,68 @@
 {% extends 'core/base.html' %}
 
 {% block title %}Σύνδεση{% endblock %}
+{% block body_class %}bg-slate-100{% endblock %}
+{% block main_class %}flex-1 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8{% endblock %}
 
 {% block content %}
+<div class="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+  <h1 class="text-2xl font-bold text-gray-900 text-center">Σύνδεση</h1>
 
-<div class="min-h-[70vh] flex items-center justify-center">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-sm border border-gray-100 px-8 py-10">
+  <form method="post" class="mt-8 space-y-5" id="login-form">
+    {% csrf_token %}
 
-    <!-- Header -->
-    <div class="text-center mb-8">
-      <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-        </svg>
-      </div>
-      <h1 class="text-2xl font-bold text-gray-800">Σύνδεση</h1>
-      <p class="text-gray-500 text-sm mt-1">Καλώς ήρθατε πίσω</p>
-    </div>
+    {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">
+          {{ field.label }}
+        </label>
+        <input
+          type="{% if field.field.widget.input_type == 'password' %}password{% else %}{{ field.field.widget.input_type }}{% endif %}"
+          name="{{ field.html_name }}"
+          id="{{ field.id_for_label }}"
+          {% if field.value %}value="{{ field.value }}"{% endif %}
+          class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 {% if field.errors %}border-red-400 focus:border-red-400 focus:ring-red-200{% endif %}"
+        />
 
-    <!-- Form -->
-    <form method="post" class="space-y-5">
-      {% csrf_token %}
-
-      {% for field in form %}
-        <div>
-          <label for="{{ field.id_for_label }}"
-            class="block text-sm font-medium text-gray-700 mb-1.5">
-            {{ field.label }}
-          </label>
-
-          {% if field.field.widget.input_type == 'password' %}
-            <div class="relative">
-              <input
-                type="password"
-                name="{{ field.html_name }}"
-                id="{{ field.id_for_label }}"
-                {% if field.value %}value="{{ field.value }}"{% endif %}
-                placeholder="••••••••"
-                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-10
-                  {% if field.errors %}border-red-400 focus:ring-red-400{% endif %}"
-              />
-              <button type="button" onclick="togglePassword('{{ field.id_for_label }}')"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </button>
-            </div>
-          {% else %}
-            <input
-              type="{{ field.field.widget.input_type }}"
-              name="{{ field.html_name }}"
-              id="{{ field.id_for_label }}"
-              {% if field.value %}value="{{ field.value }}"{% endif %}
-              placeholder="{% if field.html_name == 'username' %}Εισάγετε το username σας{% else %}{{ field.label }}{% endif %}"
-              class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition
-                {% if field.errors %}border-red-400 focus:ring-red-400{% endif %}"
-            />
-          {% endif %}
-
-          {% if field.errors %}
-            {% for error in field.errors %}
-              <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                {{ error }}
-              </p>
-            {% endfor %}
-          {% endif %}
-        </div>
-      {% endfor %}
-
-      <!-- Non-field errors (e.g. wrong username/password) -->
-      {% if form.non_field_errors %}
-        <div class="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-          {% for error in form.non_field_errors %}
-            <p class="text-red-600 text-sm flex items-center gap-2">
-              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-              {{ error }}
-            </p>
+        {% if field.errors %}
+          {% for error in field.errors %}
+            <p class="mt-1.5 text-xs text-red-600">{{ error }}</p>
           {% endfor %}
-        </div>
-      {% endif %}
+        {% endif %}
+      </div>
+    {% endfor %}
 
+    {% if form.non_field_errors %}
+      <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+        {% for error in form.non_field_errors %}
+          <p class="text-sm text-red-700">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-      <!-- Submit -->
-      <button type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-sm py-2.5 rounded-lg transition-all duration-150">
-        Σύνδεση
-      </button>
-
-    </form>
-
-  </div>
+    <button
+      type="submit"
+      class="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+    >
+      Login
+    </button>
+  </form>
 </div>
-
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  function togglePassword(fieldId) {
-    const input = document.getElementById(fieldId);
-    input.type = input.type === 'password' ? 'text' : 'password';
-  }
+  (function () {
+    const form = document.getElementById('login-form');
+    if (!form) {
+      return;
+    }
+
+    sessionStorage.removeItem('loginRockIntro');
+
+    form.addEventListener('submit', function () {
+      sessionStorage.setItem('loginRockIntro', 'pending');
+    });
+  }());
 </script>
 {% endblock %}

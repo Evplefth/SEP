@@ -1,0 +1,121 @@
+{% extends "core/base.html" %}
+{% block title %}{{ member.last_name }} {{ member.first_name }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">{{ member.last_name }} {{ member.first_name }}</h1>
+    <p class="text-gray-500 text-sm mt-1">του {{ member.fathers_name }}</p>
+  </div>
+  <div class="flex gap-3">
+    <a href="{% url 'core:members_list' %}" class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Πίσω</a>
+    <a href="{% url 'core:member_update' member.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Επεξεργασία</a>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="border-b border-gray-100 px-6 pt-4">
+    <div class="flex gap-2">
+      <button type="button" class="member-tab-btn px-4 py-2.5 text-sm font-semibold text-blue-600 border-b-2 border-blue-600" data-tab="personal">Προσωπικές Πληροφορίες</button>
+      <button type="button" class="member-tab-btn px-4 py-2.5 text-sm font-semibold text-gray-500 border-b-2 border-transparent" data-tab="companies">Εταιρίες</button>
+    </div>
+  </div>
+
+  <div id="tab-personal" class="member-tab-panel px-6 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">ΑΔΤ</p><p class="font-semibold text-gray-800">{{ member.ADT }}</p></div>
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">ΑΦΜ</p><p class="font-semibold text-gray-800">{{ member.AFM }}</p></div>
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">ΑΜΚΑ</p><p class="font-semibold text-gray-800">{{ member.AMKA }}</p></div>
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">ΑΜΑ</p><p class="font-semibold text-gray-800">{{ member.AMA }}</p></div>
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">Φύλο</p><p class="font-semibold text-gray-800">{{ member.get_gender_display|default:"-" }}</p></div>
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">Ημ. Γέννησης</p><p class="font-semibold text-gray-800">{{ member.date_of_birth|date:"d/m/Y"|default:"-" }}</p></div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">Ιθαγένεια</p><p class="font-semibold text-gray-800">{{ member.nationality|default:"-" }}</p></div>
+        <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">Κατάσταση</p><p class="font-semibold text-gray-800">{% if member.active %}Ενεργό{% else %}Ανενεργό{% endif %}</p><p class="text-xs text-gray-500 mt-1">Ανενεργό από: {{ member.inactive_date|date:"d/m/Y"|default:"-" }}</p></div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400">Μητρώο</p>
+          <p class="font-semibold text-gray-800">{{ member.mitroo_type|default:"-" }}{% if member.mitroo_number %}-{{ member.mitroo_number }}{% endif %}</p>
+          <p class="text-xs text-gray-500 mt-1">Εγγραφή: {{ member.date_of_registration|date:"d/m/Y"|default:"-" }} | Λήξη: {{ member.date_of_deregistration|date:"d/m/Y"|default:"-" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400">Επικοινωνία</p>
+          <p class="font-semibold text-gray-800">{{ member.phone_number1|default:"-" }}</p>
+          <p class="text-sm text-gray-700">{{ member.phone_number2|default:"-" }}</p>
+          <p class="text-sm text-gray-700">{{ member.email|default:"-" }}</p>
+          <p class="text-sm text-gray-700 mt-1">{{ member.address|default:"-" }} {{ member.tk|default:"" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400">Τράπεζα</p>
+          <p class="font-semibold text-gray-800">{{ member.bank|default:"-" }}</p>
+          <p class="text-sm text-gray-700 break-all">{{ member.bank_account_number|default:"-" }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-400">Άδειες / Ομαδικό</p>
+          <p class="text-sm text-gray-700">Α: {{ member.driver_A|yesno:"Ναι,Όχι" }}, Β: {{ member.driver_B|yesno:"Ναι,Όχι" }}, Γ: {{ member.driver_C|yesno:"Ναι,Όχι" }}, Δ: {{ member.driver_D|yesno:"Ναι,Όχι" }}</p>
+          <p class="text-sm text-gray-700">Ανυψωτικό: {{ member.lifter|yesno:"Ναι,Όχι" }}</p>
+          <p class="text-sm text-gray-700">Ομαδικό: {{ member.omadiko|yesno:"Ναι,Όχι" }} | Από {{ member.omadiko_from|date:"d/m/Y"|default:"-" }} έως {{ member.omadiko_to|date:"d/m/Y"|default:"-" }}</p>
+          <p class="text-sm text-gray-700">Εξαρτώμενα στο ομαδικό: {{ member.omadiko_exartomena|yesno:"Ναι,Όχι" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div class="bg-gray-50 rounded-lg p-4">
+        <p class="text-xs text-gray-400 mb-2">Παρατηρήσεις</p>
+        <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ member.notes|default:"-" }}</p>
+      </div>
+      <div class="bg-amber-50 border border-amber-100 rounded-lg p-4">
+        <p class="text-xs text-amber-500 font-semibold mb-2">Εκκρεμότητες</p>
+        <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ member.pending_issues|default:"-" }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-companies" class="member-tab-panel hidden px-6 py-6">
+    <div class="space-y-4">
+      {% for relation in company_links %}
+      <div class="border border-gray-200 rounded-xl p-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <a href="{% url 'core:company_detail' relation.company.id %}" class="font-semibold text-blue-600 hover:underline">{{ relation.company.name }}</a>
+            <p class="text-xs text-gray-400 mt-1">ΑΦΜ: {{ relation.company.AFM }} | ΔΟΥ: {{ relation.company.DOY|default:"-" }}</p>
+          </div>
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {% if relation.active %}bg-green-50 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+            {% if relation.active %}Ενεργή σχέση{% else %}Ανενεργή σχέση{% endif %}
+          </span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">Έναρξη</p><p class="font-semibold text-gray-800">{{ relation.active_date|date:"d/m/Y"|default:"-" }}</p></div>
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">Ανενεργή από</p><p class="font-semibold text-gray-800">{{ relation.inactive_date|date:"d/m/Y"|default:"-" }}</p></div>
+          <div class="bg-gray-50 rounded-lg p-3"><p class="text-xs text-gray-400">Σημειώσεις</p><p class="font-semibold text-gray-800">{{ relation.notes|default:"-" }}</p></div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-10 text-gray-500">Δεν υπάρχουν συνδεδεμένες εταιρίες.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('.member-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.member-tab-btn').forEach(b => {
+        b.classList.remove('text-blue-600', 'border-blue-600');
+        b.classList.add('text-gray-500', 'border-transparent');
+      });
+      document.querySelectorAll('.member-tab-panel').forEach(panel => panel.classList.add('hidden'));
+      btn.classList.add('text-blue-600', 'border-blue-600');
+      btn.classList.remove('text-gray-500', 'border-transparent');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+    });
+  });
+</script>
+{% endblock %}

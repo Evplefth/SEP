@@ -1,24 +1,371 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}MyCompany{% endblock %}</title>
+  <title>{% block title %}SEP Φορτοεκφορτώσεις{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 18%),
+        radial-gradient(circle at top right, rgba(191, 219, 254, 0.4), transparent 16%),
+        radial-gradient(circle at bottom center, rgba(96, 165, 250, 0.14), transparent 24%),
+        linear-gradient(180deg, #f5f9ff 0%, #ebf3ff 52%, #f7fbff 100%);
+      color: #0f172a;
+    }
+
+    .site-shell {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-shell::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(96, 165, 250, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96, 165, 250, 0.07) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(circle at center, black 20%, transparent 82%);
+      opacity: 0.42;
+      z-index: -1;
+    }
+
+    .site-shell::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent),
+        linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+      background-size: 100% 100%, 100% 220px;
+      background-repeat: no-repeat;
+      mix-blend-mode: screen;
+      opacity: 0.28;
+      z-index: -1;
+    }
+
+    .app-nav {
+      background: rgba(248, 252, 255, 0.78);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(147, 197, 253, 0.82);
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.08);
+    }
+
+    .app-footer {
+      background: rgba(248, 252, 255, 0.78);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(147, 197, 253, 0.74);
+    }
+
+    .surface-card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(239, 246, 255, 0.82));
+      border: 1px solid rgba(147, 197, 253, 0.68);
+      box-shadow:
+        0 18px 45px rgba(37, 99, 235, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .surface-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.55), transparent 30%),
+        linear-gradient(90deg, transparent, transparent calc(100% - 1px), rgba(96, 165, 250, 0.14) calc(100% - 1px));
+    }
+
+    .soft-panel {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(237, 245, 255, 0.9));
+      border: 1px solid rgba(147, 197, 253, 0.74);
+      box-shadow:
+        0 14px 36px rgba(59, 130, 246, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.88);
+    }
+
+    .soft-panel::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.65), rgba(125, 211, 252, 0.32));
+    }
+
+    .impact-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 140;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .impact-transition.active {
+      opacity: 1;
+    }
+
+    .impact-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at center, rgba(255, 244, 214, 0.88), transparent 8%),
+        radial-gradient(circle at center, rgba(251, 191, 36, 0.42), transparent 16%),
+        radial-gradient(circle at center, rgba(249, 115, 22, 0.3), transparent 28%),
+        radial-gradient(circle at center, rgba(239, 68, 68, 0.2), transparent 48%),
+        rgba(2, 6, 23, 0.92);
+      animation: impact-fade 1800ms ease-out forwards;
+    }
+
+    .impact-core,
+    .impact-flash,
+    .impact-ring,
+    .impact-ring::before,
+    .impact-ring::after,
+    .impact-shards span,
+    .impact-smoke span,
+    .impact-grid,
+    .impact-grid::before,
+    .impact-grid::after {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .impact-core {
+      width: 9rem;
+      height: 9rem;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(255, 237, 213, 0.96) 22%, rgba(251, 146, 60, 0.92) 44%, rgba(220, 38, 38, 0.18) 74%, transparent 100%);
+      filter: blur(1px);
+      animation: core-burst 1150ms cubic-bezier(.16, 1, .3, 1) forwards;
+    }
+
+    .impact-flash {
+      width: 22rem;
+      height: 22rem;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.32) 34%, transparent 72%);
+      filter: blur(10px);
+      opacity: 0;
+      animation: flash-bloom 780ms ease-out forwards;
+    }
+
+    .impact-ring {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 9999px;
+      border: 6px solid rgba(255, 248, 220, 0.96);
+      box-shadow:
+        0 0 40px rgba(251, 146, 60, 0.55),
+        0 0 80px rgba(249, 115, 22, 0.35);
+      animation: ring-blast 1400ms cubic-bezier(.16, 1, .3, 1) forwards;
+    }
+
+    .impact-ring::before,
+    .impact-ring::after {
+      content: "";
+      border-radius: 9999px;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      opacity: 0.75;
+    }
+
+    .impact-ring::before {
+      width: 14rem;
+      height: 14rem;
+      animation: ring-echo 1500ms ease-out forwards;
+    }
+
+    .impact-ring::after {
+      width: 22rem;
+      height: 22rem;
+      animation: ring-echo 1800ms ease-out 120ms forwards;
+    }
+
+    .impact-shards span {
+      width: 0.55rem;
+      height: 10rem;
+      border-radius: 9999px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(253, 186, 116, 0.95), rgba(249, 115, 22, 0.75), rgba(220, 38, 38, 0));
+      transform-origin: center top;
+      opacity: 0;
+      animation: shard-burst 1250ms cubic-bezier(.18, .9, .22, 1) forwards;
+    }
+
+    .impact-shards span:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg); }
+    .impact-shards span:nth-child(2) { transform: translate(-50%, -50%) rotate(45deg); }
+    .impact-shards span:nth-child(3) { transform: translate(-50%, -50%) rotate(90deg); }
+    .impact-shards span:nth-child(4) { transform: translate(-50%, -50%) rotate(135deg); }
+    .impact-shards span:nth-child(5) { transform: translate(-50%, -50%) rotate(22deg); animation-delay: 50ms; }
+    .impact-shards span:nth-child(6) { transform: translate(-50%, -50%) rotate(68deg); animation-delay: 80ms; }
+    .impact-shards span:nth-child(7) { transform: translate(-50%, -50%) rotate(112deg); animation-delay: 120ms; }
+    .impact-shards span:nth-child(8) { transform: translate(-50%, -50%) rotate(158deg); animation-delay: 160ms; }
+
+    .impact-shards span:nth-child(9) { transform: translate(-50%, -50%) rotate(202deg); animation-delay: 90ms; }
+    .impact-shards span:nth-child(10) { transform: translate(-50%, -50%) rotate(248deg); animation-delay: 130ms; }
+    .impact-shards span:nth-child(11) { transform: translate(-50%, -50%) rotate(292deg); animation-delay: 180ms; }
+    .impact-shards span:nth-child(12) { transform: translate(-50%, -50%) rotate(338deg); animation-delay: 220ms; }
+
+    .impact-smoke span {
+      width: 18rem;
+      height: 18rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.16), rgba(148, 163, 184, 0.05) 42%, transparent 74%);
+      filter: blur(14px);
+      animation: smoke-bloom 2200ms ease-out forwards;
+    }
+
+    .impact-smoke span:nth-child(2) {
+      animation-delay: 140ms;
+    }
+
+    .impact-smoke span:nth-child(3) {
+      animation-delay: 260ms;
+    }
+
+    .impact-grid {
+      width: 70rem;
+      height: 70rem;
+      border-radius: 9999px;
+      opacity: 0;
+      mix-blend-mode: screen;
+      background:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 28px),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 28px);
+      mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 12%, transparent 58%);
+      animation: grid-pulse 1200ms ease-out forwards;
+    }
+
+    .impact-grid::before,
+    .impact-grid::after {
+      content: "";
+      inset: 50%;
+      border-radius: 9999px;
+    }
+
+    .impact-grid::before {
+      width: 30rem;
+      height: 30rem;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      animation: grid-ring 1300ms ease-out forwards;
+    }
+
+    .impact-grid::after {
+      width: 44rem;
+      height: 44rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      animation: grid-ring 1500ms ease-out 90ms forwards;
+    }
+
+    @keyframes impact-fade {
+      0% { opacity: 0; transform: scale(0.96); }
+      8% { opacity: 1; transform: scale(1); }
+      65% { opacity: 1; }
+      100% { opacity: 0; transform: scale(1.04); }
+    }
+
+    @keyframes core-burst {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.15); }
+      14% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+      38% { opacity: 1; transform: translate(-50%, -50%) scale(0.92); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(3.5); }
+    }
+
+    @keyframes flash-bloom {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+      12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+    }
+
+    @keyframes ring-blast {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.1); }
+      12% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(13); }
+    }
+
+    @keyframes ring-echo {
+      0% { opacity: 0.82; transform: translate(-50%, -50%) scale(0.25); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
+    }
+
+    @keyframes shard-burst {
+      0% { opacity: 0; }
+      12% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -260%) scaleY(1.7) rotate(var(--angle, 0deg)); }
+    }
+
+    @keyframes smoke-bloom {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+      20% { opacity: 0.38; }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+    }
+
+    @keyframes grid-pulse {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+      18% { opacity: 0.45; }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.25); }
+    }
+
+    @keyframes grid-ring {
+      0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.45); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+    }
   </style>
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-blue-50 min-h-screen flex flex-col">
+<body class="{% block body_class %}bg-blue-50{% endblock %} min-h-screen flex flex-col">
+  <div class="site-shell flex min-h-screen flex-col">
+  <div id="impact-transition" class="impact-transition" aria-hidden="true">
+    <div class="impact-backdrop"></div>
+    <div class="impact-flash"></div>
+    <div class="impact-core"></div>
+    <div class="impact-ring"></div>
+    <div class="impact-grid"></div>
+    <div class="impact-shards" aria-hidden="true">
+      <span style="--angle: 0deg;"></span>
+      <span style="--angle: 45deg;"></span>
+      <span style="--angle: 90deg;"></span>
+      <span style="--angle: 135deg;"></span>
+      <span style="--angle: 22deg;"></span>
+      <span style="--angle: 68deg;"></span>
+      <span style="--angle: 112deg;"></span>
+      <span style="--angle: 158deg;"></span>
+      <span style="--angle: 202deg;"></span>
+      <span style="--angle: 248deg;"></span>
+      <span style="--angle: 292deg;"></span>
+      <span style="--angle: 338deg;"></span>
+    </div>
+    <div class="impact-smoke" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
 
-  <!-- ─── NAVBAR ─── -->
-  <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+  <audio id="login-impact-audio" preload="auto" class="hidden">
+    <source src="{% static 'core/audio/back-in-black.mp3' %}" type="audio/mpeg">
+  </audio>
+
+  {% if request.resolver_match.url_name != 'login' %}
+  <nav class="app-nav sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
-
-        <!-- Logo -->
         <a href="/" class="flex items-center gap-2.5">
           <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,21 +373,18 @@
                 d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
-          <span class="text-gray-900 font-semibold text-lg tracking-tight">MyCompany</span>
+          <span class="text-gray-900 font-semibold text-lg tracking-tight">SEP Cargo</span>
         </a>
 
-        <!-- Desktop nav links -->
         <div class="hidden md:flex items-center gap-1">
-          <a href="{%url 'core:dashboard'%}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Profile</a>
-          <a href="{%url 'core:members_list'%}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">members</a>
-          <a href="#" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">About</a>
-          <a href="#" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Contact</a>
+          <a href="{% url 'core:dashboard' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Κέντρο Ελέγχου</a>
+          <a href="{% url 'core:members_list' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Μέλη</a>
+          <a href="{% url 'core:companies_list' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εταιρίες</a>
+          <a href="{% url 'core:users' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Χρήστες</a>
         </div>
 
-        <!-- Right side -->
         <div class="hidden md:flex items-center gap-3">
           {% if user.is_authenticated %}
-            <!-- User menu -->
             <div class="flex items-center gap-3">
               <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -64,7 +408,6 @@
           {% endif %}
         </div>
 
-        <!-- Mobile menu button -->
         <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition">
           <svg id="menu-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -73,16 +416,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
-
       </div>
     </div>
 
-    <!-- Mobile menu -->
     <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2 space-y-1">
-      <a href="/" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Home</a>
-      <a href="/dashboard/" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Dashboard</a>
-      <a href="#" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">About</a>
-      <a href="#" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Contact</a>
+      <a href="{% url 'core:home' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Home</a>
+      <a href="{% url 'core:dashboard' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Κέντρο Ελέγχου</a>
+      <a href="{% url 'core:members_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Μέλη</a>
+      <a href="{% url 'core:companies_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εταιρίες</a>
       <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
         {% if user.is_authenticated %}
           <span class="px-3 py-2 text-sm text-gray-600">Hello, <strong>{{ user.username }}</strong></span>
@@ -97,12 +438,12 @@
       </div>
     </div>
   </nav>
+  {% endif %}
 
-  <!-- ─── FLASH MESSAGES ─── -->
-  {% if messages %}
+  {% if messages and request.resolver_match.url_name != 'login' %}
   <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
     {% for message in messages %}
-      <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
+      <div class="surface-card flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium
         {% if message.tags == 'success' %} bg-green-50 text-green-700 border border-green-200
         {% elif message.tags == 'error' %} bg-red-50 text-red-700 border border-red-200
         {% elif message.tags == 'warning' %} bg-yellow-50 text-yellow-700 border border-yellow-200
@@ -121,27 +462,23 @@
   </div>
   {% endif %}
 
-  <!-- ─── PAGE CONTENT ─── -->
-  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+  <main class="{% block main_class %}flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8{% endblock %}">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- ─── FOOTER ─── -->
-  <footer class="bg-white border-t border-gray-200 mt-auto">
+  {% if request.resolver_match.url_name != 'login' %}
+  <footer class="app-footer mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-
-        <!-- Brand -->
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
             <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
-          <span class="text-gray-700 font-semibold text-sm">MyCompany</span>
+          <span class="text-gray-700 font-semibold text-sm">SEP Cargo</span>
         </div>
 
-        <!-- Links -->
         <div class="flex items-center gap-6">
           <a href="#" class="text-gray-400 hover:text-blue-600 text-xs transition">Privacy</a>
           <a href="#" class="text-gray-400 hover:text-blue-600 text-xs transition">Terms</a>
@@ -149,11 +486,11 @@
           <a href="#" class="text-gray-400 hover:text-blue-600 text-xs transition">Contact</a>
         </div>
 
-        <!-- Copyright -->
-        <p class="text-gray-400 text-xs">© 2026 MyCompany. All rights reserved.</p>
+        <p class="text-gray-400 text-xs">© 2026 SEP Φορτοεκφορτώσεις</p>
       </div>
     </div>
   </footer>
+  {% endif %}
 
   <script>
     function toggleMobileMenu() {
@@ -164,8 +501,48 @@
       open.classList.toggle('hidden');
       close.classList.toggle('hidden');
     }
+
+    (function () {
+      const shouldAnimate = sessionStorage.getItem('loginRockIntro') === 'pending';
+      const isLoginPage = window.location.pathname === '{% url "login" %}';
+      const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+      const isStaff = {{ user.is_staff|yesno:"true,false" }};
+      const transition = document.getElementById('impact-transition');
+      const audio = document.getElementById('login-impact-audio');
+
+      if (!shouldAnimate) {
+        return;
+      }
+
+      if (!isAuthenticated || !isStaff || isLoginPage) {
+        sessionStorage.removeItem('loginRockIntro');
+        return;
+      }
+
+      sessionStorage.removeItem('loginRockIntro');
+
+      if (transition) {
+        transition.classList.add('active');
+        transition.setAttribute('aria-hidden', 'false');
+        window.setTimeout(function () {
+          transition.classList.remove('active');
+          transition.setAttribute('aria-hidden', 'true');
+        }, 1900);
+      }
+
+      if (audio) {
+        audio.currentTime = 0;
+        const playPromise = audio.play();
+
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function () {
+          });
+        }
+      }
+    }());
   </script>
 
   {% block extra_scripts %}{% endblock %}
+  </div>
 </body>
 </html>
