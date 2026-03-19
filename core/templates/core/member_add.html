@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load countries %}
 {% block title %}Νέο Μέλος{% endblock %}
 
 {% block content %}
@@ -19,16 +20,6 @@
   </div>
 </div>
 
-<!-- Success / Error messages -->
-{% if success %}
-<div class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-5 py-4 mb-6">
-  <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-  </svg>
-  {{ success }}
-</div>
-{% endif %}
-
 {% if error %}
 <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-5 py-4 mb-6">
   <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +32,7 @@
 <form method="post" class="space-y-6">
   {% csrf_token %}
 
-  <!-- ── 1. Προσωπικά Στοιχεία ───────────────────────────────────── -->
+  <!-- ══ 1. Προσωπικά Στοιχεία ══════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -55,43 +46,67 @@
 
       <!-- Όνομα -->
       <div>
-        <label for="first_name" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Όνομα <span class="text-red-400">*</span>
-        </label>
+        <label for="first_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Όνομα <span class="text-red-400">*</span></label>
         <input type="text" name="first_name" id="first_name"
-          value="{{ request.POST.first_name|default:'' }}"
-          placeholder="π.χ. Γιώργος"
+          value="{{ request.POST.first_name|default:'' }}" placeholder="π.χ. Γιώργος"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <!-- Επίθετο -->
       <div>
-        <label for="last_name" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Επίθετο <span class="text-red-400">*</span>
-        </label>
+        <label for="last_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Επίθετο <span class="text-red-400">*</span></label>
         <input type="text" name="last_name" id="last_name"
-          value="{{ request.POST.last_name|default:'' }}"
-          placeholder="π.χ. Παπαδόπουλος"
+          value="{{ request.POST.last_name|default:'' }}" placeholder="π.χ. Παπαδόπουλος"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <!-- Πατρώνυμο -->
       <div>
-        <label for="fathers_name" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Πατρώνυμο <span class="text-red-400">*</span>
-        </label>
+        <label for="fathers_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Πατρώνυμο <span class="text-red-400">*</span></label>
         <input type="text" name="fathers_name" id="fathers_name"
-          value="{{ request.POST.fathers_name|default:'' }}"
-          placeholder="π.χ. Δημήτριος"
+          value="{{ request.POST.fathers_name|default:'' }}" placeholder="π.χ. Δημήτριος"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      </div>
+
+      <!-- Φύλο -->
+      <div>
+        <label for="gender" class="block text-xs font-semibold text-gray-600 mb-1.5">Φύλο</label>
+        <select name="gender" id="gender"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+          <option value="">— Επιλέξτε —</option>
+          <option value="M" {% if request.POST.gender == 'M' %}selected{% endif %}>Άνδρας</option>
+          <option value="F" {% if request.POST.gender == 'F' %}selected{% endif %}>Γυναίκα</option>
+        </select>
+      </div>
+
+      <!-- Ημ. Γέννησης -->
+      <div>
+        <label for="date_of_birth" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Γέννησης</label>
+        <input type="date" name="date_of_birth" id="date_of_birth"
+          value="{{ request.POST.date_of_birth|default:'' }}"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      </div>
+
+      <!-- Ιθαγένεια — django-countries -->
+      <div>
+        <label for="nationality" class="block text-xs font-semibold text-gray-600 mb-1.5">Ιθαγένεια</label>
+        <select name="nationality" id="nationality"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+          <option value="">— Επιλέξτε —</option>
+          {% get_countries as countries %}
+          {% for code, country_name in countries %}
+            <option value="{{ code }}" {% if request.POST.nationality == code %}selected{% endif %}>
+              {{ country_name }}
+            </option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- ΑΔΤ -->
       <div>
         <label for="ADT" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΔΤ</label>
         <input type="text" name="ADT" id="ADT"
-          value="{{ request.POST.ADT|default:'' }}"
-          placeholder="π.χ. ΑΒ123456"
+          value="{{ request.POST.ADT|default:'' }}" placeholder="π.χ. ΑΒ123456"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
@@ -99,8 +114,7 @@
       <div>
         <label for="AFM" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΦΜ</label>
         <input type="text" name="AFM" id="AFM"
-          value="{{ request.POST.AFM|default:'' }}"
-          placeholder="9 ψηφία"
+          value="{{ request.POST.AFM|default:'' }}" placeholder="9 ψηφία"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
@@ -108,15 +122,22 @@
       <div>
         <label for="AMKA" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΜΚΑ</label>
         <input type="text" name="AMKA" id="AMKA"
-          value="{{ request.POST.AMKA|default:'' }}"
-          placeholder="11 ψηφία"
+          value="{{ request.POST.AMKA|default:'' }}" placeholder="11 ψηφία"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      </div>
+
+      <!-- ΑΜΑ -->
+      <div>
+        <label for="AMA" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΜΑ</label>
+        <input type="text" name="AMA" id="AMA"
+          value="{{ request.POST.AMA|default:'' }}" placeholder="Αριθμός Μητρώου Ασφαλισμένου"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
     </div>
   </div>
 
-  <!-- ── 2. Μητρώο ───────────────────────────────────────────────── -->
+  <!-- ══ 2. Μητρώο ══════════════════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -128,7 +149,6 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
-      <!-- Τύπος Μητρώου -->
       <div>
         <label for="mitroo_type" class="block text-xs font-semibold text-gray-600 mb-1.5">Τύπος (Α/Β)</label>
         <select name="mitroo_type" id="mitroo_type"
@@ -139,16 +159,13 @@
         </select>
       </div>
 
-      <!-- Αριθμός Μητρώου -->
       <div>
         <label for="mitroo_number" class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός</label>
         <input type="number" name="mitroo_number" id="mitroo_number"
-          value="{{ request.POST.mitroo_number|default:'' }}"
-          placeholder="π.χ. 112"
+          value="{{ request.POST.mitroo_number|default:'' }}" placeholder="π.χ. 112"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Ημ. Εγγραφής -->
       <div>
         <label for="date_of_registration" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Εγγραφής</label>
         <input type="date" name="date_of_registration" id="date_of_registration"
@@ -156,22 +173,19 @@
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
-      <!-- Ημ. Διαγραφής -->
       <div>
         <label for="date_of_deregistration" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Ημ. Λήξης
-          <span class="text-gray-400 font-normal">(αυτόματη +5 χρόνια)</span>
+          Ημ. Λήξης <span class="text-gray-400 font-normal">(+5 χρόνια)</span>
         </label>
         <input type="date" name="date_of_deregistration" id="date_of_deregistration"
-          value="{{ request.POST.date_of_deregistration|default:'' }}"
-          readonly
+          value="{{ request.POST.date_of_deregistration|default:'' }}" readonly
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 outline-none transition bg-gray-50 cursor-not-allowed"/>
       </div>
 
     </div>
   </div>
 
-  <!-- ── 3. Οδηγός & Χειριστής ──────────────────────────────────── -->
+  <!-- ══ 3. Οδηγός & Χειριστής ══════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -183,39 +197,32 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-      <!-- Κατηγορίες Διπλώματος -->
       <div>
         <label class="block text-xs font-semibold text-gray-600 mb-3">Κατηγορίες Διπλώματος Οδήγησης</label>
         <div class="space-y-2">
           <label class="flex items-center gap-2.5 cursor-pointer group">
-            <input type="checkbox" name="driver_A" {% if request.POST.driver_A %}checked{% endif %}
-              class="w-4 h-4 accent-blue-600 rounded"/>
+            <input type="checkbox" name="driver_A" {% if request.POST.driver_A %}checked{% endif %} class="w-4 h-4 accent-blue-600 rounded"/>
             <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Α</span>
           </label>
           <label class="flex items-center gap-2.5 cursor-pointer group">
-            <input type="checkbox" name="driver_B" {% if request.POST.driver_B %}checked{% endif %}
-              class="w-4 h-4 accent-blue-600 rounded"/>
+            <input type="checkbox" name="driver_B" {% if request.POST.driver_B %}checked{% endif %} class="w-4 h-4 accent-blue-600 rounded"/>
             <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Β</span>
           </label>
           <label class="flex items-center gap-2.5 cursor-pointer group">
-            <input type="checkbox" name="driver_C" {% if request.POST.driver_C %}checked{% endif %}
-              class="w-4 h-4 accent-blue-600 rounded"/>
+            <input type="checkbox" name="driver_C" {% if request.POST.driver_C %}checked{% endif %} class="w-4 h-4 accent-blue-600 rounded"/>
             <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Γ</span>
           </label>
           <label class="flex items-center gap-2.5 cursor-pointer group">
-            <input type="checkbox" name="driver_D" {% if request.POST.driver_D %}checked{% endif %}
-              class="w-4 h-4 accent-blue-600 rounded"/>
+            <input type="checkbox" name="driver_D" {% if request.POST.driver_D %}checked{% endif %} class="w-4 h-4 accent-blue-600 rounded"/>
             <span class="text-sm text-gray-700 group-hover:text-gray-900">Κατηγορία Δ</span>
           </label>
         </div>
       </div>
 
-      <!-- Χειριστής Ανυψωτικού -->
       <div>
         <label class="block text-xs font-semibold text-gray-600 mb-3">Χειριστής Ανυψωτικού</label>
         <label class="flex items-center gap-2.5 cursor-pointer group">
-          <input type="checkbox" name="lifter" {% if request.POST.lifter %}checked{% endif %}
-            class="w-4 h-4 accent-blue-600 rounded"/>
+          <input type="checkbox" name="lifter" {% if request.POST.lifter %}checked{% endif %} class="w-4 h-4 accent-blue-600 rounded"/>
           <span class="text-sm text-gray-700 group-hover:text-gray-900">Ναι, είναι χειριστής ανυψωτικού</span>
         </label>
       </div>
@@ -223,7 +230,7 @@
     </div>
   </div>
 
-  <!-- ── 4. Ομαδικό ──────────────────────────────────────────────── -->
+  <!-- ══ 4. Ομαδικό ═════════════════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -233,26 +240,71 @@
       </div>
       <h2 class="font-semibold text-gray-800 text-sm">Ομαδικό</h2>
     </div>
-    <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+    <div class="px-6 py-5 space-y-4">
 
-      <div>
-        <label for="omadiko_from" class="block text-xs font-semibold text-gray-600 mb-1.5">Από</label>
-        <input type="date" name="omadiko_from" id="omadiko_from"
-          value="{{ request.POST.omadiko_from|default:'' }}"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      <div class="flex flex-wrap gap-6">
+        <label class="flex items-center gap-2.5 cursor-pointer group">
+          <input type="checkbox" name="omadiko" id="omadiko"
+            {% if request.POST.omadiko %}checked{% endif %}
+            onchange="toggleOmadiko(this)"
+            class="w-4 h-4 accent-blue-600 rounded"/>
+          <span class="text-sm text-gray-700 font-medium group-hover:text-gray-900">Έχει ομαδικό</span>
+        </label>
+        <label class="flex items-center gap-2.5 cursor-pointer group">
+          <input type="checkbox" name="omadiko_exartomena" {% if request.POST.omadiko_exartomena %}checked{% endif %}
+            class="w-4 h-4 accent-blue-600 rounded"/>
+          <span class="text-sm text-gray-700 group-hover:text-gray-900">Συμπεριλαμβάνει εξαρτώμενα</span>
+        </label>
       </div>
 
-      <div>
-        <label for="omadiko_to" class="block text-xs font-semibold text-gray-600 mb-1.5">Έως</label>
-        <input type="date" name="omadiko_to" id="omadiko_to"
-          value="{{ request.POST.omadiko_to|default:'' }}"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      <div id="omadiko-dates" class="grid grid-cols-1 sm:grid-cols-2 gap-5 {% if not request.POST.omadiko %}hidden{% endif %}">
+        <div>
+          <label for="omadiko_from" class="block text-xs font-semibold text-gray-600 mb-1.5">Από</label>
+          <input type="date" name="omadiko_from" id="omadiko_from"
+            value="{{ request.POST.omadiko_from|default:'' }}"
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+        </div>
+        <div>
+          <label for="omadiko_to" class="block text-xs font-semibold text-gray-600 mb-1.5">Έως</label>
+          <input type="date" name="omadiko_to" id="omadiko_to"
+            value="{{ request.POST.omadiko_to|default:'' }}"
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+        </div>
       </div>
 
     </div>
   </div>
 
-  <!-- ── 5. Τράπεζα ──────────────────────────────────────────────── -->
+  <!-- ══ 5. Εξαρτώμενα ═════════════════════════════════════════ -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <h2 class="font-semibold text-gray-800 text-sm">Εξαρτώμενα Μέλη</h2>
+      </div>
+      <button type="button" onclick="addExartomeno()"
+        class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Προσθήκη
+      </button>
+    </div>
+    <div class="px-6 py-4">
+      <div id="exartomena-empty" class="text-center py-6 text-gray-400 text-sm">
+        Δεν έχουν προστεθεί εξαρτώμενα ακόμα.
+        <br/>
+        <button type="button" onclick="addExartomeno()" class="text-blue-600 hover:underline mt-1 inline-block">Προσθέστε το πρώτο →</button>
+      </div>
+      <div id="exartomena-rows" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ══ 6. Τράπεζα ════════════════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -264,16 +316,13 @@
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-      {% comment %} Drop down {% endcomment %}
       <div>
         <label for="bank" class="block text-xs font-semibold text-gray-600 mb-1.5">Τράπεζα</label>
         <select name="bank" id="bank"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
           <option value="">— Επιλέξτε —</option>
           {% for bank in banks %}
-          <option value="{{ bank.id }}" {% if request.POST.bank == bank.id|stringformat:"s" %}selected{% endif %}>
-            {{ bank.name }}
-          </option>
+            <option value="{{ bank.id }}" {% if request.POST.bank == bank.id|stringformat:"s" %}selected{% endif %}>{{ bank.name }}</option>
           {% endfor %}
         </select>
       </div>
@@ -289,7 +338,7 @@
     </div>
   </div>
 
-  <!-- ── 6. Επικοινωνία ──────────────────────────────────────────── -->
+  <!-- ══ 7. Επικοινωνία ════════════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -304,39 +353,42 @@
       <div class="sm:col-span-2">
         <label for="address" class="block text-xs font-semibold text-gray-600 mb-1.5">Διεύθυνση</label>
         <input type="text" name="address" id="address"
-          value="{{ request.POST.address|default:'' }}"
-          placeholder="Οδός, Αριθμός, ΤΚ, Πόλη"
+          value="{{ request.POST.address|default:'' }}" placeholder="Οδός, Αριθμός, Πόλη"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      </div>
+
+      <div>
+        <label for="tk" class="block text-xs font-semibold text-gray-600 mb-1.5">Τ.Κ.</label>
+        <input type="text" name="tk" id="tk"
+          value="{{ request.POST.tk|default:'' }}" placeholder="π.χ. 12345"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      </div>
+
+      <div>
+        <label for="email" class="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
+        <input type="email" name="email" id="email"
+          value="{{ request.POST.email|default:'' }}" placeholder="email@example.com"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <div>
         <label for="phone_number1" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο 1</label>
         <input type="text" name="phone_number1" id="phone_number1"
-          value="{{ request.POST.phone_number1|default:'' }}"
-          placeholder="69XXXXXXXX"
+          value="{{ request.POST.phone_number1|default:'' }}" placeholder="69XXXXXXXX"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
       <div>
         <label for="phone_number2" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο 2</label>
         <input type="text" name="phone_number2" id="phone_number2"
-          value="{{ request.POST.phone_number2|default:'' }}"
-          placeholder="69XXXXXXXX"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div class="sm:col-span-2">
-        <label for="email" class="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
-        <input type="email" name="email" id="email"
-          value="{{ request.POST.email|default:'' }}"
-          placeholder="email@example.com"
+          value="{{ request.POST.phone_number2|default:'' }}" placeholder="69XXXXXXXX"
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
       </div>
 
     </div>
   </div>
 
-  <!-- ── 7. Παρατηρήσεις / Εκκρεμότητες ────────────────────────── -->
+  <!-- ══ 8. Παρατηρήσεις / Εκκρεμότητες ══════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
       <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -350,22 +402,20 @@
 
       <div>
         <label for="notes" class="block text-xs font-semibold text-gray-600 mb-1.5">Παρατηρήσεις</label>
-        <textarea name="notes" id="notes" rows="4"
-          placeholder="Γράψτε παρατηρήσεις..."
+        <textarea name="notes" id="notes" rows="4" placeholder="Γράψτε παρατηρήσεις..."
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none">{{ request.POST.notes|default:'' }}</textarea>
       </div>
 
       <div>
         <label for="pending_issues" class="block text-xs font-semibold text-gray-600 mb-1.5">Εκκρεμότητες</label>
-        <textarea name="pending_issues" id="pending_issues" rows="4"
-          placeholder="Γράψτε εκκρεμότητες..."
+        <textarea name="pending_issues" id="pending_issues" rows="4" placeholder="Γράψτε εκκρεμότητες..."
           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none">{{ request.POST.pending_issues|default:'' }}</textarea>
       </div>
 
     </div>
   </div>
 
-  <!-- Action buttons -->
+  <!-- Buttons -->
   <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
     <a href="{% url 'core:members_list' %}"
       class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">
@@ -386,18 +436,16 @@
 
 {% block extra_scripts %}
 <script>
-  // ── Live full name in header ──────────────────────────────────
+  // ── Live full name ────────────────────────────────────────────
   ['last_name', 'first_name', 'fathers_name'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateName);
   });
-
   function updateName() {
-    const last     = document.getElementById('last_name').value.trim();
-    const first    = document.getElementById('first_name').value.trim();
-    const fathers  = document.getElementById('fathers_name').value.trim();
-    const liveName = document.getElementById('live-name');
+    const last    = document.getElementById('last_name').value.trim();
+    const first   = document.getElementById('first_name').value.trim();
+    const fathers = document.getElementById('fathers_name').value.trim();
+    const liveName    = document.getElementById('live-name');
     const placeholder = document.getElementById('live-name-placeholder');
-
     if (last || first) {
       let full = [last, first].filter(Boolean).join(' ');
       if (fathers) full += ' του ' + fathers;
@@ -410,13 +458,10 @@
     }
   }
 
-  // ── Auto +5 years on date_of_registration ────────────────────
+  // ── Auto +5 years ─────────────────────────────────────────────
   document.getElementById('date_of_registration').addEventListener('change', function () {
     const val = this.value;
-    if (!val) {
-      document.getElementById('date_of_deregistration').value = '';
-      return;
-    }
+    if (!val) { document.getElementById('date_of_deregistration').value = ''; return; }
     const d = new Date(val);
     d.setFullYear(d.getFullYear() + 5);
     const y  = d.getFullYear();
@@ -424,5 +469,55 @@
     const dy = String(d.getDate()).padStart(2, '0');
     document.getElementById('date_of_deregistration').value = `${y}-${mo}-${dy}`;
   });
+
+  // ── Omadiko toggle ────────────────────────────────────────────
+  function toggleOmadiko(cb) {
+    document.getElementById('omadiko-dates').classList.toggle('hidden', !cb.checked);
+  }
+
+  // ── Εξαρτώμενα dynamic rows ───────────────────────────────────
+  let exarCounter = 0;
+
+  // Build property options string once from Django context
+  const propertiesOptions = `{% for p in properties %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}`;
+
+  function addExartomeno() {
+    const container = document.getElementById('exartomena-rows');
+    const empty     = document.getElementById('exartomena-empty');
+    empty.classList.add('hidden');
+
+    const i   = exarCounter++;
+    const row = document.createElement('div');
+    row.id        = `exar-row-${i}`;
+    row.className = 'flex gap-3 items-center';
+    row.innerHTML = `
+      <div class="flex-1">
+        <input type="text" name="exartomeno_name_${i}"
+          placeholder="Ονοματεπώνυμο εξαρτώμενου"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+      </div>
+      <div class="w-44 shrink-0">
+        <select name="exartomeno_property_${i}"
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+          <option value="">— Ιδιότητα —</option>
+          ${propertiesOptions}
+        </select>
+      </div>
+      <button type="button" onclick="removeExartomeno(${i})"
+        class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    `;
+    container.appendChild(row);
+  }
+
+  function removeExartomeno(i) {
+    document.getElementById(`exar-row-${i}`).remove();
+    if (document.getElementById('exartomena-rows').children.length === 0) {
+      document.getElementById('exartomena-empty').classList.remove('hidden');
+    }
+  }
 </script>
 {% endblock %}

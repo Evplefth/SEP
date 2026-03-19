@@ -52,9 +52,9 @@
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Ενέργειες</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50" id="members-tbody">
+      <tbody class="divide-y divide-gray-50">
         {% for member in members %}
-        <tr class="hover:bg-blue-50/30 transition cursor-pointer member-row"
+        <tr class="hover:bg-blue-50/30 transition cursor-pointer"
             data-id="{{ member.id }}"
             data-last="{{ member.last_name }}"
             data-first="{{ member.first_name }}"
@@ -62,6 +62,10 @@
             data-adt="{{ member.ADT|default:'' }}"
             data-afm="{{ member.AFM|default:'' }}"
             data-amka="{{ member.AMKA|default:'' }}"
+            data-ama="{{ member.AMA|default:'' }}"
+            data-gender="{{ member.get_gender_display|default:'—' }}"
+            data-dob="{{ member.date_of_birth|date:'d/m/Y'|default:'—' }}"
+            data-nationality="{{ member.nationality|default:'—' }}"
             data-mitroo-type="{{ member.mitroo_type|default:'' }}"
             data-mitroo-number="{{ member.mitroo_number|default:'' }}"
             data-date-reg="{{ member.date_of_registration|date:'d/m/Y'|default:'—' }}"
@@ -71,11 +75,14 @@
             data-driver-c="{{ member.driver_C|yesno:'1,0' }}"
             data-driver-d="{{ member.driver_D|yesno:'1,0' }}"
             data-lifter="{{ member.lifter|yesno:'1,0' }}"
+            data-omadiko="{{ member.omadiko|yesno:'1,0' }}"
             data-omadiko-from="{{ member.omadiko_from|date:'d/m/Y'|default:'—' }}"
             data-omadiko-to="{{ member.omadiko_to|date:'d/m/Y'|default:'—' }}"
+            data-omadiko-exartomena="{{ member.omadiko_exartomena|yesno:'1,0' }}"
             data-bank="{{ member.bank|default:'—' }}"
             data-iban="{{ member.bank_account_number|default:'—' }}"
             data-address="{{ member.address|default:'—' }}"
+            data-tk="{{ member.tk|default:'—' }}"
             data-phone1="{{ member.phone_number1|default:'—' }}"
             data-phone2="{{ member.phone_number2|default:'—' }}"
             data-email="{{ member.email|default:'—' }}"
@@ -173,7 +180,7 @@
 <div id="detail-panel"
   class="fixed top-0 right-0 h-full w-full sm:w-[480px] bg-white shadow-2xl z-50 translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
 
-  <!-- Header -->
+  <!-- Panel Header -->
   <div class="flex items-center justify-between px-6 py-5 bg-blue-600 shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
@@ -191,13 +198,13 @@
     </button>
   </div>
 
-  <!-- Scrollable body -->
+  <!-- Panel Body -->
   <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
     <!-- Προσωπικά -->
     <div>
       <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Προσωπικά Στοιχεία</p>
-      <div class="grid grid-cols-3 gap-2">
+      <div class="grid grid-cols-3 gap-2 mb-2">
         <div class="bg-gray-50 rounded-lg px-3 py-2.5">
           <p class="text-xs text-gray-400 mb-0.5">ΑΔΤ</p>
           <p id="p-adt" class="text-sm font-semibold text-gray-800"></p>
@@ -210,6 +217,22 @@
           <p class="text-xs text-gray-400 mb-0.5">ΑΜΚΑ</p>
           <p id="p-amka" class="text-sm font-semibold text-gray-800"></p>
         </div>
+        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+          <p class="text-xs text-gray-400 mb-0.5">ΑΜΑ</p>
+          <p id="p-ama" class="text-sm font-semibold text-gray-800"></p>
+        </div>
+        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+          <p class="text-xs text-gray-400 mb-0.5">Φύλο</p>
+          <p id="p-gender" class="text-sm font-semibold text-gray-800"></p>
+        </div>
+        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+          <p class="text-xs text-gray-400 mb-0.5">Ημ. Γέννησης</p>
+          <p id="p-dob" class="text-sm font-semibold text-gray-800"></p>
+        </div>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+        <p class="text-xs text-gray-400 mb-0.5">Ιθαγένεια</p>
+        <p id="p-nationality" class="text-sm font-semibold text-gray-800"></p>
       </div>
     </div>
 
@@ -241,7 +264,11 @@
     <!-- Ομαδικό -->
     <div>
       <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Ομαδικό</p>
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-3 gap-2 mb-2">
+        <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+          <p class="text-xs text-gray-400 mb-0.5">Κατάσταση</p>
+          <p id="p-omadiko" class="text-sm font-semibold text-gray-800"></p>
+        </div>
         <div class="bg-gray-50 rounded-lg px-3 py-2.5">
           <p class="text-xs text-gray-400 mb-0.5">Από</p>
           <p id="p-omadiko-from" class="text-sm font-semibold text-gray-800"></p>
@@ -250,6 +277,10 @@
           <p class="text-xs text-gray-400 mb-0.5">Έως</p>
           <p id="p-omadiko-to" class="text-sm font-semibold text-gray-800"></p>
         </div>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+        <p class="text-xs text-gray-400 mb-0.5">Εξαρτώμενα</p>
+        <p id="p-omadiko-exartomena" class="text-sm font-semibold text-gray-800"></p>
       </div>
     </div>
 
@@ -276,7 +307,11 @@
           <p class="text-xs text-gray-400 mb-0.5">Διεύθυνση</p>
           <p id="p-address" class="text-sm font-semibold text-gray-800"></p>
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+            <p class="text-xs text-gray-400 mb-0.5">ΤΚ</p>
+            <p id="p-tk" class="text-sm font-semibold text-gray-800"></p>
+          </div>
           <div class="bg-gray-50 rounded-lg px-3 py-2.5">
             <p class="text-xs text-gray-400 mb-0.5">Τηλ. 1</p>
             <p id="p-phone1" class="text-sm font-semibold text-gray-800"></p>
@@ -310,7 +345,7 @@
 
   </div>
 
-  <!-- Footer -->
+  <!-- Panel Footer -->
   <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 shrink-0">
     <a id="p-edit-btn" href="#"
       class="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition">
@@ -331,68 +366,68 @@
   function openPanelFromRow(row) {
     const d = row.dataset;
 
-    // Header
+    // ── Header ──────────────────────────────────────────────────
     document.getElementById('p-initial').textContent  = d.last.charAt(0).toUpperCase();
     document.getElementById('p-fullname').textContent = d.last + ' ' + d.first;
     document.getElementById('p-fathers').textContent  = 'του ' + d.fathers;
 
-    // Προσωπικά
-    document.getElementById('p-adt').textContent  = d.adt  || '—';
-    document.getElementById('p-afm').textContent  = d.afm  || '—';
-    document.getElementById('p-amka').textContent = d.amka || '—';
+    // ── Προσωπικά ───────────────────────────────────────────────
+    document.getElementById('p-adt').textContent         = d.adt         || '—';
+    document.getElementById('p-afm').textContent         = d.afm         || '—';
+    document.getElementById('p-amka').textContent        = d.amka        || '—';
+    document.getElementById('p-ama').textContent         = d.ama         || '—';
+    document.getElementById('p-gender').textContent      = d.gender      || '—';
+    document.getElementById('p-dob').textContent         = d.dob         || '—';
+    document.getElementById('p-nationality').textContent = d.nationality || '—';
 
-    // Μητρώο
-    const mitroo = (d.mitrooType && d.mitrooNumber) ? d.mitrooType + '-' + d.mitrooNumber : '—';
-    document.getElementById('p-mitroo').textContent    = mitroo;
+    // ── Μητρώο ──────────────────────────────────────────────────
+    document.getElementById('p-mitroo').textContent    = (d.mitrooType && d.mitrooNumber) ? d.mitrooType + '-' + d.mitrooNumber : '—';
     document.getElementById('p-datereg').textContent   = d.dateReg   || '—';
     document.getElementById('p-datedereg').textContent = d.dateDereg || '—';
 
-    // Drivers badges
+    // ── Drivers ─────────────────────────────────────────────────
     const driversEl = document.getElementById('p-drivers');
     driversEl.innerHTML = '';
     [
-      { label: 'Κατηγορία Α', val: d.driverA },
-      { label: 'Κατηγορία Β', val: d.driverB },
-      { label: 'Κατηγορία Γ', val: d.driverC },
-      { label: 'Κατηγορία Δ', val: d.driverD },
-      { label: 'Χειριστής Ανυψωτικού', val: d.lifter },
+      { label: 'Κατηγορία Α',          val: d.driverA },
+      { label: 'Κατηγορία Β',          val: d.driverB },
+      { label: 'Κατηγορία Γ',          val: d.driverC },
+      { label: 'Κατηγορία Δ',          val: d.driverD },
+      { label: 'Χειριστής Ανυψωτικού', val: d.lifter  },
     ].forEach(b => {
       const span = document.createElement('span');
       span.textContent = b.label;
-      if (b.val === '1') {
-        span.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200';
-      } else {
-        span.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-400 line-through';
-      }
+      span.className = b.val === '1'
+        ? 'px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200'
+        : 'px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-400 line-through';
       driversEl.appendChild(span);
     });
 
-    // Ομαδικό
-    document.getElementById('p-omadiko-from').textContent = d.omadiko_from || d.omadiko_From || '—';
-    document.getElementById('p-omadiko-to').textContent   = d.omadiko_to   || d.omadiko_To   || '—';
+    // ── Ομαδικό — χρήση getAttribute για hyphenated keys ────────
+    document.getElementById('p-omadiko').textContent            = d.omadiko === '1' ? '✓ Ενεργό' : '✗ Ανενεργό';
+    document.getElementById('p-omadiko-from').textContent       = row.getAttribute('data-omadiko-from') || '—';
+    document.getElementById('p-omadiko-to').textContent         = row.getAttribute('data-omadiko-to')   || '—';
+    document.getElementById('p-omadiko-exartomena').textContent = row.getAttribute('data-omadiko-exartomena') === '1' ? 'Ναι' : 'Όχι';
 
-    // Use getAttribute for hyphenated keys
-    document.getElementById('p-omadiko-from').textContent = row.getAttribute('data-omadiko-from') || '—';
-    document.getElementById('p-omadiko-to').textContent   = row.getAttribute('data-omadiko-to')   || '—';
-
-    // Τράπεζα
+    // ── Τράπεζα ─────────────────────────────────────────────────
     document.getElementById('p-bank').textContent = d.bank || '—';
     document.getElementById('p-iban').textContent = d.iban || '—';
 
-    // Επικοινωνία
+    // ── Επικοινωνία ─────────────────────────────────────────────
     document.getElementById('p-address').textContent = d.address || '—';
+    document.getElementById('p-tk').textContent      = d.tk      || '—';
     document.getElementById('p-phone1').textContent  = d.phone1  || '—';
     document.getElementById('p-phone2').textContent  = d.phone2  || '—';
     document.getElementById('p-email').textContent   = d.email   || '—';
 
-    // Παρατηρήσεις
+    // ── Παρατηρήσεις ────────────────────────────────────────────
     document.getElementById('p-notes').textContent   = d.notes   || '—';
     document.getElementById('p-pending').textContent = d.pending || '—';
 
-    // Edit button — update to correct URL when you have member_edit view
-    document.getElementById('p-edit-btn').href = '/members/' + d.id + '/edit/';
+    // ── Edit button ─────────────────────────────────────────────
+    document.getElementById('p-edit-btn').href = '{% url "core:member_create" %}?edit=' + d.id;
 
-    // Open
+    // ── Open ────────────────────────────────────────────────────
     const panel    = document.getElementById('detail-panel');
     const backdrop = document.getElementById('panel-backdrop');
     backdrop.classList.remove('hidden');
