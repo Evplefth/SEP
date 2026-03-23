@@ -14,7 +14,7 @@ class Companies_contacts(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = "Επαφή Εταιρείας"
+        verbose_name        = "Επαφή Εταιρείας"
         verbose_name_plural = "Επαφές Εταιρειών"
 
 
@@ -33,43 +33,43 @@ class Invoices(models.Model):
         return f"{self.invoice_number} — {self.company}"
 
     class Meta:
-        verbose_name = "Τιμολόγιο"
+        verbose_name        = "Τιμολόγιο"
         verbose_name_plural = "Τιμολόγια"
-        ordering = ['-date_of_issue']
+        ordering            = ['-date_of_issue']
 
 
 class companies(models.Model):
-    name              = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
-    AFM               = models.CharField(max_length=20,  unique=True)
-    DOY               = models.CharField(max_length=100, blank=True, null=True)
-    address           = models.CharField(max_length=255, blank=True, null=True)
-    services          = models.TextField(blank=True, null=True)
-    ekremotes_ofiles  = models.TextField(blank=True, null=True)
-    notes             = models.TextField(blank=True, null=True)
-    active            = models.BooleanField(default=True)
-    active_date       = models.DateField(auto_now_add=True)
-    inactive_date     = models.DateField(blank=True, null=True)
+    name             = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
+    AFM              = models.CharField(max_length=20, unique=True)
+    DOY              = models.CharField(max_length=100, blank=True, null=True)
+    address          = models.CharField(max_length=255, blank=True, null=True)
+    services         = models.TextField(blank=True, null=True)
+    ekremotes_ofiles = models.TextField(blank=True, null=True)
+    notes            = models.TextField(blank=True, null=True)
+    active           = models.BooleanField(default=True)
+    active_date      = models.DateField(auto_now_add=True)
+    inactive_date    = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name = "Εταιρεία"
+        verbose_name        = "Εταιρεία"
         verbose_name_plural = "Εταιρείες"
-        ordering = ['name']
+        ordering            = ['name']
 
 
 class companies_members(models.Model):
-    company = models.ForeignKey(companies, on_delete=models.CASCADE, related_name='members')
-    member  = models.ForeignKey('Members', on_delete=models.CASCADE, related_name='companies')
-    active = models.BooleanField(default=True)
-    active_date = models.DateField(blank=True, null=True)
+    company       = models.ForeignKey(companies, on_delete=models.CASCADE, related_name='members')
+    member        = models.ForeignKey('Members', on_delete=models.CASCADE, related_name='companies')
+    active        = models.BooleanField(default=True)
+    active_date   = models.DateField(blank=True, null=True)
     inactive_date = models.DateField(blank=True, null=True)
-    notes = models.TextField(blank=True, null=True)
+    notes         = models.TextField(blank=True, null=True)
 
     class Meta:
-        verbose_name = "Απασχόληση"
-        unique_together = ('company', 'member')  # αποφεύγει διπλές εγγραφές
+        verbose_name    = "Απασχόληση"
+        unique_together = ('company', 'member')
 
 
 class Banks(models.Model):
@@ -79,20 +79,19 @@ class Banks(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = "Τράπεζα"
+        verbose_name        = "Τράπεζα"
         verbose_name_plural = "Τράπεζες"
-        ordering = ['name']
+        ordering            = ['name']
 
 
 class Properties(models.Model):
     SIGGENIES_CHOICES = [
-        ('syzygos',  'Σύζυγος'),
-        ('tekno',    'Τέκνο'),
-        ('goneas',   'Γονέας'),
-        ('adelfos',  'Αδελφός/ή'),
-        ('allo',     'Άλλο'),
+        ('syzygos', 'Σύζυγος'),
+        ('tekno',   'Τέκνο'),
+        ('goneas',  'Γονέας'),
+        ('adelfos', 'Αδελφός/ή'),
+        ('allo',    'Άλλο'),
     ]
-    # ✅ Choices ορίζονται σωστά ως field choices, όχι ως απλή λίστα
     name = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
 
     def __str__(self):
@@ -111,7 +110,7 @@ class Exartomena(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = "Εξαρτώμενο"
+        verbose_name        = "Εξαρτώμενο"
         verbose_name_plural = "Εξαρτώμενα"
 
 
@@ -122,33 +121,32 @@ class nationalities(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = "Ιθαγένεια"
+        verbose_name        = "Ιθαγένεια"
         verbose_name_plural = "Ιθαγένειες"
-        ordering = ['name']
+        ordering            = ['name']
 
 
 class Members(models.Model):
-    GENDER_CHOICES   = [('M', 'Άνδρας'), ('F', 'Γυναίκα')]
-    MITROO_CHOICES   = [('A', 'Τύπος Α'), ('B', 'Τύπος Β')]
+    GENDER_CHOICES = [('M', 'Άνδρας'), ('F', 'Γυναίκα')]
+    MITROO_CHOICES = [('A', 'Τύπος Α'), ('B', 'Τύπος Β')]
 
     # ── Προσωπικά ───────────────────────────────────────────────
-    first_name   = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Όνομα")
-    last_name    = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Επίθετο")
-    fathers_name = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Πατρώνυμο")
-    gender       = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, verbose_name="Φύλο")
-    date_of_birth= models.DateField(blank=True, null=True, verbose_name="Ημ. Γέννησης")
-    nationality  = models.ForeignKey(nationalities, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Ιθαγένεια")
-    ADT          = models.CharField(max_length=20, unique=True, verbose_name="ΑΔΤ")
-    AFM          = models.CharField(max_length=20, unique=True, verbose_name="ΑΦΜ")
-    AMKA         = models.CharField(max_length=20, unique=True, verbose_name="ΑΜΚΑ")
-    AMA          = models.CharField(max_length=20, unique=True, verbose_name="ΑΜΑ")  # Αριθμός Μητρώου Ασφαλισμένου
+    first_name    = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Όνομα")
+    last_name     = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Επίθετο")
+    fathers_name  = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Πατρώνυμο")
+    gender        = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, verbose_name="Φύλο")
+    date_of_birth = models.DateField(blank=True, null=True, verbose_name="Ημ. Γέννησης")
+    nationality   = models.ForeignKey(nationalities, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Ιθαγένεια")
+    ADT           = models.CharField(max_length=20, unique=True, verbose_name="ΑΔΤ")
+    AFM           = models.CharField(max_length=20, unique=True, verbose_name="ΑΦΜ")
+    AMKA          = models.CharField(max_length=20, unique=True, verbose_name="ΑΜΚΑ")
+    AMA           = models.CharField(max_length=20, unique=True, verbose_name="ΑΜΑ")
 
     # ── Μητρώο ──────────────────────────────────────────────────
-    mitroo_type           = models.CharField(max_length=1, choices=MITROO_CHOICES, blank=True, null=True, verbose_name="Τύπος Μητρώου")
-    mitroo_number         = models.PositiveIntegerField(blank=True, null=True, verbose_name="Αριθμός Μητρώου")
-    # ✅ Διορθώθηκε: auto_now_add=True αφαιρέθηκε — δεν μπορούσε να οριστεί από τη φόρμα
-    date_of_registration  = models.DateField(blank=True, null=True, verbose_name="Ημ. Εγγραφής")
-    date_of_deregistration= models.DateField(blank=True, null=True, verbose_name="Ημ. Λήξης")
+    mitroo_type            = models.CharField(max_length=1, choices=MITROO_CHOICES, blank=True, null=True, verbose_name="Τύπος Μητρώου")
+    mitroo_number          = models.PositiveIntegerField(blank=True, null=True, verbose_name="Αριθμός Μητρώου")
+    date_of_registration   = models.DateField(blank=True, null=True, verbose_name="Ημ. Εγγραφής")
+    date_of_deregistration = models.DateField(blank=True, null=True, verbose_name="Ημ. Λήξης")
 
     # ── Οδηγός / Χειριστής ──────────────────────────────────────
     driver_A = models.BooleanField(default=False, verbose_name="Δίπλωμα Α")
@@ -158,15 +156,14 @@ class Members(models.Model):
     lifter   = models.BooleanField(default=False, verbose_name="Χειριστής Ανυψωτικού")
 
     # ── Ομαδικό ─────────────────────────────────────────────────
-    omadiko           = models.BooleanField(default=False, verbose_name="Ομαδικό")
-    omadiko_from      = models.DateField(blank=True, null=True, verbose_name="Ομαδικό Από")
-    omadiko_to        = models.DateField(blank=True, null=True, verbose_name="Ομαδικό Έως")
-    omadiko_exartomena= models.BooleanField(default=False, verbose_name="Ομαδικό Εξαρτώμενων")
+    omadiko            = models.BooleanField(default=False, verbose_name="Ομαδικό")
+    omadiko_from       = models.DateField(blank=True, null=True, verbose_name="Ομαδικό Από")
+    omadiko_to         = models.DateField(blank=True, null=True, verbose_name="Ομαδικό Έως")
+    omadiko_exartomena = models.BooleanField(default=False, verbose_name="Ομαδικό Εξαρτώμενων")
 
     # ── Τράπεζα ─────────────────────────────────────────────────
-    bank               = models.ForeignKey(Banks, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Τράπεζα")
-    # ✅ Διορθώθηκε: blank=True, null=True — δεν είναι υποχρεωτικό
-    bank_account_number= models.CharField(max_length=34, unique=True, null=True, verbose_name="IBAN")
+    bank                = models.ForeignKey(Banks, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Τράπεζα")
+    bank_account_number = models.CharField(max_length=34, unique=True, null=True, verbose_name="IBAN")
 
     # ── Επικοινωνία ─────────────────────────────────────────────
     address       = models.CharField(max_length=255, blank=True, null=True, verbose_name="Διεύθυνση")
@@ -179,9 +176,9 @@ class Members(models.Model):
     notes          = models.TextField(blank=True, null=True, verbose_name="Παρατηρήσεις")
     pending_issues = models.TextField(blank=True, null=True, verbose_name="Εκκρεμότητες")
 
-    active       = models.BooleanField(default=True)
-    active_date  = models.DateField(auto_now_add=True)
-    inactive_date= models.DateField(blank=True, null=True)
+    active        = models.BooleanField(default=True)
+    active_date   = models.DateField(auto_now_add=True)
+    inactive_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.last_name} {self.first_name}"
@@ -190,31 +187,40 @@ class Members(models.Model):
         return f"{self.last_name} {self.first_name} του {self.fathers_name}"
 
     class Meta:
-        verbose_name = "Μέλος"
+        verbose_name        = "Μέλος"
         verbose_name_plural = "Μέλη"
-        ordering = ['last_name', 'first_name']
+        ordering            = ['last_name', 'first_name']
 
-
-
-
-    # ── Πρωτόκολλο ─────────────────────────────────────────────────    
 
 class Protocol(models.Model):
+    # ── Αριθμός / Έτος ──────────────────────────────────────────
     protocol_number = models.PositiveIntegerField(verbose_name="Αριθμός Πρωτοκόλλου")
     year            = models.PositiveIntegerField(verbose_name="Έτος")
 
+    # ── Βασικά ──────────────────────────────────────────────────
     date    = models.DateField(verbose_name="Ημερομηνία")
     subject = models.CharField(max_length=500, verbose_name="Θέμα")
     file    = models.FileField(upload_to='protocols/%Y/', blank=True, null=True, verbose_name="Αρχείο")
 
+    # ── Αποστολέας ──────────────────────────────────────────────
+    sender_last_name    = models.CharField(max_length=100, blank=True, verbose_name="Επώνυμο Αποστολέα")
+    sender_first_name   = models.CharField(max_length=100, blank=True, verbose_name="Όνομα Αποστολέα")
+    sender_organization = models.CharField(max_length=200, blank=True, verbose_name="Οργανισμός Αποστολέα")
+    sender_department   = models.CharField(max_length=200, blank=True, verbose_name="Τμήμα Αποστολέα")
+    sender_address      = models.CharField(max_length=255, blank=True, verbose_name="Διεύθυνση Αποστολέα")
+    sender_tk           = models.CharField(max_length=10,  blank=True, verbose_name="Τ.Κ. Αποστολέα")
+    sender_phone        = models.CharField(max_length=20,  blank=True, verbose_name="Τηλέφωνο Αποστολέα")
+    sender_email        = models.EmailField(blank=True,              verbose_name="Email Αποστολέα")
+
+    # ── Παραλήπτης ──────────────────────────────────────────────
     receiver_last_name    = models.CharField(max_length=100, blank=True, verbose_name="Επώνυμο Παραλήπτη")
     receiver_first_name   = models.CharField(max_length=100, blank=True, verbose_name="Όνομα Παραλήπτη")
-    receiver_organization = models.CharField(max_length=200, blank=True, verbose_name="Οργανισμός / Υπηρεσία")
-    receiver_department   = models.CharField(max_length=200, blank=True, verbose_name="Τμήμα")
-    receiver_address      = models.CharField(max_length=255, blank=True, verbose_name="Διεύθυνση")
-    receiver_tk           = models.CharField(max_length=10,  blank=True, verbose_name="Τ.Κ.")
-    receiver_phone        = models.CharField(max_length=20,  blank=True, verbose_name="Τηλέφωνο")
-    receiver_email        = models.EmailField(blank=True,              verbose_name="Email")
+    receiver_organization = models.CharField(max_length=200, blank=True, verbose_name="Οργανισμός Παραλήπτη")
+    receiver_department   = models.CharField(max_length=200, blank=True, verbose_name="Τμήμα Παραλήπτη")
+    receiver_address      = models.CharField(max_length=255, blank=True, verbose_name="Διεύθυνση Παραλήπτη")
+    receiver_tk           = models.CharField(max_length=10,  blank=True, verbose_name="Τ.Κ. Παραλήπτη")
+    receiver_phone        = models.CharField(max_length=20,  blank=True, verbose_name="Τηλέφωνο Παραλήπτη")
+    receiver_email        = models.EmailField(blank=True,              verbose_name="Email Παραλήπτη")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

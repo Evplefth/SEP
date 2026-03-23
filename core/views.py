@@ -371,6 +371,31 @@ def _find_invoice_duplicate(invoice):
     return qs.exists()
 
 
+def _protocol_from_post(request):
+    """Διαβάζει όλα τα protocol fields από το POST — χρησιμοποιείται και στο create και στο update."""
+    return {
+        "subject":               (request.POST.get("subject") or "").strip(),
+        # ── Αποστολέας ──────────────────────────────────────────
+        "sender_last_name":      (request.POST.get("sender_last_name") or "").strip(),
+        "sender_first_name":     (request.POST.get("sender_first_name") or "").strip(),
+        "sender_organization":   (request.POST.get("sender_organization") or "").strip(),
+        "sender_department":     (request.POST.get("sender_department") or "").strip(),
+        "sender_address":        (request.POST.get("sender_address") or "").strip(),
+        "sender_tk":             (request.POST.get("sender_tk") or "").strip(),
+        "sender_phone":          (request.POST.get("sender_phone") or "").strip(),
+        "sender_email":          (request.POST.get("sender_email") or "").strip(),
+        # ── Παραλήπτης ──────────────────────────────────────────
+        "receiver_last_name":    (request.POST.get("receiver_last_name") or "").strip(),
+        "receiver_first_name":   (request.POST.get("receiver_first_name") or "").strip(),
+        "receiver_organization": (request.POST.get("receiver_organization") or "").strip(),
+        "receiver_department":   (request.POST.get("receiver_department") or "").strip(),
+        "receiver_address":      (request.POST.get("receiver_address") or "").strip(),
+        "receiver_tk":           (request.POST.get("receiver_tk") or "").strip(),
+        "receiver_phone":        (request.POST.get("receiver_phone") or "").strip(),
+        "receiver_email":        (request.POST.get("receiver_email") or "").strip(),
+    }
+
+
 # ════════════════════════════════════════════════════════════════
 #  DASHBOARD
 # ════════════════════════════════════════════════════════════════
@@ -824,6 +849,8 @@ def protocol_list(request):
     if query:
         protocols = protocols.filter(
             Q(subject__icontains=query)
+            | Q(sender_last_name__icontains=query)
+            | Q(sender_organization__icontains=query)
             | Q(receiver_last_name__icontains=query)
             | Q(receiver_first_name__icontains=query)
             | Q(receiver_organization__icontains=query)
@@ -851,18 +878,10 @@ def protocol_create(request):
         chosen_year = chosen_date.year
         chosen_num  = Protocol.next_number(chosen_year)
 
-        subject               = (request.POST.get("subject") or "").strip()
-        receiver_last_name    = (request.POST.get("receiver_last_name") or "").strip()
-        receiver_first_name   = (request.POST.get("receiver_first_name") or "").strip()
-        receiver_organization = (request.POST.get("receiver_organization") or "").strip()
-        receiver_department   = (request.POST.get("receiver_department") or "").strip()
-        receiver_address      = (request.POST.get("receiver_address") or "").strip()
-        receiver_tk           = (request.POST.get("receiver_tk") or "").strip()
-        receiver_phone        = (request.POST.get("receiver_phone") or "").strip()
-        receiver_email        = (request.POST.get("receiver_email") or "").strip()
+        fields = _protocol_from_post(request)
 
-        if not subject:
-            return render(request, "core/protocol_create.html", {   # ← protocol_create.html
+        if not fields["subject"]:
+            return render(request, "core/protocol_create.html", {
                 "next_num": chosen_num,
                 "year":     chosen_year,
                 "today":    today.isoformat(),
@@ -870,18 +889,10 @@ def protocol_create(request):
             })
 
         protocol = Protocol(
-            protocol_number       = chosen_num,
-            year                  = chosen_year,
-            date                  = chosen_date,
-            subject               = subject,
-            receiver_last_name    = receiver_last_name,
-            receiver_first_name   = receiver_first_name,
-            receiver_organization = receiver_organization,
-            receiver_department   = receiver_department,
-            receiver_address      = receiver_address,
-            receiver_tk           = receiver_tk,
-            receiver_phone        = receiver_phone,
-            receiver_email        = receiver_email,
+            protocol_number = chosen_num,
+            year            = chosen_year,
+            date            = chosen_date,
+            **fields,
         )
         if request.FILES.get("file"):
             protocol.file = request.FILES["file"]
@@ -895,7 +906,7 @@ def protocol_create(request):
         messages.success(request, f"Πρωτόκολλο {protocol.full_number} καταχωρήθηκε επιτυχώς.")
         return redirect("core:protocol_list")
 
-    return render(request, "core/protocol_create.html", {   # ← protocol_create.html
+    return render(request, "core/protocol_create.html", {
         "next_num": next_num,
         "year":     year,
         "today":    today.isoformat(),
@@ -913,36 +924,22 @@ def protocol_update(request, protocol_id):
     protocol = get_object_or_404(Protocol, pk=protocol_id)
 
     if request.method == "POST":
-        subject               = (request.POST.get("subject") or "").strip()
-        receiver_last_name    = (request.POST.get("receiver_last_name") or "").strip()
-        receiver_first_name   = (request.POST.get("receiver_first_name") or "").strip()
-        receiver_organization = (request.POST.get("receiver_organization") or "").strip()
-        receiver_department   = (request.POST.get("receiver_department") or "").strip()
-        receiver_address      = (request.POST.get("receiver_address") or "").strip()
-        receiver_tk           = (request.POST.get("receiver_tk") or "").strip()
-        receiver_phone        = (request.POST.get("receiver_phone") or "").strip()
-        receiver_email        = (request.POST.get("receiver_email") or "").strip()
+        fields = _protocol_from_post(request)
 
-        if not subject:
-            return render(request, "core/protocol_create.html", {   # ← protocol_create.html
+        if not fields["subject"]:
+            return render(request, "core/protocol_create.html", {
                 "protocol": protocol,
                 "error":    "Το θέμα είναι υποχρεωτικό.",
             })
 
-        protocol.subject               = subject
-        protocol.receiver_last_name    = receiver_last_name
-        protocol.receiver_first_name   = receiver_first_name
-        protocol.receiver_organization = receiver_organization
-        protocol.receiver_department   = receiver_department
-        protocol.receiver_address      = receiver_address
-        protocol.receiver_tk           = receiver_tk
-        protocol.receiver_phone        = receiver_phone
-        protocol.receiver_email        = receiver_email
+        for attr, value in fields.items():
+            setattr(protocol, attr, value)
+
         if request.FILES.get("file"):
             protocol.file = request.FILES["file"]
-        protocol.save()
 
+        protocol.save()
         messages.success(request, f"Πρωτόκολλο {protocol.full_number} ενημερώθηκε.")
         return redirect("core:protocol_list")
 
-    return render(request, "core/protocol_create.html", {"protocol": protocol})  # ← protocol_create.html
+    return render(request, "core/protocol_create.html", {"protocol": protocol})
