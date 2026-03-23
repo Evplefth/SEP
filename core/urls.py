@@ -22,4 +22,9 @@ urlpatterns = [
     path("invoices/create/", views.invoice_create, name="invoice_create"),
     path("invoices/<int:invoice_id>/edit/", views.invoice_update, name="invoice_update"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    # ── Πρωτόκολλα ──────────────────────────────────────────────
+    path("protocols/", views.protocol_list, name="protocol_list"),
+    path("protocols/new/", views.protocol_create, name="protocol_create"),
+    path("protocols/<int:protocol_id>/", views.protocol_detail, name="protocol_detail"),
+    path("protocols/<int:protocol_id>/edit/", views.protocol_update, name="protocol_update"),
 ]

@@ -9,9 +9,12 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.static import serve
 from django_countries import countries
+
+import datetime
 
 from core.models import (
     Banks,
@@ -19,6 +22,7 @@ from core.models import (
     Invoices,
     Members,
     Properties,
+    Protocol,
     companies,
     companies_members,
     nationalities,
@@ -367,18 +371,26 @@ def _find_invoice_duplicate(invoice):
     return qs.exists()
 
 
+# ════════════════════════════════════════════════════════════════
+#  DASHBOARD
+# ════════════════════════════════════════════════════════════════
+
 @login_required
 def dashboard(request):
     return render(
         request,
         "core/dashboard.html",
         {
-            "members_count": Members.objects.count(),
+            "members_count":   Members.objects.count(),
             "companies_count": companies.objects.count(),
-            "invoices_count": Invoices.objects.count(),
+            "invoices_count":  Invoices.objects.count(),
         },
     )
 
+
+# ════════════════════════════════════════════════════════════════
+#  USERS
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def user_list(request):
@@ -393,13 +405,13 @@ def user_create(request):
         return redirect("core:users")
 
     if request.method == "POST":
-        username = (request.POST.get("username") or "").strip()
-        email = (request.POST.get("email") or "").strip()
+        username   = (request.POST.get("username") or "").strip()
+        email      = (request.POST.get("email") or "").strip()
         first_name = (request.POST.get("first_name") or "").strip()
-        last_name = (request.POST.get("last_name") or "").strip()
-        password1 = request.POST.get("password1") or ""
-        password2 = request.POST.get("password2") or ""
-        is_staff = request.POST.get("is_staff") == "on"
+        last_name  = (request.POST.get("last_name") or "").strip()
+        password1  = request.POST.get("password1") or ""
+        password2  = request.POST.get("password2") or ""
+        is_staff   = request.POST.get("is_staff") == "on"
 
         if not username or not password1:
             return render(request, "core/user_add.html", {"error": "Το username και ο κωδικός είναι υποχρεωτικά."})
@@ -409,12 +421,8 @@ def user_create(request):
             return render(request, "core/user_add.html", {"error": "Υπάρχει ήδη χρήστης με αυτό το username."})
 
         user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password1,
-            first_name=first_name,
-            last_name=last_name,
-            is_staff=is_staff,
+            username=username, email=email, password=password1,
+            first_name=first_name, last_name=last_name, is_staff=is_staff,
         )
         messages.success(request, f"Ο χρήστης {user.username} δημιουργήθηκε επιτυχώς.")
         return redirect("core:users")
@@ -422,10 +430,14 @@ def user_create(request):
     return render(request, "core/user_add.html")
 
 
+# ════════════════════════════════════════════════════════════════
+#  MEMBERS
+# ════════════════════════════════════════════════════════════════
+
 @login_required
 def member_list(request):
     members = Members.objects.select_related("nationality", "bank").prefetch_related("companies__company").all()
-    query = (request.GET.get("q") or "").strip()
+    query  = (request.GET.get("q") or "").strip()
     mitroo = (request.GET.get("mitroo") or "").strip()
 
     if query:
@@ -455,14 +467,7 @@ def member_detail(request, member_id):
         pk=member_id,
     )
     company_links = member.companies.select_related("company").all().order_by("-active", "company__name")
-    return render(
-        request,
-        "core/member_detail.html",
-        {
-            "member": member,
-            "company_links": company_links,
-        },
-    )
+    return render(request, "core/member_detail.html", {"member": member, "company_links": company_links})
 
 
 @login_required
@@ -470,46 +475,31 @@ def member_create(request):
     if request.method == "POST":
         error = _validate_member_post(request)
         if error:
-            return render(
-                request,
-                "core/member_add.html",
-                _member_form_context(
-                    request.POST,
-                    error=error,
-                    existing_exartomena=_posted_exartomena(request),
-                    existing_companies=_posted_member_companies(request),
-                ),
-            )
+            return render(request, "core/member_add.html", _member_form_context(
+                request.POST, error=error,
+                existing_exartomena=_posted_exartomena(request),
+                existing_companies=_posted_member_companies(request),
+            ))
 
         member = _member_from_post(request)
         duplicate_label = _find_member_duplicate(member)
         if duplicate_label:
-            return render(
-                request,
-                "core/member_add.html",
-                _member_form_context(
-                    request.POST,
-                    error=f"Υπάρχει ήδη μέλος με ίδιο {duplicate_label}.",
-                    existing_exartomena=_posted_exartomena(request),
-                    existing_companies=_posted_member_companies(request),
-                ),
-            )
+            return render(request, "core/member_add.html", _member_form_context(
+                request.POST, error=f"Υπάρχει ήδη μέλος με ίδιο {duplicate_label}.",
+                existing_exartomena=_posted_exartomena(request),
+                existing_companies=_posted_member_companies(request),
+            ))
 
         try:
             member.save()
             _save_exartomena(request, member)
             _save_member_companies(request, member)
         except IntegrityError:
-            return render(
-                request,
-                "core/member_add.html",
-                _member_form_context(
-                    request.POST,
-                    error="Υπάρχει ήδη μέλος με ίδιο ΑΔΤ, ΑΦΜ, ΑΜΚΑ, ΑΜΑ ή IBAN.",
-                    existing_exartomena=_posted_exartomena(request),
-                    existing_companies=_posted_member_companies(request),
-                ),
-            )
+            return render(request, "core/member_add.html", _member_form_context(
+                request.POST, error="Υπάρχει ήδη μέλος με ίδιο ΑΔΤ, ΑΦΜ, ΑΜΚΑ, ΑΜΑ ή IBAN.",
+                existing_exartomena=_posted_exartomena(request),
+                existing_companies=_posted_member_companies(request),
+            ))
 
         messages.success(request, f"Το μέλος {member.last_name} {member.first_name} προστέθηκε επιτυχώς.")
         return redirect("core:members_list")
@@ -524,49 +514,31 @@ def member_update(request, member_id):
     if request.method == "POST":
         error = _validate_member_post(request)
         if error:
-            return render(
-                request,
-                "core/member_add.html",
-                _member_form_context(
-                    request.POST,
-                    member=member,
-                    error=error,
-                    existing_exartomena=_posted_exartomena(request),
-                    existing_companies=_posted_member_companies(request),
-                ),
-            )
+            return render(request, "core/member_add.html", _member_form_context(
+                request.POST, member=member, error=error,
+                existing_exartomena=_posted_exartomena(request),
+                existing_companies=_posted_member_companies(request),
+            ))
 
         member = _member_from_post(request, member=member)
         duplicate_label = _find_member_duplicate(member)
         if duplicate_label:
-            return render(
-                request,
-                "core/member_add.html",
-                _member_form_context(
-                    request.POST,
-                    member=member,
-                    error=f"Υπάρχει ήδη μέλος με ίδιο {duplicate_label}.",
-                    existing_exartomena=_posted_exartomena(request),
-                    existing_companies=_posted_member_companies(request),
-                ),
-            )
+            return render(request, "core/member_add.html", _member_form_context(
+                request.POST, member=member, error=f"Υπάρχει ήδη μέλος με ίδιο {duplicate_label}.",
+                existing_exartomena=_posted_exartomena(request),
+                existing_companies=_posted_member_companies(request),
+            ))
 
         try:
             member.save()
             _save_exartomena(request, member)
             _save_member_companies(request, member)
         except IntegrityError:
-            return render(
-                request,
-                "core/member_add.html",
-                _member_form_context(
-                    request.POST,
-                    member=member,
-                    error="Υπάρχει ήδη μέλος με ίδιο ΑΔΤ, ΑΦΜ, ΑΜΚΑ, ΑΜΑ ή IBAN.",
-                    existing_exartomena=_posted_exartomena(request),
-                    existing_companies=_posted_member_companies(request),
-                ),
-            )
+            return render(request, "core/member_add.html", _member_form_context(
+                request.POST, member=member, error="Υπάρχει ήδη μέλος με ίδιο ΑΔΤ, ΑΦΜ, ΑΜΚΑ, ΑΜΑ ή IBAN.",
+                existing_exartomena=_posted_exartomena(request),
+                existing_companies=_posted_member_companies(request),
+            ))
 
         messages.success(request, f"Το μέλος {member.last_name} {member.first_name} ενημερώθηκε επιτυχώς.")
         return redirect("core:members_list")
@@ -609,33 +581,32 @@ def member_update(request, member_id):
     }
 
     existing_exartomena = [
-        {"index": index, "name": ex.name, "property_id": ex.property_id}
-        for index, ex in enumerate(member.exartomena.select_related("property").all())
+        {"index": i, "name": ex.name, "property_id": ex.property_id}
+        for i, ex in enumerate(member.exartomena.select_related("property").all())
     ]
 
     existing_companies = [
         {
-            "index": index,
+            "index": i,
             "company_id": link.company_id,
             "active": link.active,
             "active_date": link.active_date.isoformat() if link.active_date else "",
             "inactive_date": link.inactive_date.isoformat() if link.inactive_date else "",
             "notes": link.notes or "",
         }
-        for index, link in enumerate(member.companies.select_related("company").all())
+        for i, link in enumerate(member.companies.select_related("company").all())
     ]
 
-    return render(
-        request,
-        "core/member_add.html",
-        _member_form_context(
-            form_data,
-            member=member,
-            existing_exartomena=existing_exartomena,
-            existing_companies=existing_companies,
-        ),
-    )
+    return render(request, "core/member_add.html", _member_form_context(
+        form_data, member=member,
+        existing_exartomena=existing_exartomena,
+        existing_companies=existing_companies,
+    ))
 
+
+# ════════════════════════════════════════════════════════════════
+#  COMPANIES
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def company_list(request):
@@ -652,16 +623,13 @@ def company_detail(request, company_id):
     invoices_qs = company.invoices.all().order_by("-date_of_issue", "-id")
 
     status_filter = (request.GET.get("status") or "").strip()
-    date_from = (request.GET.get("date_from") or "").strip()
-    date_to = (request.GET.get("date_to") or "").strip()
+    date_from     = (request.GET.get("date_from") or "").strip()
+    date_to       = (request.GET.get("date_to") or "").strip()
     invoice_query = (request.GET.get("q") or "").strip()
-
     filters_applied = any([status_filter, date_from, date_to, invoice_query])
 
     if invoice_query:
-        invoices_qs = invoices_qs.filter(
-            Q(invoice_number__icontains=invoice_query) | Q(service_type__icontains=invoice_query)
-        )
+        invoices_qs = invoices_qs.filter(Q(invoice_number__icontains=invoice_query) | Q(service_type__icontains=invoice_query))
     if status_filter in {"paid", "pending"}:
         invoices_qs = invoices_qs.filter(status=(status_filter == "paid"))
     if date_from:
@@ -673,16 +641,12 @@ def company_detail(request, company_id):
 
     company_members = company.members.select_related("member").all().order_by("-active", "member__last_name")
 
-    return render(
-        request,
-        "core/company_detail.html",
-        {
-            "company": company,
-            "invoices": invoices_qs,
-            "company_members": company_members,
-            "filters_applied": filters_applied,
-        },
-    )
+    return render(request, "core/company_detail.html", {
+        "company": company,
+        "invoices": invoices_qs,
+        "company_members": company_members,
+        "filters_applied": filters_applied,
+    })
 
 
 @login_required
@@ -690,26 +654,18 @@ def company_create(request):
     if request.method == "POST":
         error = _validate_company_post(request)
         if error:
-            return render(
-                request,
-                "core/company_add.html",
-                _company_form_context(request.POST, error=error, existing_invoices=_posted_invoices(request)),
-            )
+            return render(request, "core/company_add.html",
+                _company_form_context(request.POST, error=error, existing_invoices=_posted_invoices(request)))
 
         company = _company_from_post(request)
         try:
             company.save()
             _save_company_invoices(request, company)
         except IntegrityError:
-            return render(
-                request,
-                "core/company_add.html",
-                _company_form_context(
-                    request.POST,
-                    error="Υπάρχει ήδη εταιρία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
-                    existing_invoices=_posted_invoices(request),
-                ),
-            )
+            return render(request, "core/company_add.html",
+                _company_form_context(request.POST,
+                error="Υπάρχει ήδη εταιρία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
+                existing_invoices=_posted_invoices(request)))
 
         messages.success(request, f"Η εταιρία {company.name} προστέθηκε επιτυχώς.")
         return redirect("core:companies_list")
@@ -724,32 +680,19 @@ def company_update(request, company_id):
     if request.method == "POST":
         error = _validate_company_post(request)
         if error:
-            return render(
-                request,
-                "core/company_add.html",
-                _company_form_context(
-                    request.POST,
-                    company=company,
-                    error=error,
-                    existing_invoices=_posted_invoices(request),
-                ),
-            )
+            return render(request, "core/company_add.html",
+                _company_form_context(request.POST, company=company, error=error,
+                existing_invoices=_posted_invoices(request)))
 
         company = _company_from_post(request, company=company)
         try:
             company.save()
             _save_company_invoices(request, company)
         except IntegrityError:
-            return render(
-                request,
-                "core/company_add.html",
-                _company_form_context(
-                    request.POST,
-                    company=company,
-                    error="Υπάρχει ήδη εταιρία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
-                    existing_invoices=_posted_invoices(request),
-                ),
-            )
+            return render(request, "core/company_add.html",
+                _company_form_context(request.POST, company=company,
+                error="Υπάρχει ήδη εταιρία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
+                existing_invoices=_posted_invoices(request)))
 
         messages.success(request, f"Η εταιρία {company.name} ενημερώθηκε επιτυχώς.")
         return redirect("core:companies_list")
@@ -768,7 +711,7 @@ def company_update(request, company_id):
 
     existing_invoices = [
         {
-            "index": index,
+            "index": i,
             "invoice_id": invoice.id,
             "invoice_number": invoice.invoice_number,
             "amount": invoice.amount,
@@ -778,22 +721,23 @@ def company_update(request, company_id):
             "scan_name": invoice.scan_file.name if invoice.scan_file else "",
             "scan_url": reverse("core:media_preview", args=[invoice.scan_file.name]) if invoice.scan_file else "",
         }
-        for index, invoice in enumerate(company.invoices.all())
+        for i, invoice in enumerate(company.invoices.all())
     ]
 
-    return render(
-        request,
-        "core/company_add.html",
-        _company_form_context(form_data, company=company, existing_invoices=existing_invoices),
-    )
+    return render(request, "core/company_add.html",
+        _company_form_context(form_data, company=company, existing_invoices=existing_invoices))
 
+
+# ════════════════════════════════════════════════════════════════
+#  INVOICES
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def invoice_list(request):
     invoices = Invoices.objects.select_related("company").all().order_by("-date_of_issue", "-id")
-    company_id = (request.GET.get("company") or "").strip()
+    company_id    = (request.GET.get("company") or "").strip()
     status_filter = (request.GET.get("status") or "").strip()
-    query = (request.GET.get("q") or "").strip()
+    query         = (request.GET.get("q") or "").strip()
 
     if company_id:
         invoices = invoices.filter(company_id=company_id)
@@ -802,14 +746,10 @@ def invoice_list(request):
     if query:
         invoices = invoices.filter(Q(invoice_number__icontains=query) | Q(service_type__icontains=query))
 
-    return render(
-        request,
-        "core/invoice_list.html",
-        {
-            "invoices": invoices,
-            "companies": companies.objects.order_by("name"),
-        },
-    )
+    return render(request, "core/invoice_list.html", {
+        "invoices": invoices,
+        "companies": companies.objects.order_by("name"),
+    })
 
 
 @login_required
@@ -821,19 +761,13 @@ def invoice_create(request):
 
         invoice = _invoice_from_post(request)
         if _find_invoice_duplicate(invoice):
-            return render(
-                request,
-                "core/invoice_add.html",
-                _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."),
-            )
+            return render(request, "core/invoice_add.html",
+                _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
         try:
             invoice.save()
         except IntegrityError:
-            return render(
-                request,
-                "core/invoice_add.html",
-                _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."),
-            )
+            return render(request, "core/invoice_add.html",
+                _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
 
         messages.success(request, f"Το τιμολόγιο {invoice.invoice_number} προστέθηκε επιτυχώς.")
         return redirect("core:invoices_list")
@@ -848,27 +782,20 @@ def invoice_update(request, invoice_id):
     if request.method == "POST":
         error = _validate_invoice_post(request)
         if error:
-            return render(
-                request,
-                "core/invoice_add.html",
-                _invoice_form_context(request.POST, invoice=invoice, error=error),
-            )
+            return render(request, "core/invoice_add.html",
+                _invoice_form_context(request.POST, invoice=invoice, error=error))
 
         invoice = _invoice_from_post(request, invoice=invoice)
         if _find_invoice_duplicate(invoice):
-            return render(
-                request,
-                "core/invoice_add.html",
-                _invoice_form_context(request.POST, invoice=invoice, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."),
-            )
+            return render(request, "core/invoice_add.html",
+                _invoice_form_context(request.POST, invoice=invoice,
+                error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
         try:
             invoice.save()
         except IntegrityError:
-            return render(
-                request,
-                "core/invoice_add.html",
-                _invoice_form_context(request.POST, invoice=invoice, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."),
-            )
+            return render(request, "core/invoice_add.html",
+                _invoice_form_context(request.POST, invoice=invoice,
+                error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
 
         messages.success(request, f"Το τιμολόγιο {invoice.invoice_number} ενημερώθηκε επιτυχώς.")
         return redirect("core:invoices_list")
@@ -882,3 +809,140 @@ def invoice_update(request, invoice_id):
         "status": invoice.status,
     }
     return render(request, "core/invoice_add.html", _invoice_form_context(form_data, invoice=invoice))
+
+
+# ════════════════════════════════════════════════════════════════
+#  ΠΡΩΤΟΚΟΛΛΑ
+# ════════════════════════════════════════════════════════════════
+
+@login_required
+def protocol_list(request):
+    protocols = Protocol.objects.all()
+    query  = (request.GET.get("q") or "").strip()
+    year_f = (request.GET.get("year") or "").strip()
+
+    if query:
+        protocols = protocols.filter(
+            Q(subject__icontains=query)
+            | Q(receiver_last_name__icontains=query)
+            | Q(receiver_first_name__icontains=query)
+            | Q(receiver_organization__icontains=query)
+        )
+    if year_f:
+        protocols = protocols.filter(year=year_f)
+
+    years = Protocol.objects.values_list("year", flat=True).distinct().order_by("-year")
+
+    return render(request, "core/protocol_list.html", {
+        "protocols": protocols,
+        "years":     years,
+    })
+
+
+@login_required
+def protocol_create(request):
+    today    = timezone.now().date()
+    year     = today.year
+    next_num = Protocol.next_number(year)
+
+    if request.method == "POST":
+        date_str    = request.POST.get("date") or today.isoformat()
+        chosen_date = datetime.date.fromisoformat(date_str)
+        chosen_year = chosen_date.year
+        chosen_num  = Protocol.next_number(chosen_year)
+
+        subject               = (request.POST.get("subject") or "").strip()
+        receiver_last_name    = (request.POST.get("receiver_last_name") or "").strip()
+        receiver_first_name   = (request.POST.get("receiver_first_name") or "").strip()
+        receiver_organization = (request.POST.get("receiver_organization") or "").strip()
+        receiver_department   = (request.POST.get("receiver_department") or "").strip()
+        receiver_address      = (request.POST.get("receiver_address") or "").strip()
+        receiver_tk           = (request.POST.get("receiver_tk") or "").strip()
+        receiver_phone        = (request.POST.get("receiver_phone") or "").strip()
+        receiver_email        = (request.POST.get("receiver_email") or "").strip()
+
+        if not subject:
+            return render(request, "core/protocol_create.html", {   # ← protocol_create.html
+                "next_num": chosen_num,
+                "year":     chosen_year,
+                "today":    today.isoformat(),
+                "error":    "Το θέμα είναι υποχρεωτικό.",
+            })
+
+        protocol = Protocol(
+            protocol_number       = chosen_num,
+            year                  = chosen_year,
+            date                  = chosen_date,
+            subject               = subject,
+            receiver_last_name    = receiver_last_name,
+            receiver_first_name   = receiver_first_name,
+            receiver_organization = receiver_organization,
+            receiver_department   = receiver_department,
+            receiver_address      = receiver_address,
+            receiver_tk           = receiver_tk,
+            receiver_phone        = receiver_phone,
+            receiver_email        = receiver_email,
+        )
+        if request.FILES.get("file"):
+            protocol.file = request.FILES["file"]
+
+        try:
+            protocol.save()
+        except IntegrityError:
+            protocol.protocol_number = Protocol.next_number(chosen_year)
+            protocol.save()
+
+        messages.success(request, f"Πρωτόκολλο {protocol.full_number} καταχωρήθηκε επιτυχώς.")
+        return redirect("core:protocol_list")
+
+    return render(request, "core/protocol_create.html", {   # ← protocol_create.html
+        "next_num": next_num,
+        "year":     year,
+        "today":    today.isoformat(),
+    })
+
+
+@login_required
+def protocol_detail(request, protocol_id):
+    protocol = get_object_or_404(Protocol, pk=protocol_id)
+    return render(request, "core/protocol_details.html", {"protocol": protocol})
+
+
+@login_required
+def protocol_update(request, protocol_id):
+    protocol = get_object_or_404(Protocol, pk=protocol_id)
+
+    if request.method == "POST":
+        subject               = (request.POST.get("subject") or "").strip()
+        receiver_last_name    = (request.POST.get("receiver_last_name") or "").strip()
+        receiver_first_name   = (request.POST.get("receiver_first_name") or "").strip()
+        receiver_organization = (request.POST.get("receiver_organization") or "").strip()
+        receiver_department   = (request.POST.get("receiver_department") or "").strip()
+        receiver_address      = (request.POST.get("receiver_address") or "").strip()
+        receiver_tk           = (request.POST.get("receiver_tk") or "").strip()
+        receiver_phone        = (request.POST.get("receiver_phone") or "").strip()
+        receiver_email        = (request.POST.get("receiver_email") or "").strip()
+
+        if not subject:
+            return render(request, "core/protocol_create.html", {   # ← protocol_create.html
+                "protocol": protocol,
+                "error":    "Το θέμα είναι υποχρεωτικό.",
+            })
+
+        protocol.subject               = subject
+        protocol.receiver_last_name    = receiver_last_name
+        protocol.receiver_first_name   = receiver_first_name
+        protocol.receiver_organization = receiver_organization
+        protocol.receiver_department   = receiver_department
+        protocol.receiver_address      = receiver_address
+        protocol.receiver_tk           = receiver_tk
+        protocol.receiver_phone        = receiver_phone
+        protocol.receiver_email        = receiver_email
+        if request.FILES.get("file"):
+            protocol.file = request.FILES["file"]
+        protocol.save()
+
+        messages.success(request, f"Πρωτόκολλο {protocol.full_number} ενημερώθηκε.")
+        return redirect("core:protocol_list")
+
+    return render(request, "core/protocol_create.html", {"protocol": protocol})  # ← protocol_create.html

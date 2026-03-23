@@ -1,0 +1,119 @@
+{% extends "core/base.html" %}
+{% block title %}Πρωτόκολλο {{ protocol.full_number }}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-center gap-4 mb-6">
+  <a href="{% url 'core:protocol_list' %}" class="text-gray-400 hover:text-gray-600 transition">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+  </a>
+  <div class="flex-1">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl font-bold text-blue-700">Πρωτ. {{ protocol.full_number }}</span>
+    </div>
+    <p class="text-gray-500 text-sm mt-0.5">{{ protocol.date|date:"d/m/Y" }}</p>
+  </div>
+  <a href="{% url 'core:protocol_update' protocol.pk %}"
+    class="inline-flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+    </svg>
+    Επεξεργασία
+  </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+  <!-- Βασικά Στοιχεία -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <h2 class="font-semibold text-gray-800 text-sm">Βασικά Στοιχεία</h2>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-gray-50 rounded-lg px-4 py-3">
+          <p class="text-xs text-gray-400 mb-0.5">Αριθμός</p>
+          <p class="text-sm font-bold text-blue-700">{{ protocol.full_number }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg px-4 py-3">
+          <p class="text-xs text-gray-400 mb-0.5">Ημερομηνία</p>
+          <p class="text-sm font-semibold text-gray-800">{{ protocol.date|date:"d/m/Y" }}</p>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 rounded-lg px-4 py-3">
+        <p class="text-xs text-gray-400 mb-1">Θέμα</p>
+        <p class="text-sm text-gray-800 leading-relaxed">{{ protocol.subject }}</p>
+      </div>
+
+      {% if protocol.file %}
+      <div class="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 flex items-center gap-3">
+        <svg class="w-5 h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+        </svg>
+        <div>
+          <p class="text-xs text-gray-500 mb-0.5">Επισυναπτόμενο Αρχείο</p>
+          <a href="{{ protocol.file.url }}" target="_blank" class="text-sm text-blue-600 font-medium hover:underline">
+            {{ protocol.file.name }}
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- Παραλήπτης -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <h2 class="font-semibold text-gray-800 text-sm">Στοιχεία Παραλήπτη</h2>
+    </div>
+    <div class="px-6 py-5 grid grid-cols-2 gap-3">
+
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+        <p class="text-xs text-gray-400 mb-0.5">Επώνυμο</p>
+        <p class="text-sm font-semibold text-gray-800">{{ protocol.receiver_last_name|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+        <p class="text-xs text-gray-400 mb-0.5">Όνομα</p>
+        <p class="text-sm font-semibold text-gray-800">{{ protocol.receiver_first_name|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5 col-span-2">
+        <p class="text-xs text-gray-400 mb-0.5">Οργανισμός / Υπηρεσία</p>
+        <p class="text-sm font-semibold text-gray-800">{{ protocol.receiver_organization|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5 col-span-2">
+        <p class="text-xs text-gray-400 mb-0.5">Τμήμα</p>
+        <p class="text-sm font-semibold text-gray-800">{{ protocol.receiver_department|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5 col-span-2">
+        <p class="text-xs text-gray-400 mb-0.5">Διεύθυνση</p>
+        <p class="text-sm font-semibold text-gray-800">{{ protocol.receiver_address|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+        <p class="text-xs text-gray-400 mb-0.5">Τ.Κ.</p>
+        <p class="text-sm font-semibold text-gray-800">{{ protocol.receiver_tk|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+        <p class="text-xs text-gray-400 mb-0.5">Τηλέφωνο</p>
+        <p class="text-sm font-semibold text-gray-800">{{ protocol.receiver_phone|default:"—" }}</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5 col-span-2">
+        <p class="text-xs text-gray-400 mb-0.5">Email</p>
+        <p class="text-sm font-semibold text-gray-800">
+          {% if protocol.receiver_email %}
+            <a href="mailto:{{ protocol.receiver_email }}" class="text-blue-600 hover:underline">{{ protocol.receiver_email }}</a>
+          {% else %}—{% endif %}
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

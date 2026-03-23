@@ -215,7 +215,6 @@
     .impact-shards span:nth-child(6) { transform: translate(-50%, -50%) rotate(68deg); animation-delay: 80ms; }
     .impact-shards span:nth-child(7) { transform: translate(-50%, -50%) rotate(112deg); animation-delay: 120ms; }
     .impact-shards span:nth-child(8) { transform: translate(-50%, -50%) rotate(158deg); animation-delay: 160ms; }
-
     .impact-shards span:nth-child(9) { transform: translate(-50%, -50%) rotate(202deg); animation-delay: 90ms; }
     .impact-shards span:nth-child(10) { transform: translate(-50%, -50%) rotate(248deg); animation-delay: 130ms; }
     .impact-shards span:nth-child(11) { transform: translate(-50%, -50%) rotate(292deg); animation-delay: 180ms; }
@@ -231,13 +230,8 @@
       animation: smoke-bloom 2200ms ease-out forwards;
     }
 
-    .impact-smoke span:nth-child(2) {
-      animation-delay: 140ms;
-    }
-
-    .impact-smoke span:nth-child(3) {
-      animation-delay: 260ms;
-    }
+    .impact-smoke span:nth-child(2) { animation-delay: 140ms; }
+    .impact-smoke span:nth-child(3) { animation-delay: 260ms; }
 
     .impact-grid {
       width: 70rem;
@@ -376,11 +370,29 @@
           <span class="text-gray-900 font-semibold text-lg tracking-tight">SEP Cargo</span>
         </a>
 
+        <!-- Desktop nav -->
         <div class="hidden md:flex items-center gap-1">
-          <a href="{% url 'core:dashboard' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Κέντρο Ελέγχου</a>
-          <a href="{% url 'core:members_list' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Μέλη</a>
-          <a href="{% url 'core:companies_list' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εταιρίες</a>
-          <a href="{% url 'core:users' %}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Χρήστες</a>
+          <a href="{% url 'core:dashboard' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Κέντρο Ελέγχου
+          </a>
+          <a href="{% url 'core:members_list' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Μέλη
+          </a>
+          <a href="{% url 'core:companies_list' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Εταιρίες
+          </a>
+          <!-- ✅ Νέο link Πρωτόκολλα -->
+          <a href="{% url 'core:protocol_list' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Πρωτόκολλα
+          </a>
+          <a href="{% url 'core:users' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Χρήστες
+          </a>
         </div>
 
         <div class="hidden md:flex items-center gap-3">
@@ -419,11 +431,14 @@
       </div>
     </div>
 
+    <!-- Mobile menu -->
     <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2 space-y-1">
       <a href="{% url 'core:home' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Home</a>
       <a href="{% url 'core:dashboard' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Κέντρο Ελέγχου</a>
       <a href="{% url 'core:members_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Μέλη</a>
       <a href="{% url 'core:companies_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εταιρίες</a>
+      <!-- ✅ Νέο link Πρωτόκολλα (mobile) -->
+      <a href="{% url 'core:protocol_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Πρωτόκολλα</a>
       <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
         {% if user.is_authenticated %}
           <span class="px-3 py-2 text-sm text-gray-600">Hello, <strong>{{ user.username }}</strong></span>
@@ -478,14 +493,12 @@
           </div>
           <span class="text-gray-700 font-semibold text-sm">SEP Cargo</span>
         </div>
-
         <div class="flex items-center gap-6">
           <a href="#" class="text-gray-400 hover:text-blue-600 text-xs transition">Privacy</a>
           <a href="#" class="text-gray-400 hover:text-blue-600 text-xs transition">Terms</a>
           <a href="#" class="text-gray-400 hover:text-blue-600 text-xs transition">Support</a>
           <a href="#" class="text-gray-400 hover:text-blue-600 text-xs transition">Contact</a>
         </div>
-
         <p class="text-gray-400 text-xs">© 2026 SEP Φορτοεκφορτώσεις</p>
       </div>
     </div>
@@ -510,10 +523,7 @@
       const transition = document.getElementById('impact-transition');
       const audio = document.getElementById('login-impact-audio');
 
-      if (!shouldAnimate) {
-        return;
-      }
-
+      if (!shouldAnimate) return;
       if (!isAuthenticated || !isStaff || isLoginPage) {
         sessionStorage.removeItem('loginRockIntro');
         return;
@@ -533,10 +543,8 @@
       if (audio) {
         audio.currentTime = 0;
         const playPromise = audio.play();
-
         if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(function () {
-          });
+          playPromise.catch(function () {});
         }
       }
     }());

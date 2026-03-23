@@ -1,0 +1,143 @@
+# ════════════════════════════════════════════════════════════════
+#  ΠΡΩΤΟΚΟΛΛΟ  —  προσθέστε αυτές τις συναρτήσεις στο views.py
+#  και import: from core.models import Protocol
+#              from django.utils import timezone
+# ════════════════════════════════════════════════════════════════
+
+@login_required
+def protocol_list(request):
+    protocols = Protocol.objects.all()
+
+    query    = (request.GET.get('q') or '').strip()
+    year_f   = (request.GET.get('year') or '').strip()
+
+    if query:
+        protocols = protocols.filter(
+            Q(subject__icontains=query)
+            | Q(receiver_last_name__icontains=query)
+            | Q(receiver_first_name__icontains=query)
+            | Q(receiver_organization__icontains=query)
+        )
+    if year_f:
+        protocols = protocols.filter(year=year_f)
+
+    # Διαθέσιμα έτη για το φίλτρο
+    years = Protocol.objects.values_list('year', flat=True).distinct().order_by('-year')
+
+    return render(request, 'core/protocol_list.html', {
+        'protocols': protocols,
+        'years':     years,
+    })
+
+
+@login_required
+def protocol_create(request):
+    today    = timezone.now().date()
+    year     = today.year
+    next_num = Protocol.next_number(year)
+
+    if request.method == 'POST':
+        date_val = request.POST.get('date') or today.isoformat()
+        # Χρησιμοποιούμε το έτος της επιλεγμένης ημερομηνίας
+        from datetime import date as date_type
+        import datetime
+        chosen_date = datetime.date.fromisoformat(date_val)
+        chosen_year = chosen_date.year
+        chosen_num  = Protocol.next_number(chosen_year)
+
+        subject               = (request.POST.get('subject') or '').strip()
+        receiver_last_name    = (request.POST.get('receiver_last_name') or '').strip()
+        receiver_first_name   = (request.POST.get('receiver_first_name') or '').strip()
+        receiver_organization = (request.POST.get('receiver_organization') or '').strip()
+        receiver_department   = (request.POST.get('receiver_department') or '').strip()
+        receiver_address      = (request.POST.get('receiver_address') or '').strip()
+        receiver_tk           = (request.POST.get('receiver_tk') or '').strip()
+        receiver_phone        = (request.POST.get('receiver_phone') or '').strip()
+        receiver_email        = (request.POST.get('receiver_email') or '').strip()
+
+        if not subject:
+            return render(request, 'core/protocol_add.html', {
+                'next_num': chosen_num,
+                'year':     chosen_year,
+                'today':    today.isoformat(),
+                'error':    'Το θέμα είναι υποχρεωτικό.',
+            })
+
+        protocol = Protocol(
+            protocol_number       = chosen_num,
+            year                  = chosen_year,
+            date                  = chosen_date,
+            subject               = subject,
+            receiver_last_name    = receiver_last_name,
+            receiver_first_name   = receiver_first_name,
+            receiver_organization = receiver_organization,
+            receiver_department   = receiver_department,
+            receiver_address      = receiver_address,
+            receiver_tk           = receiver_tk,
+            receiver_phone        = receiver_phone,
+            receiver_email        = receiver_email,
+        )
+        if request.FILES.get('file'):
+            protocol.file = request.FILES['file']
+
+        try:
+            protocol.save()
+        except IntegrityError:
+            # Race condition — try again with new number
+            protocol.protocol_number = Protocol.next_number(chosen_year)
+            protocol.save()
+
+        messages.success(request, f'Πρωτόκολλο {protocol.full_number} καταχωρήθηκε επιτυχώς.')
+        return redirect('core:protocol_list')
+
+    return render(request, 'core/protocol_add.html', {
+        'next_num': next_num,
+        'year':     year,
+        'today':    today.isoformat(),
+    })
+
+
+@login_required
+def protocol_detail(request, protocol_id):
+    protocol = get_object_or_404(Protocol, pk=protocol_id)
+    return render(request, 'core/protocol_detail.html', {'protocol': protocol})
+
+
+@login_required
+def protocol_update(request, protocol_id):
+    protocol = get_object_or_404(Protocol, pk=protocol_id)
+
+    if request.method == 'POST':
+        subject               = (request.POST.get('subject') or '').strip()
+        receiver_last_name    = (request.POST.get('receiver_last_name') or '').strip()
+        receiver_first_name   = (request.POST.get('receiver_first_name') or '').strip()
+        receiver_organization = (request.POST.get('receiver_organization') or '').strip()
+        receiver_department   = (request.POST.get('receiver_department') or '').strip()
+        receiver_address      = (request.POST.get('receiver_address') or '').strip()
+        receiver_tk           = (request.POST.get('receiver_tk') or '').strip()
+        receiver_phone        = (request.POST.get('receiver_phone') or '').strip()
+        receiver_email        = (request.POST.get('receiver_email') or '').strip()
+
+        if not subject:
+            return render(request, 'core/protocol_add.html', {
+                'protocol': protocol,
+                'error':    'Το θέμα είναι υποχρεωτικό.',
+            })
+
+        protocol.subject               = subject
+        protocol.receiver_last_name    = receiver_last_name
+        protocol.receiver_first_name   = receiver_first_name
+        protocol.receiver_organization = receiver_organization
+        protocol.receiver_department   = receiver_department
+        protocol.receiver_address      = receiver_address
+        protocol.receiver_tk           = receiver_tk
+        protocol.receiver_phone        = receiver_phone
+        protocol.receiver_email        = receiver_email
+        if request.FILES.get('file'):
+            protocol.file = request.FILES['file']
+        protocol.save()
+
+        messages.success(request, f'Πρωτόκολλο {protocol.full_number} ενημερώθηκε.')
+        return redirect('core:protocol_list')
+
+    return render(request, 'core/protocol_add.html', {'protocol': protocol})
