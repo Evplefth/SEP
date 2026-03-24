@@ -192,17 +192,100 @@ class Members(models.Model):
         ordering            = ['last_name', 'first_name']
 
 
+class MemberFile(models.Model):
+    member      = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='files')
+    file        = models.FileField(upload_to='members/%Y/', verbose_name="Αρχείο")
+    description = models.CharField(max_length=200, blank=True, verbose_name="Περιγραφή")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.member} — {self.file.name}"
+
+    class Meta:
+        verbose_name        = "Αρχείο Μέλους"
+        verbose_name_plural = "Αρχεία Μέλους"
+        ordering            = ['-uploaded_at']
+
+
+# ════════════════════════════════════════════════════════════════
+#  ΑΣΦΑΛΙΣΤΙΚΕΣ ΕΤΑΙΡΕΙΕΣ & ΣΥΜΒΟΛΑΙΑ
+# ════════════════════════════════════════════════════════════════
+
+class InsuranceCompany(models.Model):
+    """Ασφαλιστική εταιρεία που εκδίδει ομαδικά συμβόλαια"""
+    name           = models.CharField(max_length=200, verbose_name="Επωνυμία")
+    address        = models.CharField(max_length=255, blank=True, verbose_name="Διεύθυνση")
+    phone          = models.CharField(max_length=20,  blank=True, verbose_name="Τηλέφωνο")
+    email          = models.EmailField(blank=True,              verbose_name="Email")
+    contact_person = models.CharField(max_length=150, blank=True, verbose_name="Υπεύθυνος Επικοινωνίας")
+    notes          = models.TextField(blank=True,              verbose_name="Παρατηρήσεις")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name        = "Ασφαλιστική Εταιρεία"
+        verbose_name_plural = "Ασφαλιστικές Εταιρείες"
+        ordering            = ['name']
+
+
+class InsuranceContract(models.Model):
+    """Ομαδικό συμβόλαιο — μία ασφαλιστική, πολλά μέλη"""
+    company         = models.ForeignKey(
+        InsuranceCompany, on_delete=models.CASCADE,
+        related_name='contracts', verbose_name="Ασφαλιστική Εταιρεία"
+    )
+    contract_number = models.CharField(max_length=100, verbose_name="Αριθμός Συμβολαίου")
+    coverage_type   = models.CharField(max_length=200, blank=True, verbose_name="Τύπος Κάλυψης")
+    amount          = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Ποσό Ασφαλίστρου")
+    start_date      = models.DateField(blank=True, null=True, verbose_name="Ημ. Έναρξης")
+    end_date        = models.DateField(blank=True, null=True, verbose_name="Ημ. Λήξης")
+    active          = models.BooleanField(default=True, verbose_name="Ενεργό")
+    notes           = models.TextField(blank=True, verbose_name="Παρατηρήσεις")
+
+    def __str__(self):
+        return f"{self.contract_number} — {self.company}"
+
+    class Meta:
+        verbose_name        = "Ασφαλιστικό Συμβόλαιο"
+        verbose_name_plural = "Ασφαλιστικά Συμβόλαια"
+        ordering            = ['-start_date']
+        unique_together     = ('company', 'contract_number')
+
+
+class MemberInsurance(models.Model):
+    """Σύνδεση μέλους με ασφαλιστικό συμβόλαιο"""
+    member              = models.ForeignKey(
+        Members, on_delete=models.CASCADE,
+        related_name='insurance_contracts', verbose_name="Μέλος"
+    )
+    contract            = models.ForeignKey(
+        InsuranceContract, on_delete=models.CASCADE,
+        related_name='members', verbose_name="Συμβόλαιο"
+    )
+    includes_dependents = models.BooleanField(default=False, verbose_name="Περιλαμβάνει Εξαρτώμενα")
+
+    def __str__(self):
+        return f"{self.member} → {self.contract}"
+
+    class Meta:
+        verbose_name    = "Ασφάλιση Μέλους"
+        verbose_name_plural = "Ασφαλίσεις Μελών"
+        unique_together = ('member', 'contract')
+
+
+# ════════════════════════════════════════════════════════════════
+#  ΠΡΩΤΟΚΟΛΛΟ
+# ════════════════════════════════════════════════════════════════
+
 class Protocol(models.Model):
-    # ── Αριθμός / Έτος ──────────────────────────────────────────
     protocol_number = models.PositiveIntegerField(verbose_name="Αριθμός Πρωτοκόλλου")
     year            = models.PositiveIntegerField(verbose_name="Έτος")
 
-    # ── Βασικά ──────────────────────────────────────────────────
     date    = models.DateField(verbose_name="Ημερομηνία")
     subject = models.CharField(max_length=500, verbose_name="Θέμα")
     file    = models.FileField(upload_to='protocols/%Y/', blank=True, null=True, verbose_name="Αρχείο")
 
-    # ── Αποστολέας ──────────────────────────────────────────────
     sender_last_name    = models.CharField(max_length=100, blank=True, verbose_name="Επώνυμο Αποστολέα")
     sender_first_name   = models.CharField(max_length=100, blank=True, verbose_name="Όνομα Αποστολέα")
     sender_organization = models.CharField(max_length=200, blank=True, verbose_name="Οργανισμός Αποστολέα")
@@ -212,7 +295,6 @@ class Protocol(models.Model):
     sender_phone        = models.CharField(max_length=20,  blank=True, verbose_name="Τηλέφωνο Αποστολέα")
     sender_email        = models.EmailField(blank=True,              verbose_name="Email Αποστολέα")
 
-    # ── Παραλήπτης ──────────────────────────────────────────────
     receiver_last_name    = models.CharField(max_length=100, blank=True, verbose_name="Επώνυμο Παραλήπτη")
     receiver_first_name   = models.CharField(max_length=100, blank=True, verbose_name="Όνομα Παραλήπτη")
     receiver_organization = models.CharField(max_length=200, blank=True, verbose_name="Οργανισμός Παραλήπτη")

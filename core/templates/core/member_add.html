@@ -24,9 +24,10 @@
 </div>
 {% endif %}
 
-<form method="post" class="space-y-6">
+<form method="post" enctype="multipart/form-data" class="space-y-6">
   {% csrf_token %}
 
+  <!-- Κατάσταση -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Κατάσταση Μέλους</h2>
@@ -43,6 +44,7 @@
     </div>
   </div>
 
+  <!-- Προσωπικά -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Προσωπικά Στοιχεία</h2>
@@ -101,6 +103,7 @@
     </div>
   </div>
 
+  <!-- Μητρώο -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Μητρώο</h2>
@@ -129,6 +132,7 @@
     </div>
   </div>
 
+  <!-- Εταιρίες -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
       <h2 class="font-semibold text-gray-800 text-sm">Εταιρίες Απασχόλησης</h2>
@@ -142,6 +146,7 @@
     </div>
   </div>
 
+  <!-- Άδειες & Ομαδικό -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
@@ -177,6 +182,7 @@
     </div>
   </div>
 
+  <!-- Εξαρτώμενα -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
       <h2 class="font-semibold text-gray-800 text-sm">Εξαρτώμενα Μέλη</h2>
@@ -190,6 +196,7 @@
     </div>
   </div>
 
+  <!-- Τράπεζα & Επικοινωνία -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Τράπεζα και Επικοινωνία</h2>
@@ -231,6 +238,54 @@
     </div>
   </div>
 
+  <!-- ══ Αρχεία Μέλους ══════════════════════════════════════════ -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+          </svg>
+        </div>
+        <h2 class="font-semibold text-gray-800 text-sm">Αρχεία</h2>
+      </div>
+      <button type="button" onclick="addFileRow()" class="text-sm text-blue-600 font-semibold hover:text-blue-700 transition">
+        + Προσθήκη Αρχείου
+      </button>
+    </div>
+    <div class="px-6 py-4">
+
+      <!-- Υπάρχοντα αρχεία (μόνο σε edit) -->
+      {% if member and member.files.all %}
+      <div class="mb-4 space-y-2">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Υπάρχοντα Αρχεία</p>
+        {% for f in member.files.all %}
+        <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
+          <div class="flex items-center gap-3 min-w-0">
+            <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <div class="min-w-0">
+              <a href="{{ f.file.url }}" target="_blank" class="text-sm text-blue-600 hover:underline truncate block">{{ f.file.name|cut:"members/" }}</a>
+              {% if f.description %}<p class="text-xs text-gray-400">{{ f.description }}</p>{% endif %}
+            </div>
+          </div>
+          <span class="text-xs text-gray-400 shrink-0 ml-4">{{ f.uploaded_at|date:"d/m/Y" }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Νέα αρχεία -->
+      <div id="file-empty" class="text-center py-6 text-gray-400 text-sm">
+        Κάντε κλικ στο "+ Προσθήκη Αρχείου" για να επισυνάψετε αρχεία.
+      </div>
+      <div id="file-rows" class="space-y-3"></div>
+
+    </div>
+  </div>
+
+  <!-- Παρατηρήσεις -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Παρατηρήσεις</h2>
@@ -247,6 +302,7 @@
     </div>
   </div>
 
+  <!-- Buttons -->
   <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
     <a href="{% url 'core:members_list' %}" class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">Ακύρωση</a>
     <button type="submit" class="px-8 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
@@ -260,22 +316,18 @@
 <script>
   const propertiesOptions = `{% for p in properties %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}`;
   const companyOptions = `{% for company in all_companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}`;
-  let exarCounter = {{ existing_exartomena|length }};
+  let exarCounter    = {{ existing_exartomena|length }};
   let companyCounter = {{ existing_companies|length }};
+  let fileCounter    = 0;
 
   function toggleMemberInactive(cb) {
     document.getElementById('member-inactive-date-wrapper').classList.toggle('hidden', cb.checked);
-    if (cb.checked) {
-      document.getElementById('inactive_date').value = '';
-    }
+    if (cb.checked) document.getElementById('inactive_date').value = '';
   }
 
   document.getElementById('date_of_registration').addEventListener('change', function () {
     const val = this.value;
-    if (!val) {
-      document.getElementById('date_of_deregistration').value = '';
-      return;
-    }
+    if (!val) { document.getElementById('date_of_deregistration').value = ''; return; }
     const d = new Date(val);
     d.setFullYear(d.getFullYear() + 5);
     document.getElementById('date_of_deregistration').value = d.toISOString().slice(0, 10);
@@ -285,10 +337,10 @@
     document.getElementById('omadiko-dates').classList.toggle('hidden', !cb.checked);
   }
 
+  // ── Εξαρτώμενα ───────────────────────────────────────────────
   function addExartomeno(name = '', propertyId = '') {
     const container = document.getElementById('exartomena-rows');
     document.getElementById('exartomena-empty').classList.add('hidden');
-
     const i = exarCounter++;
     const row = document.createElement('div');
     row.id = `exar-row-${i}`;
@@ -296,8 +348,7 @@
     row.innerHTML = `
       <input type="text" name="exartomeno_name_${i}" value="${name}" placeholder="Ονοματεπώνυμο εξαρτώμενου" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
       <select name="exartomeno_property_${i}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-        <option value="">Ιδιότητα</option>
-        ${propertiesOptions}
+        <option value="">Ιδιότητα</option>${propertiesOptions}
       </select>
       <button type="button" onclick="removeRow('exar-row-${i}', 'exartomena-empty', 'exartomena-rows')" class="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">Διαγραφή</button>
     `;
@@ -305,9 +356,10 @@
     row.querySelector(`select[name="exartomeno_property_${i}"]`).value = propertyId;
   }
 
+  // ── Εταιρίες ─────────────────────────────────────────────────
   function toggleCompanyActive(index, checked) {
     const inactiveWrapper = document.getElementById(`company-inactive-wrapper-${index}`);
-    const inactiveInput = document.getElementById(`company_inactive_date_${index}`);
+    const inactiveInput   = document.getElementById(`company_inactive_date_${index}`);
     inactiveWrapper.classList.toggle('hidden', checked);
     if (checked && inactiveInput) inactiveInput.value = '';
   }
@@ -315,7 +367,6 @@
   function addCompanyRow(companyId = '', active = true, activeDate = '', inactiveDate = '', notes = '') {
     const container = document.getElementById('company-rows');
     document.getElementById('company-empty').classList.add('hidden');
-
     const i = companyCounter++;
     const row = document.createElement('div');
     row.id = `company-row-${i}`;
@@ -325,8 +376,7 @@
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Εταιρία</label>
           <select name="company_id_${i}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="">Επιλέξτε εταιρία</option>
-            ${companyOptions}
+            <option value="">Επιλέξτε εταιρία</option>${companyOptions}
           </select>
         </div>
         <div class="flex items-center justify-between gap-3">
@@ -352,6 +402,43 @@
     `;
     container.appendChild(row);
     row.querySelector(`select[name="company_id_${i}"]`).value = companyId;
+  }
+
+  // ── Αρχεία ───────────────────────────────────────────────────
+  function addFileRow() {
+    const container = document.getElementById('file-rows');
+    document.getElementById('file-empty').classList.add('hidden');
+    const i = fileCounter++;
+    const row = document.createElement('div');
+    row.id = `file-row-${i}`;
+    row.className = 'grid grid-cols-1 sm:grid-cols-[1fr_220px_auto] gap-3 items-center border border-gray-200 rounded-lg px-4 py-3';
+    row.innerHTML = `
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Αρχείο</label>
+        <input type="file" name="member_file_${i}"
+          class="w-full text-sm text-gray-700 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"/>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Περιγραφή</label>
+        <input type="text" name="member_file_desc_${i}" placeholder="π.χ. Ταυτότητα, Σύμβαση..."
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
+      </div>
+      <button type="button" onclick="removeFileRow(${i})"
+        class="mt-5 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    `;
+    container.appendChild(row);
+  }
+
+  function removeFileRow(i) {
+    const row = document.getElementById(`file-row-${i}`);
+    if (row) row.remove();
+    if (document.getElementById('file-rows').children.length === 0) {
+      document.getElementById('file-empty').classList.remove('hidden');
+    }
   }
 
   function removeRow(rowId, emptyId, containerId) {
