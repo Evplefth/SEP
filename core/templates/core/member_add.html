@@ -146,38 +146,75 @@
     </div>
   </div>
 
-  <!-- Άδειες & Ομαδικό -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <h2 class="font-semibold text-gray-800 text-sm">Άδειες Οδήγησης</h2>
+  <!-- Άδειες Οδήγησης -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <h2 class="font-semibold text-gray-800 text-sm">Άδειες Οδήγησης</h2>
+    </div>
+    <div class="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_A" {% if form_data.driver_A %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Α</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_B" {% if form_data.driver_B %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Β</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_C" {% if form_data.driver_C %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Γ</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_D" {% if form_data.driver_D %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Δ</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="lifter" {% if form_data.lifter %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Χειριστής ανυψωτικού</label>
+    </div>
+  </div>
+
+  <!-- ══ ΟΜΑΔΙΚΟ — dynamic rows ══ -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+      <div>
+        <h2 class="font-semibold text-gray-800 text-sm">Ομαδικό Ασφαλιστήριο</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Ένα μέλος μπορεί να ανήκει σε πολλά συμβόλαια</p>
       </div>
-      <div class="px-6 py-5 space-y-3">
-        <label class="flex items-center gap-2"><input type="checkbox" name="driver_A" {% if form_data.driver_A %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Α</label>
-        <label class="flex items-center gap-2"><input type="checkbox" name="driver_B" {% if form_data.driver_B %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Β</label>
-        <label class="flex items-center gap-2"><input type="checkbox" name="driver_C" {% if form_data.driver_C %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Γ</label>
-        <label class="flex items-center gap-2"><input type="checkbox" name="driver_D" {% if form_data.driver_D %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Κατηγορία Δ</label>
-        <label class="flex items-center gap-2"><input type="checkbox" name="lifter" {% if form_data.lifter %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Χειριστής ανυψωτικού</label>
+      <div class="flex items-center gap-4">
+        <label class="flex items-center gap-2 text-sm text-gray-700">
+          <input type="checkbox" name="omadiko" id="omadiko"
+            {% if form_data.omadiko %}checked{% endif %}
+            onchange="toggleOmadiko(this)"
+            class="w-4 h-4 accent-blue-600">
+          Έχει ομαδικό
+        </label>
+        <button type="button" id="add-insurance-btn" onclick="addInsuranceRow()"
+          class="text-sm text-blue-600 font-semibold {% if not form_data.omadiko %}hidden{% endif %}">
+          + Προσθήκη Συμβολαίου
+        </button>
       </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <h2 class="font-semibold text-gray-800 text-sm">Ομαδικό</h2>
-      </div>
-      <div class="px-6 py-5 space-y-4">
-        <label class="flex items-center gap-2"><input type="checkbox" name="omadiko" id="omadiko" {% if form_data.omadiko %}checked{% endif %} onchange="toggleOmadiko(this)" class="w-4 h-4 accent-blue-600"> Έχει ομαδικό</label>
-        <label class="flex items-center gap-2"><input type="checkbox" name="omadiko_exartomena" {% if form_data.omadiko_exartomena %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Περιλαμβάνει εξαρτώμενα</label>
-        <div id="omadiko-dates" class="grid grid-cols-1 sm:grid-cols-2 gap-5 {% if not form_data.omadiko %}hidden{% endif %}">
-          <div>
-            <label for="omadiko_from" class="block text-xs font-semibold text-gray-600 mb-1.5">Από</label>
-            <input type="date" name="omadiko_from" id="omadiko_from" value="{{ form_data.omadiko_from|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label for="omadiko_to" class="block text-xs font-semibold text-gray-600 mb-1.5">Έως</label>
-            <input type="date" name="omadiko_to" id="omadiko_to" value="{{ form_data.omadiko_to|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
+    <div id="omadiko-section" class="{% if not form_data.omadiko %}hidden{% endif %}">
+      <!-- Ημερομηνίες -->
+      <div class="px-6 pt-5 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-5 border-b border-gray-100">
+        <div>
+          <label for="omadiko_from" class="block text-xs font-semibold text-gray-600 mb-1.5">Από</label>
+          <input type="date" name="omadiko_from" id="omadiko_from"
+            value="{{ form_data.omadiko_from|default:'' }}"
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
+        <div>
+          <label for="omadiko_to" class="block text-xs font-semibold text-gray-600 mb-1.5">Έως</label>
+          <input type="date" name="omadiko_to" id="omadiko_to"
+            value="{{ form_data.omadiko_to|default:'' }}"
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <!-- Rows συμβολαίων -->
+      <div class="px-6 py-4">
+        <div id="insurance-empty" class="text-center py-6 text-gray-400 text-sm {% if existing_insurance %}hidden{% endif %}">
+          Πατήστε "+ Προσθήκη Συμβολαίου" για να προσθέσετε ασφαλιστήριο.
+        </div>
+        <div id="insurance-rows" class="space-y-4"></div>
+      </div>
+
+      <!-- Ομαδικό εξαρτώμενα -->
+      <div class="px-6 pb-5">
+        <label class="flex items-center gap-2 text-sm text-gray-700">
+          <input type="checkbox" name="omadiko_exartomena"
+            {% if form_data.omadiko_exartomena %}checked{% endif %}
+            class="w-4 h-4 accent-blue-600">
+          Περιλαμβάνει εξαρτώμενα (ομαδικό)
+        </label>
       </div>
     </div>
   </div>
@@ -238,7 +275,7 @@
     </div>
   </div>
 
-  <!-- ══ Αρχεία Μέλους ══════════════════════════════════════════ -->
+  <!-- Αρχεία -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
       <div class="flex items-center gap-2">
@@ -254,8 +291,6 @@
       </button>
     </div>
     <div class="px-6 py-4">
-
-      <!-- Υπάρχοντα αρχεία (μόνο σε edit) -->
       {% if member and member.files.all %}
       <div class="mb-4 space-y-2">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Υπάρχοντα Αρχεία</p>
@@ -275,13 +310,10 @@
         {% endfor %}
       </div>
       {% endif %}
-
-      <!-- Νέα αρχεία -->
       <div id="file-empty" class="text-center py-6 text-gray-400 text-sm">
         Κάντε κλικ στο "+ Προσθήκη Αρχείου" για να επισυνάψετε αρχεία.
       </div>
       <div id="file-rows" class="space-y-3"></div>
-
     </div>
   </div>
 
@@ -315,11 +347,15 @@
 {% block extra_scripts %}
 <script>
   const propertiesOptions = `{% for p in properties %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}`;
-  const companyOptions = `{% for company in all_companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}`;
-  let exarCounter    = {{ existing_exartomena|length }};
-  let companyCounter = {{ existing_companies|length }};
-  let fileCounter    = 0;
+  const companyOptions    = `{% for company in all_companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}`;
+  const insuranceOptions  = `{% for ins in insurance_companies %}<option value="{{ ins.id }}">{{ ins.name }}</option>{% endfor %}`;
 
+  let exarCounter      = {{ existing_exartomena|length }};
+  let companyCounter   = {{ existing_companies|length }};
+  let insuranceCounter = {{ existing_insurance|length }};
+  let fileCounter      = 0;
+
+  // ── Κατάσταση ────────────────────────────────────────────────
   function toggleMemberInactive(cb) {
     document.getElementById('member-inactive-date-wrapper').classList.toggle('hidden', cb.checked);
     if (cb.checked) document.getElementById('inactive_date').value = '';
@@ -333,8 +369,95 @@
     document.getElementById('date_of_deregistration').value = d.toISOString().slice(0, 10);
   });
 
+  // ── Ομαδικό toggle ───────────────────────────────────────────
   function toggleOmadiko(cb) {
-    document.getElementById('omadiko-dates').classList.toggle('hidden', !cb.checked);
+    document.getElementById('omadiko-section').classList.toggle('hidden', !cb.checked);
+    document.getElementById('add-insurance-btn').classList.toggle('hidden', !cb.checked);
+  }
+
+  // ── AJAX: φόρτωση συμβολαίων ─────────────────────────────────
+  async function loadContracts(companyId, selectEl, preselectId = null) {
+    selectEl.innerHTML = '<option value="">Φόρτωση...</option>';
+    if (!companyId) {
+      selectEl.innerHTML = '<option value="">— Επιλέξτε πρώτα ασφαλιστική —</option>';
+      return;
+    }
+    try {
+      const resp = await fetch(`/insurance/${companyId}/contracts.json/`);
+      const data = await resp.json();
+      selectEl.innerHTML = '<option value="">— Επιλέξτε συμβόλαιο —</option>';
+      data.contracts.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value       = c.id;
+        opt.textContent = c.contract_number + (c.coverage_type ? ` — ${c.coverage_type}` : '');
+        if (preselectId && String(c.id) === String(preselectId)) opt.selected = true;
+        selectEl.appendChild(opt);
+      });
+      if (data.contracts.length === 0) {
+        selectEl.innerHTML = '<option value="">Δεν υπάρχουν ενεργά συμβόλαια</option>';
+      }
+    } catch {
+      selectEl.innerHTML = '<option value="">Σφάλμα φόρτωσης</option>';
+    }
+  }
+
+  // ── Προσθήκη row ασφάλισης ───────────────────────────────────
+  function addInsuranceRow(companyId = '', contractId = '', includesDependents = false) {
+    const container = document.getElementById('insurance-rows');
+    document.getElementById('insurance-empty').classList.add('hidden');
+    const i = insuranceCounter++;
+    const row = document.createElement('div');
+    row.id = `ins-row-${i}`;
+    row.className = 'border border-gray-200 rounded-xl p-4';
+    row.innerHTML = `
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ασφαλιστική Εταιρεία</label>
+          <select id="ins_company_${i}"
+            onchange="loadContracts(this.value, document.getElementById('insurance_contract_${i}'))"
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            <option value="">— Επιλέξτε ασφαλιστική —</option>
+            ${insuranceOptions}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός Συμβολαίου</label>
+          <select name="insurance_contract_${i}" id="insurance_contract_${i}"
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            <option value="">— Επιλέξτε πρώτα ασφαλιστική —</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-between sm:col-span-2">
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" name="insurance_includes_dependents_${i}"
+              ${includesDependents ? 'checked' : ''}
+              class="w-4 h-4 accent-blue-600">
+            Περιλαμβάνει εξαρτώμενα στην ασφάλιση
+          </label>
+          <button type="button" onclick="removeInsuranceRow(${i})"
+            class="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition">
+            Διαγραφή
+          </button>
+        </div>
+      </div>
+    `;
+    container.appendChild(row);
+
+    // Αν edit mode — επίλεξε εταιρεία και φόρτωσε συμβόλαια
+    const companySelect  = document.getElementById(`ins_company_${i}`);
+    const contractSelect = document.getElementById(`insurance_contract_${i}`);
+    if (companyId) {
+      companySelect.value = companyId;
+      loadContracts(companyId, contractSelect, contractId);
+    }
+  }
+
+  function removeInsuranceRow(i) {
+    const row = document.getElementById(`ins-row-${i}`);
+    if (row) row.remove();
+    if (document.getElementById('insurance-rows').children.length === 0) {
+      document.getElementById('insurance-empty').classList.remove('hidden');
+    }
   }
 
   // ── Εξαρτώμενα ───────────────────────────────────────────────
@@ -358,10 +481,9 @@
 
   // ── Εταιρίες ─────────────────────────────────────────────────
   function toggleCompanyActive(index, checked) {
-    const inactiveWrapper = document.getElementById(`company-inactive-wrapper-${index}`);
-    const inactiveInput   = document.getElementById(`company_inactive_date_${index}`);
-    inactiveWrapper.classList.toggle('hidden', checked);
-    if (checked && inactiveInput) inactiveInput.value = '';
+    document.getElementById(`company-inactive-wrapper-${index}`).classList.toggle('hidden', checked);
+    const inp = document.getElementById(`company_inactive_date_${index}`);
+    if (checked && inp) inp.value = '';
   }
 
   function addCompanyRow(companyId = '', active = true, activeDate = '', inactiveDate = '', notes = '') {
@@ -449,12 +571,17 @@
     }
   }
 
+  // ── Αρχικοποίηση υπαρχόντων δεδομένων ───────────────────────
   {% for item in existing_exartomena %}
   addExartomeno('{{ item.name|escapejs }}', '{{ item.property_id }}');
   {% endfor %}
 
   {% for item in existing_companies %}
   addCompanyRow('{{ item.company_id }}', {{ item.active|yesno:"true,false" }}, '{{ item.active_date }}', '{{ item.inactive_date }}', '{{ item.notes|escapejs }}');
+  {% endfor %}
+
+  {% for item in existing_insurance %}
+  addInsuranceRow('{{ item.company_id }}', '{{ item.contract_id }}', {{ item.includes_dependents|yesno:"true,false" }});
   {% endfor %}
 </script>
 {% endblock %}

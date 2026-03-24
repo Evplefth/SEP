@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -19,7 +20,11 @@ import datetime
 from core.models import (
     Banks,
     Exartomena,
+    InsuranceCompany,
+    InsuranceContract,
     Invoices,
+    MemberFile,
+    MemberInsurance,
     Members,
     Properties,
     Protocol,
@@ -44,20 +49,17 @@ def media_preview(request, path):
 def _extract_row_indexes(data, prefixes):
     indexes = set()
     pattern = re.compile(r"_(\d+)$")
-
     for key in data.keys():
         if any(key.startswith(prefix) for prefix in prefixes):
             match = pattern.search(key)
             if match:
                 indexes.add(int(match.group(1)))
-
     return sorted(indexes)
 
 
 def _country_code_from_member_nationality(member):
     if not member.nationality:
         return ""
-
     country_name = member.nationality.name.strip().lower()
     for code, name in countries:
         if name.strip().lower() == country_name:
@@ -65,24 +67,29 @@ def _country_code_from_member_nationality(member):
     return ""
 
 
-def _member_form_context(form_data=None, member=None, error=None, existing_exartomena=None, existing_companies=None):
+# ── FIX 1: προστέθηκε existing_insurance ────────────────────────
+def _member_form_context(form_data=None, member=None, error=None,
+                          existing_exartomena=None, existing_companies=None,
+                          existing_insurance=None):
     return {
-        "banks": Banks.objects.all().order_by("name"),
-        "properties": Properties.objects.all().order_by("name"),
-        "all_companies": companies.objects.order_by("name"),
-        "form_data": form_data or {},
-        "member": member,
-        "error": error,
+        "banks":               Banks.objects.all().order_by("name"),
+        "properties":          Properties.objects.all().order_by("name"),
+        "all_companies":       companies.objects.order_by("name"),
+        "insurance_companies": InsuranceCompany.objects.order_by("name"),
+        "form_data":           form_data or {},
+        "member":              member,
+        "error":               error,
         "existing_exartomena": existing_exartomena or [],
-        "existing_companies": existing_companies or [],
+        "existing_companies":  existing_companies or [],
+        "existing_insurance":  existing_insurance or [],  # ← πολλαπλά
     }
 
 
 def _company_form_context(form_data=None, company=None, error=None, existing_invoices=None):
     return {
-        "form_data": form_data or {},
-        "company": company,
-        "error": error,
+        "form_data":         form_data or {},
+        "company":           company,
+        "error":             error,
         "existing_invoices": existing_invoices or [],
     }
 
@@ -90,22 +97,20 @@ def _company_form_context(form_data=None, company=None, error=None, existing_inv
 def _invoice_form_context(form_data=None, invoice=None, error=None):
     return {
         "form_data": form_data or {},
-        "invoice": invoice,
+        "invoice":   invoice,
         "companies": companies.objects.order_by("name"),
-        "error": error,
+        "error":     error,
     }
 
 
 def _posted_exartomena(request):
     rows = []
     for index in _extract_row_indexes(request.POST, ["exartomeno_name_", "exartomeno_property_"]):
-        rows.append(
-            {
-                "index": index,
-                "name": request.POST.get(f"exartomeno_name_{index}", ""),
-                "property_id": request.POST.get(f"exartomeno_property_{index}", ""),
-            }
-        )
+        rows.append({
+            "index":       index,
+            "name":        request.POST.get(f"exartomeno_name_{index}", ""),
+            "property_id": request.POST.get(f"exartomeno_property_{index}", ""),
+        })
     return rows
 
 
@@ -115,16 +120,14 @@ def _posted_member_companies(request):
         request.POST,
         ["company_id_", "company_active_", "company_active_date_", "company_inactive_date_", "company_notes_"],
     ):
-        rows.append(
-            {
-                "index": index,
-                "company_id": request.POST.get(f"company_id_{index}", ""),
-                "active": request.POST.get(f"company_active_{index}") == "on",
-                "active_date": request.POST.get(f"company_active_date_{index}", ""),
-                "inactive_date": request.POST.get(f"company_inactive_date_{index}", ""),
-                "notes": request.POST.get(f"company_notes_{index}", ""),
-            }
-        )
+        rows.append({
+            "index":         index,
+            "company_id":    request.POST.get(f"company_id_{index}", ""),
+            "active":        request.POST.get(f"company_active_{index}") == "on",
+            "active_date":   request.POST.get(f"company_active_date_{index}", ""),
+            "inactive_date": request.POST.get(f"company_inactive_date_{index}", ""),
+            "notes":         request.POST.get(f"company_notes_{index}", ""),
+        })
     return rows
 
 
@@ -134,25 +137,22 @@ def _posted_invoices(request):
         set(_extract_row_indexes(request.POST, ["invoice_"]) + _extract_row_indexes(request.FILES, ["invoice_scan_file_"]))
     )
     for index in indexes:
-        rows.append(
-            {
-                "index": index,
-                "invoice_id": request.POST.get(f"invoice_id_{index}", ""),
-                "invoice_number": request.POST.get(f"invoice_number_{index}", ""),
-                "amount": request.POST.get(f"invoice_amount_{index}", ""),
-                "service_type": request.POST.get(f"invoice_service_type_{index}", ""),
-                "date_of_issue": request.POST.get(f"invoice_date_of_issue_{index}", ""),
-                "status": request.POST.get(f"invoice_status_{index}") == "on",
-                "scan_file": request.FILES.get(f"invoice_scan_file_{index}"),
-                "scan_name": request.POST.get(f"invoice_existing_scan_{index}", ""),
-            }
-        )
+        rows.append({
+            "index":          index,
+            "invoice_id":     request.POST.get(f"invoice_id_{index}", ""),
+            "invoice_number": request.POST.get(f"invoice_number_{index}", ""),
+            "amount":         request.POST.get(f"invoice_amount_{index}", ""),
+            "service_type":   request.POST.get(f"invoice_service_type_{index}", ""),
+            "date_of_issue":  request.POST.get(f"invoice_date_of_issue_{index}", ""),
+            "status":         request.POST.get(f"invoice_status_{index}") == "on",
+            "scan_file":      request.FILES.get(f"invoice_scan_file_{index}"),
+            "scan_name":      request.POST.get(f"invoice_existing_scan_{index}", ""),
+        })
     return rows
 
 
 def _save_exartomena(request, member):
     Exartomena.objects.filter(member=member).delete()
-
     for row in _posted_exartomena(request):
         name = (row["name"] or "").strip()
         property_id = row["property_id"] or None
@@ -162,16 +162,13 @@ def _save_exartomena(request, member):
 
 def _save_member_companies(request, member):
     companies_members.objects.filter(member=member).delete()
-
     for row in _posted_member_companies(request):
         company_id = row["company_id"] or None
         if not company_id:
             continue
-
-        active = row["active"]
-        active_date = row["active_date"] or (date.today().isoformat() if active else None)
+        active        = row["active"]
+        active_date   = row["active_date"] or (date.today().isoformat() if active else None)
         inactive_date = row["inactive_date"] or (None if active else date.today().isoformat())
-
         companies_members.objects.create(
             member=member,
             company_id=company_id,
@@ -184,15 +181,12 @@ def _save_member_companies(request, member):
 
 def _save_company_invoices(request, company):
     keep_ids = []
-
     for row in _posted_invoices(request):
         invoice_number = (row["invoice_number"] or "").strip()
-        amount = row["amount"] or None
-        date_of_issue = row["date_of_issue"] or None
-
+        amount         = row["amount"] or None
+        date_of_issue  = row["date_of_issue"] or None
         if not invoice_number or not amount or not date_of_issue:
             continue
-
         invoice_id = row["invoice_id"] or None
         if invoice_id:
             invoice = Invoices.objects.filter(pk=invoice_id, company=company).first()
@@ -200,27 +194,50 @@ def _save_company_invoices(request, company):
                 invoice = Invoices(company=company)
         else:
             invoice = Invoices(company=company)
-
         invoice.invoice_number = invoice_number
-        invoice.amount = amount
-        invoice.service_type = (row["service_type"] or "").strip() or None
-        invoice.date_of_issue = date_of_issue
-        invoice.status = row["status"]
+        invoice.amount         = amount
+        invoice.service_type   = (row["service_type"] or "").strip() or None
+        invoice.date_of_issue  = date_of_issue
+        invoice.status         = row["status"]
         if row["scan_file"]:
             invoice.scan_file = row["scan_file"]
         invoice.save()
         keep_ids.append(invoice.id)
-
     Invoices.objects.filter(company=company).exclude(id__in=keep_ids).delete()
+
+
+def _save_member_files(request, member):
+    i = 0
+    while True:
+        f = request.FILES.get(f"member_file_{i}")
+        if f is None:
+            break
+        desc = (request.POST.get(f"member_file_desc_{i}") or "").strip()
+        MemberFile.objects.create(member=member, file=f, description=desc)
+        i += 1
+
+
+# ── FIX 2: πολλαπλά συμβόλαια με _extract_row_indexes ──────────
+def _save_member_insurance(request, member):
+    """Αποθηκεύει ΠΟΛΛΑΠΛΑ ομαδικά συμβόλαια ανά μέλος."""
+    MemberInsurance.objects.filter(member=member).delete()
+    for index in _extract_row_indexes(request.POST, ["insurance_contract_"]):
+        contract_id         = request.POST.get(f"insurance_contract_{index}") or None
+        includes_dependents = request.POST.get(f"insurance_includes_dependents_{index}") == "on"
+        if contract_id:
+            MemberInsurance.objects.create(
+                member=member,
+                contract_id=contract_id,
+                includes_dependents=includes_dependents,
+            )
 
 
 def _member_from_post(request, member=None):
     member = member or Members()
-
-    member.first_name = (request.POST.get("first_name") or "").strip()
-    member.last_name = (request.POST.get("last_name") or "").strip()
-    member.fathers_name = (request.POST.get("fathers_name") or "").strip()
-    member.gender = request.POST.get("gender") or None
+    member.first_name    = (request.POST.get("first_name") or "").strip()
+    member.last_name     = (request.POST.get("last_name") or "").strip()
+    member.fathers_name  = (request.POST.get("fathers_name") or "").strip()
+    member.gender        = request.POST.get("gender") or None
     member.date_of_birth = request.POST.get("date_of_birth") or None
 
     nationality_code = request.POST.get("nationality") or None
@@ -231,40 +248,40 @@ def _member_from_post(request, member=None):
     else:
         member.nationality = None
 
-    member.ADT = (request.POST.get("ADT") or "").strip()
-    member.AFM = (request.POST.get("AFM") or "").strip()
+    member.ADT  = (request.POST.get("ADT") or "").strip()
+    member.AFM  = (request.POST.get("AFM") or "").strip()
     member.AMKA = (request.POST.get("AMKA") or "").strip()
-    member.AMA = (request.POST.get("AMA") or "").strip()
+    member.AMA  = (request.POST.get("AMA") or "").strip()
 
-    member.mitroo_type = request.POST.get("mitroo_type") or None
-    member.mitroo_number = request.POST.get("mitroo_number") or None
-    member.date_of_registration = request.POST.get("date_of_registration") or None
+    member.mitroo_type            = request.POST.get("mitroo_type") or None
+    member.mitroo_number          = request.POST.get("mitroo_number") or None
+    member.date_of_registration   = request.POST.get("date_of_registration") or None
     member.date_of_deregistration = request.POST.get("date_of_deregistration") or None
 
     member.driver_A = request.POST.get("driver_A") == "on"
     member.driver_B = request.POST.get("driver_B") == "on"
     member.driver_C = request.POST.get("driver_C") == "on"
     member.driver_D = request.POST.get("driver_D") == "on"
-    member.lifter = request.POST.get("lifter") == "on"
+    member.lifter   = request.POST.get("lifter") == "on"
 
-    member.omadiko = request.POST.get("omadiko") == "on"
-    member.omadiko_from = request.POST.get("omadiko_from") or None
-    member.omadiko_to = request.POST.get("omadiko_to") or None
+    member.omadiko            = request.POST.get("omadiko") == "on"
+    member.omadiko_from       = request.POST.get("omadiko_from") or None
+    member.omadiko_to         = request.POST.get("omadiko_to") or None
     member.omadiko_exartomena = request.POST.get("omadiko_exartomena") == "on"
 
-    member.bank_id = request.POST.get("bank") or None
+    member.bank_id             = request.POST.get("bank") or None
     member.bank_account_number = (request.POST.get("bank_account_number") or "").strip() or None
 
-    member.address = (request.POST.get("address") or "").strip() or None
-    member.tk = (request.POST.get("tk") or "").strip() or None
+    member.address       = (request.POST.get("address") or "").strip() or None
+    member.tk            = (request.POST.get("tk") or "").strip() or None
     member.phone_number1 = (request.POST.get("phone_number1") or "").strip() or None
     member.phone_number2 = (request.POST.get("phone_number2") or "").strip() or None
-    member.email = (request.POST.get("email") or "").strip() or None
+    member.email         = (request.POST.get("email") or "").strip() or None
 
-    member.notes = (request.POST.get("notes") or "").strip() or None
+    member.notes          = (request.POST.get("notes") or "").strip() or None
     member.pending_issues = (request.POST.get("pending_issues") or "").strip() or None
 
-    member.active = request.POST.get("active") == "on"
+    member.active        = request.POST.get("active") == "on"
     member.inactive_date = request.POST.get("inactive_date") or None
     if member.active:
         member.inactive_date = None
@@ -274,15 +291,15 @@ def _member_from_post(request, member=None):
 
 def _company_from_post(request, company=None):
     company = company or companies()
-    company.name = (request.POST.get("name") or "").strip()
-    company.AFM = (request.POST.get("AFM") or "").strip()
-    company.DOY = (request.POST.get("DOY") or "").strip() or None
-    company.address = (request.POST.get("address") or "").strip() or None
-    company.services = (request.POST.get("services") or "").strip() or None
+    company.name             = (request.POST.get("name") or "").strip()
+    company.AFM              = (request.POST.get("AFM") or "").strip()
+    company.DOY              = (request.POST.get("DOY") or "").strip() or None
+    company.address          = (request.POST.get("address") or "").strip() or None
+    company.services         = (request.POST.get("services") or "").strip() or None
     company.ekremotes_ofiles = (request.POST.get("ekremotes_ofiles") or "").strip() or None
-    company.notes = (request.POST.get("notes") or "").strip() or None
-    company.active = request.POST.get("active") == "on"
-    company.inactive_date = request.POST.get("inactive_date") or None
+    company.notes            = (request.POST.get("notes") or "").strip() or None
+    company.active           = request.POST.get("active") == "on"
+    company.inactive_date    = request.POST.get("inactive_date") or None
     if company.active:
         company.inactive_date = None
     return company
@@ -290,12 +307,12 @@ def _company_from_post(request, company=None):
 
 def _invoice_from_post(request, invoice=None):
     invoice = invoice or Invoices()
-    invoice.company_id = request.POST.get("company") or None
+    invoice.company_id     = request.POST.get("company") or None
     invoice.invoice_number = (request.POST.get("invoice_number") or "").strip()
-    invoice.amount = request.POST.get("amount") or None
-    invoice.service_type = (request.POST.get("service_type") or "").strip() or None
-    invoice.date_of_issue = request.POST.get("date_of_issue") or None
-    invoice.status = request.POST.get("status") == "on"
+    invoice.amount         = request.POST.get("amount") or None
+    invoice.service_type   = (request.POST.get("service_type") or "").strip() or None
+    invoice.date_of_issue  = request.POST.get("date_of_issue") or None
+    invoice.status         = request.POST.get("status") == "on"
     if request.FILES.get("scan_file"):
         invoice.scan_file = request.FILES["scan_file"]
     return invoice
@@ -303,13 +320,13 @@ def _invoice_from_post(request, invoice=None):
 
 def _validate_member_post(request):
     required_fields = {
-        "first_name": "Όνομα",
-        "last_name": "Επώνυμο",
+        "first_name":   "Όνομα",
+        "last_name":    "Επώνυμο",
         "fathers_name": "Πατρώνυμο",
-        "ADT": "ΑΔΤ",
-        "AFM": "ΑΦΜ",
+        "ADT":  "ΑΔΤ",
+        "AFM":  "ΑΦΜ",
         "AMKA": "ΑΜΚΑ",
-        "AMA": "ΑΜΑ",
+        "AMA":  "ΑΜΑ",
     }
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
@@ -319,32 +336,26 @@ def _validate_member_post(request):
 
 def _find_member_duplicate(member):
     unique_fields = {
-        "ADT": "ΑΔΤ",
-        "AFM": "ΑΦΜ",
+        "ADT":  "ΑΔΤ",
+        "AFM":  "ΑΦΜ",
         "AMKA": "ΑΜΚΑ",
-        "AMA": "ΑΜΑ",
+        "AMA":  "ΑΜΑ",
         "bank_account_number": "IBAN",
     }
-
     for field, label in unique_fields.items():
         value = getattr(member, field, None)
         if not value:
             continue
-
         qs = Members.objects.filter(**{field: value})
         if member.pk:
             qs = qs.exclude(pk=member.pk)
         if qs.exists():
             return label
-
     return None
 
 
 def _validate_company_post(request):
-    required_fields = {
-        "name": "Επωνυμία",
-        "AFM": "ΑΦΜ",
-    }
+    required_fields = {"name": "Επωνυμία", "AFM": "ΑΦΜ"}
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
         return f"Συμπλήρωσε τα υποχρεωτικά πεδία: {', '.join(missing)}."
@@ -353,10 +364,10 @@ def _validate_company_post(request):
 
 def _validate_invoice_post(request):
     required_fields = {
-        "company": "Εταιρία",
+        "company":        "Εταιρία",
         "invoice_number": "Αριθμός τιμολογίου",
-        "amount": "Ποσό",
-        "date_of_issue": "Ημερομηνία έκδοσης",
+        "amount":         "Ποσό",
+        "date_of_issue":  "Ημερομηνία έκδοσης",
     }
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
@@ -372,10 +383,8 @@ def _find_invoice_duplicate(invoice):
 
 
 def _protocol_from_post(request):
-    """Διαβάζει όλα τα protocol fields από το POST — χρησιμοποιείται και στο create και στο update."""
     return {
         "subject":               (request.POST.get("subject") or "").strip(),
-        # ── Αποστολέας ──────────────────────────────────────────
         "sender_last_name":      (request.POST.get("sender_last_name") or "").strip(),
         "sender_first_name":     (request.POST.get("sender_first_name") or "").strip(),
         "sender_organization":   (request.POST.get("sender_organization") or "").strip(),
@@ -384,7 +393,6 @@ def _protocol_from_post(request):
         "sender_tk":             (request.POST.get("sender_tk") or "").strip(),
         "sender_phone":          (request.POST.get("sender_phone") or "").strip(),
         "sender_email":          (request.POST.get("sender_email") or "").strip(),
-        # ── Παραλήπτης ──────────────────────────────────────────
         "receiver_last_name":    (request.POST.get("receiver_last_name") or "").strip(),
         "receiver_first_name":   (request.POST.get("receiver_first_name") or "").strip(),
         "receiver_organization": (request.POST.get("receiver_organization") or "").strip(),
@@ -402,15 +410,11 @@ def _protocol_from_post(request):
 
 @login_required
 def dashboard(request):
-    return render(
-        request,
-        "core/dashboard.html",
-        {
-            "members_count":   Members.objects.count(),
-            "companies_count": companies.objects.count(),
-            "invoices_count":  Invoices.objects.count(),
-        },
-    )
+    return render(request, "core/dashboard.html", {
+        "members_count":   Members.objects.count(),
+        "companies_count": companies.objects.count(),
+        "invoices_count":  Invoices.objects.count(),
+    })
 
 
 # ════════════════════════════════════════════════════════════════
@@ -519,6 +523,8 @@ def member_create(request):
             member.save()
             _save_exartomena(request, member)
             _save_member_companies(request, member)
+            _save_member_files(request, member)
+            _save_member_insurance(request, member)
         except IntegrityError:
             return render(request, "core/member_add.html", _member_form_context(
                 request.POST, error="Υπάρχει ήδη μέλος με ίδιο ΑΔΤ, ΑΦΜ, ΑΜΚΑ, ΑΜΑ ή IBAN.",
@@ -532,6 +538,7 @@ def member_create(request):
     return render(request, "core/member_add.html", _member_form_context())
 
 
+# ── FIX 3: member_update με πολλαπλά existing_insurance ─────────
 @login_required
 def member_update(request, member_id):
     member = get_object_or_404(Members, pk=member_id)
@@ -558,6 +565,8 @@ def member_update(request, member_id):
             member.save()
             _save_exartomena(request, member)
             _save_member_companies(request, member)
+            _save_member_files(request, member)
+            _save_member_insurance(request, member)
         except IntegrityError:
             return render(request, "core/member_add.html", _member_form_context(
                 request.POST, member=member, error="Υπάρχει ήδη μέλος με ίδιο ΑΔΤ, ΑΦΜ, ΑΜΚΑ, ΑΜΑ ή IBAN.",
@@ -568,40 +577,53 @@ def member_update(request, member_id):
         messages.success(request, f"Το μέλος {member.last_name} {member.first_name} ενημερώθηκε επιτυχώς.")
         return redirect("core:members_list")
 
+    # ── Υπάρχουσες ασφαλίσεις — ΠΟΛΛΑΠΛΕΣ ──────────────────────
+    existing_insurance = [
+        {
+            "index":               i,
+            "company_id":          mi.contract.company_id,
+            "contract_id":         mi.contract_id,
+            "includes_dependents": mi.includes_dependents,
+        }
+        for i, mi in enumerate(
+            member.insurance_contracts.select_related("contract__company").all()
+        )
+    ]
+
     form_data = {
-        "first_name": member.first_name,
-        "last_name": member.last_name,
-        "fathers_name": member.fathers_name,
-        "gender": member.gender or "",
-        "date_of_birth": member.date_of_birth.isoformat() if member.date_of_birth else "",
-        "nationality": _country_code_from_member_nationality(member),
-        "ADT": member.ADT,
-        "AFM": member.AFM,
+        "first_name":             member.first_name,
+        "last_name":              member.last_name,
+        "fathers_name":           member.fathers_name,
+        "gender":                 member.gender or "",
+        "date_of_birth":          member.date_of_birth.isoformat() if member.date_of_birth else "",
+        "nationality":            _country_code_from_member_nationality(member),
+        "ADT":  member.ADT,
+        "AFM":  member.AFM,
         "AMKA": member.AMKA,
-        "AMA": member.AMA,
-        "mitroo_type": member.mitroo_type or "",
-        "mitroo_number": str(member.mitroo_number or ""),
-        "date_of_registration": member.date_of_registration.isoformat() if member.date_of_registration else "",
+        "AMA":  member.AMA,
+        "mitroo_type":            member.mitroo_type or "",
+        "mitroo_number":          str(member.mitroo_number or ""),
+        "date_of_registration":   member.date_of_registration.isoformat() if member.date_of_registration else "",
         "date_of_deregistration": member.date_of_deregistration.isoformat() if member.date_of_deregistration else "",
         "driver_A": member.driver_A,
         "driver_B": member.driver_B,
         "driver_C": member.driver_C,
         "driver_D": member.driver_D,
-        "lifter": member.lifter,
-        "omadiko": member.omadiko,
-        "omadiko_from": member.omadiko_from.isoformat() if member.omadiko_from else "",
-        "omadiko_to": member.omadiko_to.isoformat() if member.omadiko_to else "",
+        "lifter":   member.lifter,
+        "omadiko":            member.omadiko,
+        "omadiko_from":       member.omadiko_from.isoformat() if member.omadiko_from else "",
+        "omadiko_to":         member.omadiko_to.isoformat() if member.omadiko_to else "",
         "omadiko_exartomena": member.omadiko_exartomena,
-        "bank": str(member.bank_id or ""),
+        "bank":                str(member.bank_id or ""),
         "bank_account_number": member.bank_account_number or "",
-        "address": member.address or "",
-        "tk": member.tk or "",
+        "address":       member.address or "",
+        "tk":            member.tk or "",
         "phone_number1": member.phone_number1 or "",
         "phone_number2": member.phone_number2 or "",
-        "email": member.email or "",
-        "notes": member.notes or "",
+        "email":         member.email or "",
+        "notes":          member.notes or "",
         "pending_issues": member.pending_issues or "",
-        "active": member.active,
+        "active":        member.active,
         "inactive_date": member.inactive_date.isoformat() if member.inactive_date else "",
     }
 
@@ -612,12 +634,12 @@ def member_update(request, member_id):
 
     existing_companies = [
         {
-            "index": i,
-            "company_id": link.company_id,
-            "active": link.active,
-            "active_date": link.active_date.isoformat() if link.active_date else "",
+            "index":         i,
+            "company_id":    link.company_id,
+            "active":        link.active,
+            "active_date":   link.active_date.isoformat() if link.active_date else "",
             "inactive_date": link.inactive_date.isoformat() if link.inactive_date else "",
-            "notes": link.notes or "",
+            "notes":         link.notes or "",
         }
         for i, link in enumerate(member.companies.select_related("company").all())
     ]
@@ -626,6 +648,7 @@ def member_update(request, member_id):
         form_data, member=member,
         existing_exartomena=existing_exartomena,
         existing_companies=existing_companies,
+        existing_insurance=existing_insurance,
     ))
 
 
@@ -667,8 +690,8 @@ def company_detail(request, company_id):
     company_members = company.members.select_related("member").all().order_by("-active", "member__last_name")
 
     return render(request, "core/company_detail.html", {
-        "company": company,
-        "invoices": invoices_qs,
+        "company":         company,
+        "invoices":        invoices_qs,
         "company_members": company_members,
         "filters_applied": filters_applied,
     })
@@ -723,28 +746,28 @@ def company_update(request, company_id):
         return redirect("core:companies_list")
 
     form_data = {
-        "name": company.name,
-        "AFM": company.AFM,
-        "DOY": company.DOY or "",
-        "address": company.address or "",
-        "services": company.services or "",
+        "name":             company.name,
+        "AFM":              company.AFM,
+        "DOY":              company.DOY or "",
+        "address":          company.address or "",
+        "services":         company.services or "",
         "ekremotes_ofiles": company.ekremotes_ofiles or "",
-        "notes": company.notes or "",
-        "active": company.active,
-        "inactive_date": company.inactive_date.isoformat() if company.inactive_date else "",
+        "notes":            company.notes or "",
+        "active":           company.active,
+        "inactive_date":    company.inactive_date.isoformat() if company.inactive_date else "",
     }
 
     existing_invoices = [
         {
-            "index": i,
-            "invoice_id": invoice.id,
+            "index":          i,
+            "invoice_id":     invoice.id,
             "invoice_number": invoice.invoice_number,
-            "amount": invoice.amount,
-            "service_type": invoice.service_type or "",
-            "date_of_issue": invoice.date_of_issue.isoformat() if invoice.date_of_issue else "",
-            "status": invoice.status,
-            "scan_name": invoice.scan_file.name if invoice.scan_file else "",
-            "scan_url": reverse("core:media_preview", args=[invoice.scan_file.name]) if invoice.scan_file else "",
+            "amount":         invoice.amount,
+            "service_type":   invoice.service_type or "",
+            "date_of_issue":  invoice.date_of_issue.isoformat() if invoice.date_of_issue else "",
+            "status":         invoice.status,
+            "scan_name":      invoice.scan_file.name if invoice.scan_file else "",
+            "scan_url":       reverse("core:media_preview", args=[invoice.scan_file.name]) if invoice.scan_file else "",
         }
         for i, invoice in enumerate(company.invoices.all())
     ]
@@ -772,7 +795,7 @@ def invoice_list(request):
         invoices = invoices.filter(Q(invoice_number__icontains=query) | Q(service_type__icontains=query))
 
     return render(request, "core/invoice_list.html", {
-        "invoices": invoices,
+        "invoices":  invoices,
         "companies": companies.objects.order_by("name"),
     })
 
@@ -826,12 +849,12 @@ def invoice_update(request, invoice_id):
         return redirect("core:invoices_list")
 
     form_data = {
-        "company": str(invoice.company_id),
+        "company":        str(invoice.company_id),
         "invoice_number": invoice.invoice_number,
-        "amount": invoice.amount,
-        "service_type": invoice.service_type or "",
-        "date_of_issue": invoice.date_of_issue.isoformat() if invoice.date_of_issue else "",
-        "status": invoice.status,
+        "amount":         invoice.amount,
+        "service_type":   invoice.service_type or "",
+        "date_of_issue":  invoice.date_of_issue.isoformat() if invoice.date_of_issue else "",
+        "status":         invoice.status,
     }
     return render(request, "core/invoice_add.html", _invoice_form_context(form_data, invoice=invoice))
 
@@ -877,23 +900,15 @@ def protocol_create(request):
         chosen_date = datetime.date.fromisoformat(date_str)
         chosen_year = chosen_date.year
         chosen_num  = Protocol.next_number(chosen_year)
-
-        fields = _protocol_from_post(request)
+        fields      = _protocol_from_post(request)
 
         if not fields["subject"]:
             return render(request, "core/protocol_create.html", {
-                "next_num": chosen_num,
-                "year":     chosen_year,
-                "today":    today.isoformat(),
-                "error":    "Το θέμα είναι υποχρεωτικό.",
+                "next_num": chosen_num, "year": chosen_year,
+                "today": today.isoformat(), "error": "Το θέμα είναι υποχρεωτικό.",
             })
 
-        protocol = Protocol(
-            protocol_number = chosen_num,
-            year            = chosen_year,
-            date            = chosen_date,
-            **fields,
-        )
+        protocol = Protocol(protocol_number=chosen_num, year=chosen_year, date=chosen_date, **fields)
         if request.FILES.get("file"):
             protocol.file = request.FILES["file"]
 
@@ -907,9 +922,7 @@ def protocol_create(request):
         return redirect("core:protocol_list")
 
     return render(request, "core/protocol_create.html", {
-        "next_num": next_num,
-        "year":     year,
-        "today":    today.isoformat(),
+        "next_num": next_num, "year": year, "today": today.isoformat(),
     })
 
 
@@ -925,21 +938,116 @@ def protocol_update(request, protocol_id):
 
     if request.method == "POST":
         fields = _protocol_from_post(request)
-
         if not fields["subject"]:
             return render(request, "core/protocol_create.html", {
-                "protocol": protocol,
-                "error":    "Το θέμα είναι υποχρεωτικό.",
+                "protocol": protocol, "error": "Το θέμα είναι υποχρεωτικό.",
             })
-
         for attr, value in fields.items():
             setattr(protocol, attr, value)
-
         if request.FILES.get("file"):
             protocol.file = request.FILES["file"]
-
         protocol.save()
         messages.success(request, f"Πρωτόκολλο {protocol.full_number} ενημερώθηκε.")
         return redirect("core:protocol_list")
 
     return render(request, "core/protocol_create.html", {"protocol": protocol})
+
+
+# ════════════════════════════════════════════════════════════════
+#  ΑΣΦΑΛΙΣΤΙΚΕΣ ΕΤΑΙΡΕΙΕΣ
+# ════════════════════════════════════════════════════════════════
+
+@login_required
+def insurance_company_list(request):
+    ins_companies = InsuranceCompany.objects.prefetch_related("contracts").all()
+    query = (request.GET.get("q") or "").strip()
+    if query:
+        ins_companies = ins_companies.filter(
+            Q(name__icontains=query) | Q(contact_person__icontains=query)
+        )
+    return render(request, "core/insurance_company_list.html", {"ins_companies": ins_companies})
+
+
+@login_required
+def insurance_company_create(request):
+    if request.method == "POST":
+        name = (request.POST.get("name") or "").strip()
+        if not name:
+            return render(request, "core/insurance_company_add.html", {"error": "Η επωνυμία είναι υποχρεωτική."})
+
+        ins = InsuranceCompany.objects.create(
+            name           = name,
+            address        = (request.POST.get("address") or "").strip(),
+            phone          = (request.POST.get("phone") or "").strip(),
+            email          = (request.POST.get("email") or "").strip(),
+            contact_person = (request.POST.get("contact_person") or "").strip(),
+            notes          = (request.POST.get("notes") or "").strip(),
+        )
+        messages.success(request, f"Η ασφαλιστική {ins.name} προστέθηκε επιτυχώς.")
+        return redirect("core:insurance_company_list")
+
+    return render(request, "core/insurance_company_add.html")
+
+
+@login_required
+def insurance_company_detail(request, company_id):
+    ins       = get_object_or_404(InsuranceCompany, pk=company_id)
+    contracts = ins.contracts.prefetch_related("members__member").all()
+    return render(request, "core/insurance_company_detail.html", {"ins": ins, "contracts": contracts})
+
+
+@login_required
+def insurance_company_update(request, company_id):
+    ins = get_object_or_404(InsuranceCompany, pk=company_id)
+
+    if request.method == "POST":
+        name = (request.POST.get("name") or "").strip()
+        if not name:
+            return render(request, "core/insurance_company_add.html", {
+                "ins": ins, "error": "Η επωνυμία είναι υποχρεωτική."
+            })
+        ins.name           = name
+        ins.address        = (request.POST.get("address") or "").strip()
+        ins.phone          = (request.POST.get("phone") or "").strip()
+        ins.email          = (request.POST.get("email") or "").strip()
+        ins.contact_person = (request.POST.get("contact_person") or "").strip()
+        ins.notes          = (request.POST.get("notes") or "").strip()
+        ins.save()
+        messages.success(request, f"Η ασφαλιστική {ins.name} ενημερώθηκε.")
+        return redirect("core:insurance_company_list")
+
+    return render(request, "core/insurance_company_add.html", {"ins": ins})
+
+
+@login_required
+def insurance_contract_create(request, company_id):
+    ins = get_object_or_404(InsuranceCompany, pk=company_id)
+
+    if request.method == "POST":
+        contract_number = (request.POST.get("contract_number") or "").strip()
+        if not contract_number:
+            return render(request, "core/insurance_contract_add.html", {
+                "ins": ins, "error": "Ο αριθμός συμβολαίου είναι υποχρεωτικός."
+            })
+        InsuranceContract.objects.create(
+            company         = ins,
+            contract_number = contract_number,
+            coverage_type   = (request.POST.get("coverage_type") or "").strip(),
+            amount          = request.POST.get("amount") or None,
+            start_date      = request.POST.get("start_date") or None,
+            end_date        = request.POST.get("end_date") or None,
+            active          = request.POST.get("active") == "on",
+            notes           = (request.POST.get("notes") or "").strip(),
+        )
+        messages.success(request, f"Το συμβόλαιο {contract_number} προστέθηκε.")
+        return redirect("core:insurance_company_detail", company_id=ins.pk)
+
+    return render(request, "core/insurance_contract_add.html", {"ins": ins})
+
+
+@login_required
+def insurance_contracts_json(request, company_id):
+    contracts = InsuranceContract.objects.filter(
+        company_id=company_id, active=True
+    ).values("id", "contract_number", "coverage_type")
+    return JsonResponse({"contracts": list(contracts)})
