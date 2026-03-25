@@ -116,6 +116,9 @@
             <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Ημ. έκδοσης</th>
             <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Εργασία</th>
             <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Ποσό</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Εξοφλημένο</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Υπόλοιπο</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Κατάσταση</th>
             <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Scan</th>
             <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500 text-center">Ενέργειες</th>
           </tr>
@@ -132,7 +135,18 @@
             </td>
             <td class="px-5 py-4">{{ invoice.date_of_issue|date:"d/m/Y" }}</td>
             <td class="px-5 py-4">{{ invoice.service_type|default:"-" }}</td>
-            <td class="px-5 py-4">{{ invoice.amount }}</td>
+            <td class="px-5 py-4">{{ invoice.amount }} €</td>
+            <td class="px-5 py-4">{{ invoice.allocated_amount }} €</td>
+            <td class="px-5 py-4">{{ invoice.outstanding_amount }} €</td>
+            <td class="px-5 py-4">
+              {% if invoice.is_paid %}
+              <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">Εξοφλημένο</span>
+              {% elif invoice.is_partially_paid %}
+              <span class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">Μερικώς εξοφλημένο</span>
+              {% else %}
+              <span class="inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">Ανεξόφλητο</span>
+              {% endif %}
+            </td>
             <td class="px-5 py-4">
               {% if invoice.scan_file %}
               <button type="button" class="text-blue-600 hover:underline" onclick="showInvoicePreview('{{ invoice.invoice_number|escapejs }}', '{% url 'core:media_preview' invoice.scan_file.name %}')">Preview</button>
@@ -145,7 +159,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="6" class="px-5 py-10 text-center text-slate-500">Δεν υπάρχουν τιμολόγια.</td></tr>
+          <tr><td colspan="9" class="px-5 py-10 text-center text-slate-500">Δεν υπάρχουν τιμολόγια.</td></tr>
           {% endfor %}
         </tbody>
       </table>

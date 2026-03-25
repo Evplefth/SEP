@@ -2,26 +2,35 @@ import re
 from datetime import date
 from datetime import timedelta
 from decimal import Decimal
+from io import BytesIO
+from xml.sax.saxutils import escape
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.static import serve
 from django_countries import countries
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 import datetime
 
 from core.models import (
     Banks,
     CompanyPayment,
+    PaymentAllocation,
     Exartomena,
     InsuranceCompany,
     InsuranceContract,
@@ -79,6 +88,325 @@ def _mitroo_expiry_state(deregistration_date):
         "warning": days_left <= 90,
         "expired": days_left < 0,
         "days_left": days_left,
+    }
+
+
+def _recalculate_company_payment_allocations(company):
+    invoices = list(
+        Invoices.objects.filter(company=company).order_by("date_of_issue", "id")
+    )
+    payments = list(
+        CompanyPayment.objects.filter(company=company, active=True).order_by("payment_date", "id")
+    )
+
+    invoice_remaining = {
+        invoice.id: Decimal(invoice.amount or Decimal("0.00"))
+        for invoice in invoices
+    }
+    allocations = []
+
+    for payment in payments:
+        remaining_payment = Decimal(payment.amount or Decimal("0.00"))
+        if remaining_payment <= 0:
+            continue
+
+        for invoice in invoices:
+            remaining_invoice = invoice_remaining[invoice.id]
+            if remaining_invoice <= 0:
+                continue
+            if remaining_payment <= 0:
+                break
+
+            allocated_amount = min(remaining_payment, remaining_invoice)
+            if allocated_amount <= 0:
+                continue
+
+            allocations.append(
+                PaymentAllocation(
+                    payment=payment,
+                    invoice=invoice,
+                    amount=allocated_amount,
+                )
+            )
+            invoice_remaining[invoice.id] = remaining_invoice - allocated_amount
+            remaining_payment -= allocated_amount
+
+    with transaction.atomic():
+        PaymentAllocation.objects.filter(payment__company=company).delete()
+        if allocations:
+            PaymentAllocation.objects.bulk_create(allocations)
+
+        for invoice in invoices:
+            is_paid = invoice_remaining[invoice.id] <= 0
+            if invoice.status != is_paid:
+                invoice.status = is_paid
+                invoice.save(update_fields=["status"])
+
+
+def _attach_invoice_payment_state(invoices):
+    invoice_list = list(invoices)
+    invoice_ids = [invoice.id for invoice in invoice_list]
+    if not invoice_ids:
+        return invoice_list
+
+    totals = {
+        row["invoice_id"]: row["total"] or Decimal("0.00")
+        for row in (
+            PaymentAllocation.objects.filter(invoice_id__in=invoice_ids)
+            .values("invoice_id")
+            .annotate(total=Sum("amount"))
+        )
+    }
+
+    for invoice in invoice_list:
+        allocated_amount = totals.get(invoice.id, Decimal("0.00"))
+        outstanding_amount = max(Decimal(invoice.amount or Decimal("0.00")) - allocated_amount, Decimal("0.00"))
+        invoice.allocated_amount = allocated_amount
+        invoice.outstanding_amount = outstanding_amount
+        invoice.is_paid = outstanding_amount == 0 and allocated_amount > 0
+        invoice.is_partially_paid = allocated_amount > 0 and outstanding_amount > 0
+        if invoice.is_paid:
+            invoice.payment_state_label = "Εξοφλημένο"
+        elif invoice.is_partially_paid:
+            invoice.payment_state_label = "Μερικώς εξοφλημένο"
+        else:
+            invoice.payment_state_label = "Ανεξόφλητο"
+
+    return invoice_list
+
+
+def _format_export_value(value):
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "Ναι" if value else "Όχι"
+    if isinstance(value, (datetime.date, datetime.datetime)):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, Decimal):
+        return f"{value:.2f}"
+    return str(value)
+
+
+def _clean_export_text(value):
+    text = _format_export_value(value)
+    if any(marker in text for marker in ("Ξ", "Ο", "β‚¬")):
+        try:
+            repaired = text.encode("latin1").decode("utf-8")
+            if repaired:
+                return repaired
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            pass
+    return text
+
+
+def _build_excel_response(sheet_name, filename, headers, rows):
+    xml_rows = []
+    header_cells = "".join(
+        f'<Cell ss:StyleID="header"><Data ss:Type="String">{escape(_clean_export_text(header))}</Data></Cell>'
+        for header in headers
+    )
+    xml_rows.append(f"<Row>{header_cells}</Row>")
+
+    for row in rows:
+        cells = "".join(
+            f'<Cell><Data ss:Type="String">{escape(_clean_export_text(value))}</Data></Cell>'
+            for value in row
+        )
+        xml_rows.append(f"<Row>{cells}</Row>")
+
+    content = f"""<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+  <Styles>
+    <Style ss:ID="header">
+      <Font ss:Bold="1"/>
+      <Interior ss:Color="#DCEBFF" ss:Pattern="Solid"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="{escape(_clean_export_text(sheet_name[:31]))}">
+    <Table>
+      {''.join(xml_rows)}
+    </Table>
+  </Worksheet>
+</Workbook>"""
+
+    response = HttpResponse(content, content_type="application/vnd.ms-excel; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{filename}.xls"'
+    return response
+
+
+def _export_pdf_font_name():
+    font_name = "ArialUnicodeSEP"
+    registered_fonts = set(pdfmetrics.getRegisteredFontNames())
+    if font_name not in registered_fonts:
+        pdfmetrics.registerFont(TTFont(font_name, r"C:\Windows\Fonts\arial.ttf"))
+    return font_name
+
+
+def _build_pdf_response(title, filename, headers, rows):
+    buffer = BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        leftMargin=24,
+        rightMargin=24,
+        topMargin=28,
+        bottomMargin=24,
+    )
+
+    font_name = _export_pdf_font_name()
+    styles = getSampleStyleSheet()
+    title_style = styles["Heading2"].clone("export_title")
+    title_style.fontName = font_name
+    title_style.fontSize = 15
+    title_style.leading = 18
+    title_style.textColor = colors.HexColor("#0F172A")
+
+    cell_style = styles["BodyText"].clone("export_cell")
+    cell_style.fontName = font_name
+    cell_style.fontSize = 8
+    cell_style.leading = 10
+    cell_style.wordWrap = "CJK"
+
+    table_data = [[Paragraph(_clean_export_text(header), cell_style) for header in headers]]
+    for row in rows:
+        table_data.append([
+            Paragraph(_clean_export_text(value).replace("\n", "<br/>"), cell_style)
+            for value in row
+        ])
+
+    column_count = max(len(headers), 1)
+    usable_width = landscape(A4)[0] - document.leftMargin - document.rightMargin
+    col_width = usable_width / column_count
+
+    table = Table(table_data, repeatRows=1, colWidths=[col_width] * column_count)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#DBEAFE")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#0F172A")),
+        ("FONTNAME", (0, 0), (-1, -1), font_name),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("LEADING", (0, 0), (-1, -1), 10),
+        ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#BFDBFE")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FBFF")]),
+    ]))
+
+    story = [
+        Paragraph(_clean_export_text(title), title_style),
+        Spacer(1, 12),
+        table,
+    ]
+    document.build(story)
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}.pdf"'
+    return response
+
+
+def _member_company_names(member):
+    return ", ".join(
+        link.company.name for link in member.companies.select_related("company").all()
+    )
+
+
+def _payment_allocated_invoice_numbers(payment):
+    return ", ".join(
+        f"{allocation.invoice.invoice_number} ({allocation.amount:.2f}€)"
+        for allocation in payment.allocations.select_related("invoice").all()
+    )
+
+
+def _export_configs():
+    return {
+        "members": {
+            "label": "Μέλη",
+            "filename": "members_export",
+            "sheet_name": "Members",
+            "queryset": lambda: Members.objects.select_related("nationality", "bank").prefetch_related("companies__company").order_by("last_name", "first_name"),
+            "fields": [
+                ("last_name", "Επώνυμο", lambda obj: obj.last_name),
+                ("first_name", "Όνομα", lambda obj: obj.first_name),
+                ("fathers_name", "Πατρώνυμο", lambda obj: obj.fathers_name),
+                ("gender", "Φύλο", lambda obj: obj.get_gender_display() if obj.gender else ""),
+                ("member_registry_number", "Αριθμός Βιβλίου Μητρώου", lambda obj: obj.member_registry_number),
+                ("mitroo_type", "Τύπος Μητρώου", lambda obj: obj.get_mitroo_type_display() if obj.mitroo_type else ""),
+                ("mitroo_number", "Αριθμός Μητρώου", lambda obj: obj.mitroo_number),
+                ("date_of_registration", "Ημ. Εγγραφής", lambda obj: obj.date_of_registration),
+                ("date_of_deregistration", "Ημ. Λήξης", lambda obj: obj.date_of_deregistration),
+                ("afm", "ΑΦΜ", lambda obj: obj.AFM),
+                ("amka", "ΑΜΚΑ", lambda obj: obj.AMKA),
+                ("ama", "ΑΜΑ", lambda obj: obj.AMA),
+                ("adt", "ΑΔΤ", lambda obj: obj.ADT),
+                ("phone_number1", "Τηλέφωνο 1", lambda obj: obj.phone_number1),
+                ("phone_number2", "Τηλέφωνο 2", lambda obj: obj.phone_number2),
+                ("email", "Email", lambda obj: obj.email),
+                ("bank", "Τράπεζα", lambda obj: obj.bank.name if obj.bank else ""),
+                ("iban", "IBAN", lambda obj: obj.bank_account_number),
+                ("companies", "Εταιρίες", _member_company_names),
+                ("active", "Ενεργό", lambda obj: obj.active),
+            ],
+        },
+        "companies": {
+            "label": "Εταιρίες",
+            "filename": "companies_export",
+            "sheet_name": "Companies",
+            "queryset": lambda: companies.objects.order_by("name"),
+            "fields": [
+                ("name", "Επωνυμία", lambda obj: obj.name),
+                ("afm", "ΑΦΜ", lambda obj: obj.AFM),
+                ("doy", "ΔΟΥ", lambda obj: obj.DOY),
+                ("address", "Διεύθυνση", lambda obj: obj.address),
+                ("services", "Υπηρεσίες", lambda obj: obj.services),
+                ("opening_invoice_total", "Αρχικές Τιμολογήσεις", lambda obj: obj.opening_invoice_total),
+                ("opening_payment_total", "Αρχικές Πληρωμές", lambda obj: obj.opening_payment_total),
+                ("active", "Ενεργή", lambda obj: obj.active),
+                ("inactive_date", "Ημ. Ανενεργής", lambda obj: obj.inactive_date),
+                ("notes", "Σημειώσεις", lambda obj: obj.notes),
+            ],
+        },
+        "invoices": {
+            "label": "Τιμολόγια",
+            "filename": "invoices_export",
+            "sheet_name": "Invoices",
+            "queryset": lambda: _attach_invoice_payment_state(
+                Invoices.objects.select_related("company").order_by("-date_of_issue", "-id")
+            ),
+            "fields": [
+                ("invoice_number", "Αριθμός Τιμολογίου", lambda obj: obj.invoice_number),
+                ("company", "Εταιρία", lambda obj: obj.company.name if obj.company else ""),
+                ("date_of_issue", "Ημ. Έκδοσης", lambda obj: obj.date_of_issue),
+                ("service_type", "Εργασία", lambda obj: obj.service_type),
+                ("amount", "Ποσό", lambda obj: obj.amount),
+                ("allocated_amount", "Εξοφλημένο", lambda obj: getattr(obj, "allocated_amount", Decimal("0.00"))),
+                ("outstanding_amount", "Υπόλοιπο", lambda obj: getattr(obj, "outstanding_amount", obj.amount)),
+                ("payment_state_label", "Κατάσταση Εξόφλησης", lambda obj: getattr(obj, "payment_state_label", "")),
+                ("scan_file", "Scan", lambda obj: obj.scan_file.name if obj.scan_file else ""),
+            ],
+        },
+        "payments": {
+            "label": "Πληρωμές",
+            "filename": "payments_export",
+            "sheet_name": "Payments",
+            "queryset": lambda: CompanyPayment.objects.select_related("company").prefetch_related("allocations__invoice").order_by("-payment_date", "-id"),
+            "fields": [
+                ("company", "Εταιρία", lambda obj: obj.company.name if obj.company else ""),
+                ("payment_date", "Ημερομηνία", lambda obj: obj.payment_date),
+                ("amount", "Ποσό", lambda obj: obj.amount),
+                ("reference", "Αναφορά", lambda obj: obj.reference),
+                ("active", "Ενεργή", lambda obj: obj.active),
+                ("inactive_date", "Ημ. Ανενεργής", lambda obj: obj.inactive_date),
+                ("allocated_invoices", "Τιμολόγια που κάλυψε", _payment_allocated_invoice_numbers),
+                ("notes", "Σημειώσεις", lambda obj: obj.notes),
+            ],
+        },
     }
 
 
@@ -513,6 +841,64 @@ def dashboard(request):
     })
 
 
+@login_required
+def export_data(request):
+    configs = _export_configs()
+    dataset_key = request.GET.get("dataset") or request.POST.get("dataset") or "members"
+    export_format = (request.POST.get("export_format") or request.GET.get("export_format") or "pdf").lower()
+    if dataset_key not in configs:
+        dataset_key = "members"
+    if export_format not in {"pdf", "excel"}:
+        export_format = "pdf"
+
+    selected_config = configs[dataset_key]
+    selected_field_keys = request.POST.getlist("fields") if request.method == "POST" else [
+        key for key, _, _ in selected_config["fields"]
+    ]
+
+    valid_field_keys = {key for key, _, _ in selected_config["fields"]}
+    selected_field_keys = [key for key in selected_field_keys if key in valid_field_keys]
+
+    if request.method == "POST":
+        if not selected_field_keys:
+            return render(request, "core/export_data.html", {
+                "datasets": configs,
+                "selected_dataset_key": dataset_key,
+                "selected_config": selected_config,
+                "selected_field_keys": selected_field_keys,
+                "selected_export_format": export_format,
+                "error": "??????? ??????????? ??? ????? ??? ???????.",
+            })
+
+        field_map = {key: (label, getter) for key, label, getter in selected_config["fields"]}
+        headers = [field_map[key][0] for key in selected_field_keys]
+        rows = []
+        for obj in selected_config["queryset"]():
+            rows.append([field_map[key][1](obj) for key in selected_field_keys])
+
+        if export_format == "excel":
+            return _build_excel_response(
+                selected_config["sheet_name"],
+                selected_config["filename"],
+                headers,
+                rows,
+            )
+
+        return _build_pdf_response(
+            selected_config["label"],
+            selected_config["filename"],
+            headers,
+            rows,
+        )
+
+    return render(request, "core/export_data.html", {
+        "datasets": configs,
+        "selected_dataset_key": dataset_key,
+        "selected_config": selected_config,
+        "selected_field_keys": selected_field_keys,
+        "selected_export_format": export_format,
+    })
+
 # β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
 #  USERS
 # β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
@@ -810,6 +1196,7 @@ def company_detail(request, company_id):
         invoices_qs = invoices_qs.filter(date_of_issue__lte=date_to)
     if not filters_applied:
         invoices_qs = invoices_qs[:3]
+    invoices_qs = _attach_invoice_payment_state(invoices_qs)
 
     company_members = company.members.select_related("member").all().order_by("-active", "member__last_name")
     invoices_total = company.invoices.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
@@ -849,6 +1236,7 @@ def company_create(request):
         try:
             company.save()
             _save_company_invoices(request, company)
+            _recalculate_company_payment_allocations(company)
         except IntegrityError:
             return render(request, "core/company_add.html",
                 _company_form_context(request.POST,
@@ -878,6 +1266,7 @@ def company_update(request, company_id):
         try:
             company.save()
             _save_company_invoices(request, company)
+            _recalculate_company_payment_allocations(company)
         except IntegrityError:
             return render(request, "core/company_add.html",
                 _company_form_context(request.POST, company=company,
@@ -954,6 +1343,7 @@ def payment_create(request):
 
         payment = _payment_from_post(request)
         payment.save()
+        _recalculate_company_payment_allocations(payment.company)
         messages.success(request, "Η πληρωμή καταχωρήθηκε επιτυχώς.")
         return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
@@ -977,8 +1367,12 @@ def payment_update(request, payment_id):
                 _payment_form_context(request.POST, payment=payment, company=payment.company, error=error),
             )
 
+        previous_company = payment.company
         payment = _payment_from_post(request, payment=payment)
         payment.save()
+        if previous_company and previous_company.pk != payment.company_id:
+            _recalculate_company_payment_allocations(previous_company)
+        _recalculate_company_payment_allocations(payment.company)
         messages.success(request, "Η πληρωμή ενημερώθηκε επιτυχώς.")
         return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
@@ -1001,6 +1395,7 @@ def payment_deactivate(request, payment_id):
         payment.active = False
         payment.inactive_date = timezone.now().date()
         payment.save(update_fields=["active", "inactive_date"])
+        _recalculate_company_payment_allocations(payment.company)
         messages.success(request, "Η πληρωμή έγινε ανενεργή.")
     return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
@@ -1022,6 +1417,7 @@ def invoice_list(request):
         invoices = invoices.filter(status=(status_filter == "paid"))
     if query:
         invoices = invoices.filter(Q(invoice_number__icontains=query) | Q(service_type__icontains=query))
+    invoices = _attach_invoice_payment_state(invoices)
 
     return render(request, "core/invoice_list.html", {
         "invoices":  invoices,
@@ -1042,6 +1438,7 @@ def invoice_create(request):
                 _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
         try:
             invoice.save()
+            _recalculate_company_payment_allocations(invoice.company)
         except IntegrityError:
             return render(request, "core/invoice_add.html",
                 _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
@@ -1062,6 +1459,7 @@ def invoice_update(request, invoice_id):
             return render(request, "core/invoice_add.html",
                 _invoice_form_context(request.POST, invoice=invoice, error=error))
 
+        previous_company = invoice.company
         invoice = _invoice_from_post(request, invoice=invoice)
         if _find_invoice_duplicate(invoice):
             return render(request, "core/invoice_add.html",
@@ -1069,6 +1467,9 @@ def invoice_update(request, invoice_id):
                 error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
         try:
             invoice.save()
+            if previous_company and previous_company.pk != invoice.company_id:
+                _recalculate_company_payment_allocations(previous_company)
+            _recalculate_company_payment_allocations(invoice.company)
         except IntegrityError:
             return render(request, "core/invoice_add.html",
                 _invoice_form_context(request.POST, invoice=invoice,

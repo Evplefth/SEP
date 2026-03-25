@@ -35,6 +35,7 @@ urlpatterns = [
 
     # ── Dashboard ────────────────────────────────────────────────
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("exports/", views.export_data, name="export_data"),
 
     # ── Protocols ────────────────────────────────────────────────
     path("protocols/",                        views.protocol_list,   name="protocol_list"),

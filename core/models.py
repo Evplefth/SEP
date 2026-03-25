@@ -79,6 +79,16 @@ class CompanyPayment(models.Model):
         ordering            = ['-payment_date', '-id']
 
 
+class PaymentAllocation(models.Model):
+    payment = models.ForeignKey('CompanyPayment', on_delete=models.CASCADE, related_name='allocations')
+    invoice = models.ForeignKey('Invoices', on_delete=models.CASCADE, related_name='allocations')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        unique_together = ('payment', 'invoice')
+        ordering = ['invoice__date_of_issue', 'invoice_id', 'payment__payment_date', 'payment_id']
+
+
 class companies_members(models.Model):
     company       = models.ForeignKey(companies, on_delete=models.CASCADE, related_name='members')
     member        = models.ForeignKey('Members', on_delete=models.CASCADE, related_name='companies')

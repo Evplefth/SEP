@@ -1,0 +1,80 @@
+﻿{% extends "core/base.html" %}
+{% block title %}Εξαγωγή Δεδομένων{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Εξαγωγή Δεδομένων</h1>
+    <p class="mt-1 text-sm text-slate-500">Επίλεξε κατηγορία, πεδία και μορφή αρχείου για την εξαγωγή.</p>
+  </div>
+
+  {% if error %}
+  <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+    <section class="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-800">Κατηγορία</h2>
+      <form method="get" class="mt-4 space-y-4">
+        <select name="dataset" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          {% for key, config in datasets.items %}
+          <option value="{{ key }}" {% if selected_dataset_key == key %}selected{% endif %}>{{ config.label }}</option>
+          {% endfor %}
+        </select>
+        <select name="export_format" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="pdf" {% if selected_export_format == "pdf" %}selected{% endif %}>PDF</option>
+          <option value="excel" {% if selected_export_format == "excel" %}selected{% endif %}>Excel</option>
+        </select>
+        <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">
+          Φόρτωση πεδίων
+        </button>
+      </form>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-800">Πεδία για {{ selected_config.label }}</h2>
+          <p class="text-xs text-slate-500">Μπορείς να κατεβάσεις τα επιλεγμένα πεδία είτε σε PDF είτε σε Excel.</p>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="toggleFields(true)" class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">Όλα</button>
+          <button type="button" onclick="toggleFields(false)" class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">Κανένα</button>
+        </div>
+      </div>
+
+      <form method="post" class="mt-5">
+        {% csrf_token %}
+        <input type="hidden" name="dataset" value="{{ selected_dataset_key }}">
+        <input type="hidden" name="export_format" value="{{ selected_export_format|default:'pdf' }}">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {% for key, label, getter in selected_config.fields %}
+          <label class="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50">
+            <input type="checkbox" name="fields" value="{{ key }}" class="h-4 w-4 accent-blue-600 export-field" {% if key in selected_field_keys %}checked{% endif %}>
+            <span>{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <button type="submit" class="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+            Λήψη Αρχείου
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function toggleFields(checked) {
+    document.querySelectorAll('.export-field').forEach(function (field) {
+      field.checked = checked;
+    });
+  }
+</script>
+{% endblock %}

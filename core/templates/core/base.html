@@ -395,6 +395,10 @@
             class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
             Χρήστες
           </a>
+          <a href="{% url 'core:export_data' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Εξαγωγή
+          </a>
         </div>
 
         <div class="hidden md:flex items-center gap-3">
@@ -441,6 +445,7 @@
       <a href="{% url 'core:companies_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εταιρίες</a>
       <a href="{% url 'core:protocol_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Πρωτόκολλα</a>
       <a href="{% url 'core:insurance_company_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Ασφαλιστικές</a>
+      <a href="{% url 'core:export_data' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εξαγωγή</a>
       <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
         {% if user.is_authenticated %}
           <span class="px-3 py-2 text-sm text-gray-600">Hello, <strong>{{ user.username }}</strong></span>

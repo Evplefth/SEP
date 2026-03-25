@@ -50,9 +50,8 @@
         <a href="{% url 'core:media_preview' invoice.scan_file.name %}" target="_blank" class="inline-block text-xs text-blue-600 hover:underline mt-2">Τρέχον αρχείο</a>
         {% endif %}
       </div>
-      <div class="flex items-center gap-2 pt-7">
-        <input type="checkbox" name="status" {% if form_data.status %}checked{% endif %} class="w-4 h-4 accent-blue-600">
-        <span class="text-sm text-gray-700">Πληρωμένο</span>
+      <div class="sm:col-span-2 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        Η κατάσταση εξόφλησης υπολογίζεται αυτόματα από τις πληρωμές της εταιρίας, ξεκινώντας από το παλαιότερο ανεξόφλητο τιμολόγιο.
       </div>
     </div>
 
