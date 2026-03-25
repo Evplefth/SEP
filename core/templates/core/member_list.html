@@ -28,6 +28,7 @@
       <thead class="border-b border-slate-200 bg-slate-50 text-left">
         <tr>
           <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Εργαζόμενος</th>
+          <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Βιβλίο Μητρώου</th>
           <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Μητρώο</th>
           <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Εταιρίες</th>
           <th class="hidden px-5 py-3.5 text-xs font-semibold uppercase text-slate-500 md:table-cell">Επικοινωνία</th>
@@ -56,6 +57,15 @@
                 </p>
               </div>
             </div>
+          </td>
+          <td class="px-5 py-4">
+            {% if member.member_registry_number %}
+            <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+              {{ member.member_registry_number }}
+            </span>
+            {% else %}
+            <span class="text-xs text-slate-400">-</span>
+            {% endif %}
           </td>
           <td class="px-5 py-4">
             {% if member.mitroo_type %}
@@ -90,7 +100,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="5" class="px-5 py-10 text-center text-slate-500">Δεν βρέθηκε προσωπικό.</td>
+          <td colspan="6" class="px-5 py-10 text-center text-slate-500">Δεν βρέθηκε προσωπικό.</td>
         </tr>
         {% endfor %}
       </tbody>

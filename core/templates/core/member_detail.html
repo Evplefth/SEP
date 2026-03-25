@@ -38,6 +38,7 @@
 
         <div class="rounded-xl bg-slate-50 p-4">
           <p class="mb-2 text-xs text-slate-400">Μητρώο</p>
+          <p class="text-sm text-slate-600">Αριθμός Βιβλίου Μητρώου: <span class="font-semibold text-slate-800">{{ member.member_registry_number|default:"-" }}</span></p>
           <p class="font-semibold text-slate-800">{{ member.get_mitroo_type_display|default:"-" }}{% if member.mitroo_number %} - {{ member.mitroo_number }}{% endif %}</p>
           <p class="mt-2 text-sm text-slate-600">Εγγραφή: {{ member.date_of_registration|date:"d/m/Y"|default:"-" }}</p>
           <p class="text-sm text-slate-600">Λήξη: {{ member.date_of_deregistration|date:"d/m/Y"|default:"-" }}</p>
@@ -84,7 +85,6 @@
           <p class="text-sm text-slate-700">Ομαδικό: {{ member.omadiko|yesno:"Ναι,Όχι" }}</p>
           <p class="text-sm text-slate-700">Από: {{ member.omadiko_from|date:"d/m/Y"|default:"-" }}</p>
           <p class="text-sm text-slate-700">Έως: {{ member.omadiko_to|date:"d/m/Y"|default:"-" }}</p>
-          <p class="text-sm text-slate-700">Εξαρτώμενα στο ομαδικό: {{ member.omadiko_exartomena|yesno:"Ναι,Όχι" }}</p>
           <div class="mt-3 border-t border-slate-200 pt-3">
             <p class="mb-2 text-xs text-slate-400">Συνδεδεμένα συμβόλαια</p>
             <div class="space-y-2">
@@ -178,6 +178,10 @@
       <div class="rounded-xl bg-slate-50 p-4">
         <p class="mb-3 text-xs text-slate-400">Σύνοψη Εγγράφων / Ταυτοποίησης</p>
         <div class="space-y-3">
+          <div class="rounded-lg bg-white p-3">
+            <p class="text-xs text-slate-400">Αριθμός Βιβλίου Μητρώου</p>
+            <p class="font-semibold text-slate-800">{{ member.member_registry_number|default:"-" }}</p>
+          </div>
           <div class="rounded-lg bg-white p-3">
             <p class="text-xs text-slate-400">ΑΔΤ</p>
             <p class="font-semibold text-slate-800">{{ member.ADT }}</p>

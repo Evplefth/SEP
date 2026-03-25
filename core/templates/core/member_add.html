@@ -100,6 +100,10 @@
         <label for="AMA" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΜΑ <span class="text-red-400">*</span></label>
         <input type="text" name="AMA" id="AMA" value="{{ form_data.AMA|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
+      <div>
+        <label for="member_registry_number" class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός Βιβλίου Μητρώου Μελών <span class="text-red-400">*</span></label>
+        <input type="number" name="member_registry_number" id="member_registry_number" value="{{ form_data.member_registry_number|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
     </div>
   </div>
 
@@ -205,16 +209,6 @@
           Πατήστε "+ Προσθήκη Συμβολαίου" για να προσθέσετε ασφαλιστήριο.
         </div>
         <div id="insurance-rows" class="space-y-4"></div>
-      </div>
-
-      <!-- Ομαδικό εξαρτώμενα -->
-      <div class="px-6 pb-5">
-        <label class="flex items-center gap-2 text-sm text-gray-700">
-          <input type="checkbox" name="omadiko_exartomena"
-            {% if form_data.omadiko_exartomena %}checked{% endif %}
-            class="w-4 h-4 accent-blue-600">
-          Περιλαμβάνει εξαρτώμενα (ομαδικό)
-        </label>
       </div>
     </div>
   </div>
