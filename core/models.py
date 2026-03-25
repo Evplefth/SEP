@@ -147,14 +147,14 @@ class nationalities(models.Model):
 
 
 class Members(models.Model):
-    GENDER_CHOICES = [('M', 'Ξ†Ξ½Ξ΄ΟΞ±Ο‚'), ('F', 'Ξ“Ο…Ξ½Ξ±Ξ―ΞΊΞ±')]
-    MITROO_CHOICES = [('A', 'Ξ¤ΟΟ€ΞΏΟ‚ Ξ‘'), ('B', 'Ξ¤ΟΟ€ΞΏΟ‚ Ξ’')]
+    GENDER_CHOICES = [('M', 'Άνδρας'), ('F', 'Γυναίκα')]
+    MITROO_CHOICES = [('A', 'Τύπος Α'), ('B', 'Τύπος Β')]
 
     # β”€β”€ Ξ ΟΞΏΟƒΟ‰Ο€ΞΉΞΊΞ¬ β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€
     first_name    = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="ΞΞ½ΞΏΞΌΞ±")
     last_name     = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Ξ•Ο€Ξ―ΞΈΞµΟ„ΞΏ")
     fathers_name  = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Ξ Ξ±Ο„ΟΟΞ½Ο…ΞΌΞΏ")
-    gender        = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, verbose_name="Ξ¦ΟΞ»ΞΏ")
+    gender        = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, verbose_name="Φύλο")
     date_of_birth = models.DateField(blank=True, null=True, verbose_name="Ξ—ΞΌ. Ξ“Ξ­Ξ½Ξ½Ξ·ΟƒΞ·Ο‚")
     nationality   = models.ForeignKey(nationalities, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Ξ™ΞΈΞ±Ξ³Ξ­Ξ½ΞµΞΉΞ±")
     ADT           = models.CharField(max_length=20, unique=True, verbose_name="Ξ‘Ξ”Ξ¤")
@@ -163,7 +163,7 @@ class Members(models.Model):
     AMA           = models.CharField(max_length=20, unique=True, verbose_name="Ξ‘ΞΞ‘")
 
     # β”€β”€ ΞΞ·Ο„ΟΟΞΏ β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€
-    mitroo_type            = models.CharField(max_length=1, choices=MITROO_CHOICES, blank=True, null=True, verbose_name="Ξ¤ΟΟ€ΞΏΟ‚ ΞΞ·Ο„ΟΟΞΏΟ…")
+    mitroo_type            = models.CharField(max_length=1, choices=MITROO_CHOICES, blank=True, null=True, verbose_name="Τύπος Μητρώου")
     mitroo_number          = models.PositiveIntegerField(blank=True, null=True, verbose_name="Ξ‘ΟΞΉΞΈΞΌΟΟ‚ ΞΞ·Ο„ΟΟΞΏΟ…")
     date_of_registration   = models.DateField(blank=True, null=True, verbose_name="Ξ—ΞΌ. Ξ•Ξ³Ξ³ΟΞ±Ο†Ξ®Ο‚")
     date_of_deregistration = models.DateField(blank=True, null=True, verbose_name="Ξ—ΞΌ. Ξ›Ξ®ΞΎΞ·Ο‚")
