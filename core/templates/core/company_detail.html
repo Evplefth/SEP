@@ -2,115 +2,130 @@
 {% block title %}{{ company.name }}{% endblock %}
 
 {% block content %}
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<div class="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
   <div>
-    <h1 class="text-2xl font-bold text-gray-800">{{ company.name }}</h1>
-    <p class="text-gray-500 text-sm mt-1">Συνεργαζόμενη εταιρία φορτοεκφόρτωσης | ΑΦΜ: {{ company.AFM }} | ΔΟΥ: {{ company.DOY|default:"-" }}</p>
+    <h1 class="text-2xl font-bold text-slate-900">{{ company.name }}</h1>
+    <p class="mt-1 text-sm text-slate-500">Συνεργαζόμενη εταιρία φορτοεκφόρτωσης • ΑΦΜ {{ company.AFM }} • ΔΟΥ {{ company.DOY|default:"-" }}</p>
   </div>
   <div class="flex gap-3">
-    <a href="{% url 'core:companies_list' %}" class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Πίσω</a>
-    <a href="{% url 'core:company_update' company.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Επεξεργασία</a>
+    <a href="{% url 'core:companies_list' %}" class="rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Πίσω</a>
+    <a href="{% url 'core:company_update' company.id %}" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Επεξεργασία</a>
   </div>
 </div>
 
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-  <div class="border-b border-gray-100 bg-gray-50 px-4 sm:px-6 py-4">
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5 mb-6">
+  <div class="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Αρχικές Τιμολογήσεις</p>
+    <p class="mt-3 text-2xl font-semibold text-slate-900">{{ company.opening_invoice_total }} €</p>
+  </div>
+  <div class="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Αρχικές Πληρωμές</p>
+    <p class="mt-3 text-2xl font-semibold text-slate-900">{{ company.opening_payment_total }} €</p>
+  </div>
+  <div class="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Τιμολογήσεις Συστήματος</p>
+    <p class="mt-3 text-2xl font-semibold text-slate-900">{{ invoices_total }} €</p>
+  </div>
+  <div class="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Πληρωμές Συστήματος</p>
+    <p class="mt-3 text-2xl font-semibold text-slate-900">{{ payments_total }} €</p>
+  </div>
+  <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-600 to-cyan-500 p-5 text-white shadow-sm">
+    <p class="text-xs uppercase tracking-[0.18em] text-blue-100">Υπόλοιπο</p>
+    <p class="mt-3 text-2xl font-semibold">{{ current_balance }} €</p>
+    <p class="mt-2 text-xs text-blue-100">Σύνολο τιμολογημένων {{ overall_invoiced }} € • σύνολο πληρωμένων {{ overall_paid }} €</p>
+  </div>
+</div>
+
+<div class="rounded-2xl border border-slate-200 bg-white/90 shadow-sm overflow-hidden">
+  <div class="border-b border-slate-200 bg-slate-50 px-4 py-4 sm:px-6">
     <div class="flex flex-wrap gap-2">
-      <button type="button" data-company-tab-button="details" class="company-tab-button inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold">
-        Στοιχεία
-      </button>
-      <button type="button" data-company-tab-button="members" class="company-tab-button inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold">
-        Προσωπικό
-      </button>
-      <button type="button" data-company-tab-button="invoices" class="company-tab-button inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold">
-        Παραστατικά
-      </button>
+      <button type="button" data-company-tab-button="details" class="company-tab-button rounded-xl px-4 py-2 text-sm font-semibold">Στοιχεία</button>
+      <button type="button" data-company-tab-button="members" class="company-tab-button rounded-xl px-4 py-2 text-sm font-semibold">Προσωπικό</button>
+      <button type="button" data-company-tab-button="invoices" class="company-tab-button rounded-xl px-4 py-2 text-sm font-semibold">Τιμολόγια</button>
+      <button type="button" data-company-tab-button="payments" class="company-tab-button rounded-xl px-4 py-2 text-sm font-semibold">Πληρωμές</button>
     </div>
   </div>
 
   <div data-company-tab-panel="details" class="company-tab-panel p-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-      <div><span class="text-gray-400 block text-xs">Διεύθυνση</span><span class="text-gray-800">{{ company.address|default:"-" }}</span></div>
-      <div><span class="text-gray-400 block text-xs">Κατάσταση</span><span class="text-gray-800">{% if company.active %}Ενεργή{% else %}Ανενεργή{% endif %}</span></div>
-      <div class="sm:col-span-2"><span class="text-gray-400 block text-xs">Εργασίες / Υπηρεσίες</span><span class="text-gray-800 whitespace-pre-wrap">{{ company.services|default:"-" }}</span></div>
-      <div class="sm:col-span-2"><span class="text-gray-400 block text-xs">Εκκρεμότητες / Οφειλές</span><span class="text-gray-800 whitespace-pre-wrap">{{ company.ekremotes_ofiles|default:"-" }}</span></div>
-      <div class="sm:col-span-2"><span class="text-gray-400 block text-xs">Σημειώσεις Συνεργασίας</span><span class="text-gray-800 whitespace-pre-wrap">{{ company.notes|default:"-" }}</span></div>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
+      <div><span class="block text-xs text-slate-400">Διεύθυνση</span><span class="text-slate-800">{{ company.address|default:"-" }}</span></div>
+      <div><span class="block text-xs text-slate-400">Κατάσταση</span><span class="text-slate-800">{% if company.active %}Ενεργή{% else %}Ανενεργή{% endif %}</span></div>
+      <div class="sm:col-span-2"><span class="block text-xs text-slate-400">Υπηρεσίες / Συνεργασία</span><span class="whitespace-pre-wrap text-slate-800">{{ company.services|default:"-" }}</span></div>
+      <div class="sm:col-span-2"><span class="block text-xs text-slate-400">Εκκρεμότητες / Οφειλές</span><span class="whitespace-pre-wrap text-slate-800">{{ company.ekremotes_ofiles|default:"-" }}</span></div>
+      <div class="sm:col-span-2"><span class="block text-xs text-slate-400">Σημειώσεις</span><span class="whitespace-pre-wrap text-slate-800">{{ company.notes|default:"-" }}</span></div>
     </div>
   </div>
 
   <div data-company-tab-panel="members" class="company-tab-panel hidden p-6">
     <div class="space-y-3">
       {% for relation in company_members %}
-      <div class="border border-gray-100 rounded-lg p-4">
+      <div class="rounded-2xl border border-slate-200 p-4">
         <a href="{% url 'core:member_detail' relation.member.id %}" class="font-semibold text-blue-600 hover:underline">{{ relation.member.last_name }} {{ relation.member.first_name }}</a>
-        <p class="text-xs text-gray-400 mt-1">{% if relation.active %}Ενεργή{% else %}Ανενεργή{% endif %} σχέση απασχόλησης</p>
+        <p class="mt-1 text-xs text-slate-400">{% if relation.active %}Ενεργή{% else %}Ανενεργή{% endif %} σχέση απασχόλησης</p>
         {% if relation.active_date or relation.inactive_date %}
-        <p class="text-xs text-gray-500 mt-2">
+        <p class="mt-2 text-xs text-slate-500">
           {% if relation.active_date %}Από {{ relation.active_date|date:"d/m/Y" }}{% endif %}
           {% if relation.inactive_date %} έως {{ relation.inactive_date|date:"d/m/Y" }}{% endif %}
         </p>
         {% endif %}
         {% if relation.notes %}
-        <p class="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{{ relation.notes }}</p>
+        <p class="mt-2 whitespace-pre-wrap text-sm text-slate-600">{{ relation.notes }}</p>
         {% endif %}
       </div>
       {% empty %}
-      <p class="text-sm text-gray-500">Δεν υπάρχει συνδεδεμένο προσωπικό.</p>
+      <p class="text-sm text-slate-500">Δεν υπάρχει συνδεδεμένο προσωπικό.</p>
       {% endfor %}
     </div>
   </div>
 
   <div data-company-tab-panel="invoices" class="company-tab-panel hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="border-b border-slate-200 bg-slate-50 px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="font-semibold text-gray-800 text-sm">Παραστατικά</h2>
-        <p class="text-xs text-gray-500 mt-1">
-          {% if filters_applied %}
-          Προβολή φιλτραρισμένων παραστατικών
-          {% else %}
-          Εμφανίζονται τα 3 τελευταία παραστατικά
-          {% endif %}
+        <h2 class="text-sm font-semibold text-slate-800">Τιμολόγια</h2>
+        <p class="mt-1 text-xs text-slate-500">
+          {% if filters_applied %}Προβολή φιλτραρισμένων τιμολογίων{% else %}Εμφανίζονται τα 3 τελευταία τιμολόγια{% endif %}
         </p>
       </div>
-      <a href="{% url 'core:invoice_create' %}?company={{ company.id }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Νέο Παραστατικό</a>
+      <a href="{% url 'core:invoice_create' %}?company={{ company.id }}" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Νέο Τιμολόγιο</a>
     </div>
 
-    <div class="px-6 py-4 border-b border-gray-100">
-      <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <div class="border-b border-slate-200 px-6 py-4">
+      <form method="get" class="grid grid-cols-1 gap-3 md:grid-cols-4">
         <input type="hidden" name="tab" value="invoices">
-        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Αριθμός ή εργασία" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-        <select name="status" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Αριθμός ή εργασία" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <select name="status" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Όλες οι καταστάσεις</option>
           <option value="paid" {% if request.GET.status == "paid" %}selected{% endif %}>Πληρωμένα</option>
           <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>Απλήρωτα</option>
         </select>
-        <input type="date" name="date_from" value="{{ request.GET.date_from }}" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="date" name="date_from" value="{{ request.GET.date_from }}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         <div class="md:col-span-4 flex gap-3">
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">Φίλτρο</button>
-          <a href="{% url 'core:company_detail' company.id %}?tab=invoices" class="text-sm text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2.5 rounded-lg transition text-center">Καθαρισμός</a>
+          <button type="submit" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700">Φίλτρο</button>
+          <a href="{% url 'core:company_detail' company.id %}?tab=invoices" class="rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm text-slate-500 hover:bg-slate-50">Καθαρισμός</a>
         </div>
       </form>
     </div>
 
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-100 text-left">
+        <thead class="border-b border-slate-200 bg-slate-50 text-left">
           <tr>
-            <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Αριθμός</th>
-            <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Ημ. Έκδοσης</th>
-            <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Εργασία</th>
-            <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Ποσό</th>
-            <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Scan</th>
-            <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase text-center">Ενέργειες</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Αριθμός</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Ημ. έκδοσης</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Εργασία</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Ποσό</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Scan</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500 text-center">Ενέργειες</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50">
+        <tbody class="divide-y divide-slate-100">
           {% for invoice in invoices %}
           <tr>
-            <td class="px-5 py-4 font-semibold text-gray-800">
+            <td class="px-5 py-4 font-semibold text-slate-800">
               {% if invoice.scan_file %}
-              <button type="button" class="text-blue-600 hover:underline font-semibold" onclick="showInvoicePreview('{{ invoice.invoice_number|escapejs }}', '{% url 'core:media_preview' invoice.scan_file.name %}')">{{ invoice.invoice_number }}</button>
+              <button type="button" class="text-blue-600 hover:underline" onclick="showInvoicePreview('{{ invoice.invoice_number|escapejs }}', '{% url 'core:media_preview' invoice.scan_file.name %}')">{{ invoice.invoice_number }}</button>
               {% else %}
               {{ invoice.invoice_number }}
               {% endif %}
@@ -122,15 +137,69 @@
               {% if invoice.scan_file %}
               <button type="button" class="text-blue-600 hover:underline" onclick="showInvoicePreview('{{ invoice.invoice_number|escapejs }}', '{% url 'core:media_preview' invoice.scan_file.name %}')">Preview</button>
               {% else %}
-              <span class="text-gray-400">-</span>
+              <span class="text-slate-400">-</span>
               {% endif %}
             </td>
             <td class="px-5 py-4 text-center">
-              <a href="{% url 'core:invoice_update' invoice.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Επεξεργασία</a>
+              <a href="{% url 'core:invoice_update' invoice.id %}" class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200">Επεξεργασία</a>
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="6" class="px-5 py-10 text-center text-gray-500">Δεν υπάρχουν παραστατικά.</td></tr>
+          <tr><td colspan="6" class="px-5 py-10 text-center text-slate-500">Δεν υπάρχουν τιμολόγια.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div data-company-tab-panel="payments" class="company-tab-panel hidden">
+    <div class="border-b border-slate-200 bg-slate-50 px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 class="text-sm font-semibold text-slate-800">Πληρωμές Εταιρίας</h2>
+        <p class="mt-1 text-xs text-slate-500">Εδώ φαίνονται όλες οι πληρωμές που μας έχει κάνει η εταιρία.</p>
+      </div>
+      <a href="{% url 'core:payment_create' %}?company={{ company.id }}" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Νέα Πληρωμή</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="border-b border-slate-200 bg-slate-50 text-left">
+          <tr>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Ημερομηνία</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Ποσό</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Αναφορά</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Σημειώσεις</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500">Κατάσταση</th>
+            <th class="px-5 py-3.5 text-xs font-semibold uppercase text-slate-500 text-center">Ενέργειες</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for payment in payments %}
+          <tr>
+            <td class="px-5 py-4">{{ payment.payment_date|date:"d/m/Y" }}</td>
+            <td class="px-5 py-4 font-semibold text-slate-800">{{ payment.amount }} €</td>
+            <td class="px-5 py-4">{{ payment.reference|default:"-" }}</td>
+            <td class="px-5 py-4 whitespace-pre-wrap">{{ payment.notes|default:"-" }}</td>
+            <td class="px-5 py-4">
+              {% if payment.active %}
+              <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">Ενεργή</span>
+              {% else %}
+              <span class="inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">Ανενεργή{% if payment.inactive_date %} {{ payment.inactive_date|date:"d/m/Y" }}{% endif %}</span>
+              {% endif %}
+            </td>
+            <td class="px-5 py-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <a href="{% url 'core:payment_update' payment.id %}" class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200">Επεξεργασία</a>
+                {% if payment.active %}
+                <form method="post" action="{% url 'core:payment_deactivate' payment.id %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex items-center rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-200">Ανενεργή</button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="px-5 py-10 text-center text-slate-500">Δεν υπάρχουν καταχωρημένες πληρωμές.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -138,13 +207,13 @@
   </div>
 </div>
 
-<div id="invoice-preview-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-      <h3 id="invoice-preview-title" class="text-lg font-semibold text-gray-800">Preview</h3>
-      <button type="button" onclick="closeInvoicePreview()" class="text-gray-500 hover:text-gray-700">Κλείσιμο</button>
+<div id="invoice-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h3 id="invoice-preview-title" class="text-lg font-semibold text-slate-800">Preview</h3>
+      <button type="button" onclick="closeInvoicePreview()" class="text-slate-500 hover:text-slate-700">Κλείσιμο</button>
     </div>
-    <div id="invoice-preview-body" class="flex-1 bg-gray-100 min-h-[70vh] overflow-auto"></div>
+    <div id="invoice-preview-body" class="min-h-[70vh] flex-1 overflow-auto bg-slate-100"></div>
   </div>
 </div>
 {% endblock %}
@@ -160,9 +229,9 @@
       button.classList.toggle('bg-blue-600', isActive);
       button.classList.toggle('text-white', isActive);
       button.classList.toggle('bg-white', !isActive);
-      button.classList.toggle('text-gray-600', !isActive);
+      button.classList.toggle('text-slate-600', !isActive);
       button.classList.toggle('border', !isActive);
-      button.classList.toggle('border-gray-200', !isActive);
+      button.classList.toggle('border-slate-200', !isActive);
     });
 
     panels.forEach(function (panel) {
@@ -178,13 +247,13 @@
     const modal = document.getElementById('invoice-preview-modal');
     const body = document.getElementById('invoice-preview-body');
     const previewTitle = document.getElementById('invoice-preview-title');
-    previewTitle.textContent = `Preview παραστατικού ${title}`;
+    previewTitle.textContent = `Preview τιμολογίου ${title}`;
 
     const lower = url.toLowerCase();
     if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.webp')) {
-      body.innerHTML = `<img src="${url}" alt="${title}" class="max-w-full h-auto mx-auto">`;
+      body.innerHTML = `<img src="${url}" alt="${title}" class="mx-auto h-auto max-w-full">`;
     } else {
-      body.innerHTML = `<iframe src="${url}" class="w-full h-[70vh] bg-white" title="${title}"></iframe>`;
+      body.innerHTML = `<iframe src="${url}" class="h-[70vh] w-full bg-white" title="${title}"></iframe>`;
     }
 
     modal.classList.remove('hidden');

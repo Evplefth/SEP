@@ -1,12 +1,13 @@
 import re
 from datetime import date
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -19,6 +20,7 @@ import datetime
 
 from core.models import (
     Banks,
+    CompanyPayment,
     Exartomena,
     InsuranceCompany,
     InsuranceContract,
@@ -85,12 +87,13 @@ def _member_form_context(form_data=None, member=None, error=None,
     }
 
 
-def _company_form_context(form_data=None, company=None, error=None, existing_invoices=None):
+def _company_form_context(form_data=None, company=None, error=None, existing_invoices=None, existing_payments=None):
     return {
         "form_data":         form_data or {},
         "company":           company,
         "error":             error,
         "existing_invoices": existing_invoices or [],
+        "existing_payments": existing_payments or [],
     }
 
 
@@ -100,6 +103,16 @@ def _invoice_form_context(form_data=None, invoice=None, error=None):
         "invoice":   invoice,
         "companies": companies.objects.order_by("name"),
         "error":     error,
+    }
+
+
+def _payment_form_context(form_data=None, payment=None, company=None, error=None):
+    return {
+        "form_data": form_data or {},
+        "payment": payment,
+        "company": company,
+        "error": error,
+        "companies": companies.objects.order_by("name"),
     }
 
 
@@ -147,6 +160,20 @@ def _posted_invoices(request):
             "status":         request.POST.get(f"invoice_status_{index}") == "on",
             "scan_file":      request.FILES.get(f"invoice_scan_file_{index}"),
             "scan_name":      request.POST.get(f"invoice_existing_scan_{index}", ""),
+        })
+    return rows
+
+
+def _posted_payments(request):
+    rows = []
+    for index in _extract_row_indexes(request.POST, ["payment_"]):
+        rows.append({
+            "index":        index,
+            "payment_id":   request.POST.get(f"payment_id_{index}", ""),
+            "amount":       request.POST.get(f"payment_amount_{index}", ""),
+            "payment_date": request.POST.get(f"payment_date_{index}", ""),
+            "reference":    request.POST.get(f"payment_reference_{index}", ""),
+            "notes":        request.POST.get(f"payment_notes_{index}", ""),
         })
     return rows
 
@@ -204,6 +231,29 @@ def _save_company_invoices(request, company):
         invoice.save()
         keep_ids.append(invoice.id)
     Invoices.objects.filter(company=company).exclude(id__in=keep_ids).delete()
+
+
+def _save_company_payments(request, company):
+    keep_ids = []
+    for row in _posted_payments(request):
+        amount = row["amount"] or None
+        payment_date = row["payment_date"] or None
+        if not amount or not payment_date:
+            continue
+        payment_id = row["payment_id"] or None
+        if payment_id:
+            payment = CompanyPayment.objects.filter(pk=payment_id, company=company).first()
+            if not payment:
+                payment = CompanyPayment(company=company)
+        else:
+            payment = CompanyPayment(company=company)
+        payment.amount = amount
+        payment.payment_date = payment_date
+        payment.reference = (row["reference"] or "").strip() or None
+        payment.notes = (row["notes"] or "").strip() or None
+        payment.save()
+        keep_ids.append(payment.id)
+    CompanyPayment.objects.filter(company=company).exclude(id__in=keep_ids).delete()
 
 
 def _save_member_files(request, member):
@@ -298,6 +348,8 @@ def _company_from_post(request, company=None):
     company.services         = (request.POST.get("services") or "").strip() or None
     company.ekremotes_ofiles = (request.POST.get("ekremotes_ofiles") or "").strip() or None
     company.notes            = (request.POST.get("notes") or "").strip() or None
+    company.opening_invoice_total = request.POST.get("opening_invoice_total") or 0
+    company.opening_payment_total = request.POST.get("opening_payment_total") or 0
     company.active           = request.POST.get("active") == "on"
     company.inactive_date    = request.POST.get("inactive_date") or None
     if company.active:
@@ -316,6 +368,22 @@ def _invoice_from_post(request, invoice=None):
     if request.FILES.get("scan_file"):
         invoice.scan_file = request.FILES["scan_file"]
     return invoice
+
+
+def _payment_from_post(request, payment=None):
+    payment = payment or CompanyPayment()
+    payment.company_id = request.POST.get("company") or None
+    payment.amount = request.POST.get("amount") or None
+    payment.payment_date = request.POST.get("payment_date") or None
+    payment.reference = (request.POST.get("reference") or "").strip() or None
+    payment.notes = (request.POST.get("notes") or "").strip() or None
+    payment.active = request.POST.get("active") == "on" or "active" not in request.POST
+    payment.inactive_date = request.POST.get("inactive_date") or None
+    if payment.active:
+        payment.inactive_date = None
+    elif not payment.inactive_date:
+        payment.inactive_date = timezone.now().date()
+    return payment
 
 
 def _validate_member_post(request):
@@ -380,6 +448,18 @@ def _find_invoice_duplicate(invoice):
     if invoice.pk:
         qs = qs.exclude(pk=invoice.pk)
     return qs.exists()
+
+
+def _validate_payment_post(request):
+    required_fields = {
+        "company": "Εταιρία",
+        "amount": "Ποσό",
+        "payment_date": "Ημερομηνία πληρωμής",
+    }
+    missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
+    if missing:
+        return f"Συμπλήρωσε τα υποχρεωτικά πεδία: {', '.join(missing)}."
+    return None
 
 
 def _protocol_from_post(request):
@@ -658,7 +738,7 @@ def member_update(request, member_id):
 
 @login_required
 def company_list(request):
-    company_qs = companies.objects.prefetch_related("invoices").all()
+    company_qs = companies.objects.prefetch_related("invoices", "payments").all()
     query = (request.GET.get("q") or "").strip()
     if query:
         company_qs = company_qs.filter(Q(name__icontains=query) | Q(AFM__icontains=query) | Q(DOY__icontains=query))
@@ -669,6 +749,7 @@ def company_list(request):
 def company_detail(request, company_id):
     company = get_object_or_404(companies, pk=company_id)
     invoices_qs = company.invoices.all().order_by("-date_of_issue", "-id")
+    payments_qs = company.payments.all().order_by("-payment_date", "-id")
 
     status_filter = (request.GET.get("status") or "").strip()
     date_from     = (request.GET.get("date_from") or "").strip()
@@ -688,12 +769,23 @@ def company_detail(request, company_id):
         invoices_qs = invoices_qs[:3]
 
     company_members = company.members.select_related("member").all().order_by("-active", "member__last_name")
+    invoices_total = company.invoices.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    payments_total = company.payments.filter(active=True).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    overall_invoiced = (company.opening_invoice_total or Decimal("0.00")) + invoices_total
+    overall_paid = (company.opening_payment_total or Decimal("0.00")) + payments_total
+    current_balance = overall_invoiced - overall_paid
 
     return render(request, "core/company_detail.html", {
-        "company":         company,
-        "invoices":        invoices_qs,
+        "company": company,
+        "invoices": invoices_qs,
+        "payments": payments_qs,
         "company_members": company_members,
         "filters_applied": filters_applied,
+        "invoices_total": invoices_total,
+        "payments_total": payments_total,
+        "overall_invoiced": overall_invoiced,
+        "overall_paid": overall_paid,
+        "current_balance": current_balance,
     })
 
 
@@ -703,7 +795,12 @@ def company_create(request):
         error = _validate_company_post(request)
         if error:
             return render(request, "core/company_add.html",
-                _company_form_context(request.POST, error=error, existing_invoices=_posted_invoices(request)))
+                _company_form_context(
+                    request.POST,
+                    error=error,
+                    existing_invoices=_posted_invoices(request),
+                    existing_payments=_posted_payments(request),
+                ))
 
         company = _company_from_post(request)
         try:
@@ -713,7 +810,8 @@ def company_create(request):
             return render(request, "core/company_add.html",
                 _company_form_context(request.POST,
                 error="Υπάρχει ήδη εταιρία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
-                existing_invoices=_posted_invoices(request)))
+                existing_invoices=_posted_invoices(request),
+                existing_payments=_posted_payments(request)))
 
         messages.success(request, f"Η εταιρία {company.name} προστέθηκε επιτυχώς.")
         return redirect("core:companies_list")
@@ -730,7 +828,8 @@ def company_update(request, company_id):
         if error:
             return render(request, "core/company_add.html",
                 _company_form_context(request.POST, company=company, error=error,
-                existing_invoices=_posted_invoices(request)))
+                existing_invoices=_posted_invoices(request),
+                existing_payments=_posted_payments(request)))
 
         company = _company_from_post(request, company=company)
         try:
@@ -740,7 +839,8 @@ def company_update(request, company_id):
             return render(request, "core/company_add.html",
                 _company_form_context(request.POST, company=company,
                 error="Υπάρχει ήδη εταιρία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
-                existing_invoices=_posted_invoices(request)))
+                existing_invoices=_posted_invoices(request),
+                existing_payments=_posted_payments(request)))
 
         messages.success(request, f"Η εταιρία {company.name} ενημερώθηκε επιτυχώς.")
         return redirect("core:companies_list")
@@ -753,6 +853,8 @@ def company_update(request, company_id):
         "services":         company.services or "",
         "ekremotes_ofiles": company.ekremotes_ofiles or "",
         "notes":            company.notes or "",
+        "opening_invoice_total": company.opening_invoice_total,
+        "opening_payment_total": company.opening_payment_total,
         "active":           company.active,
         "inactive_date":    company.inactive_date.isoformat() if company.inactive_date else "",
     }
@@ -772,8 +874,92 @@ def company_update(request, company_id):
         for i, invoice in enumerate(company.invoices.all())
     ]
 
+    existing_payments = [
+        {
+            "index": i,
+            "payment_id": payment.id,
+            "amount": payment.amount,
+            "payment_date": payment.payment_date.isoformat() if payment.payment_date else "",
+            "reference": payment.reference or "",
+            "notes": payment.notes or "",
+        }
+        for i, payment in enumerate(company.payments.all())
+    ]
+
     return render(request, "core/company_add.html",
-        _company_form_context(form_data, company=company, existing_invoices=existing_invoices))
+        _company_form_context(
+            form_data,
+            company=company,
+            existing_invoices=existing_invoices,
+            existing_payments=existing_payments,
+        ))
+
+
+@login_required
+def payment_create(request):
+    company_id = (request.GET.get("company") or request.POST.get("company") or "").strip()
+    selected_company = companies.objects.filter(pk=company_id).first() if company_id else None
+
+    if request.method == "POST":
+        error = _validate_payment_post(request)
+        if error:
+            return render(
+                request,
+                "core/payment_add.html",
+                _payment_form_context(request.POST, company=selected_company, error=error),
+            )
+
+        payment = _payment_from_post(request)
+        payment.save()
+        messages.success(request, "Η πληρωμή καταχωρήθηκε επιτυχώς.")
+        return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
+
+    form_data = {
+        "company": selected_company.id if selected_company else "",
+        "active": True,
+    }
+    return render(request, "core/payment_add.html", _payment_form_context(form_data, company=selected_company))
+
+
+@login_required
+def payment_update(request, payment_id):
+    payment = get_object_or_404(CompanyPayment.objects.select_related("company"), pk=payment_id)
+
+    if request.method == "POST":
+        error = _validate_payment_post(request)
+        if error:
+            return render(
+                request,
+                "core/payment_add.html",
+                _payment_form_context(request.POST, payment=payment, company=payment.company, error=error),
+            )
+
+        payment = _payment_from_post(request, payment=payment)
+        payment.save()
+        messages.success(request, "Η πληρωμή ενημερώθηκε επιτυχώς.")
+        return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
+
+    form_data = {
+        "company": payment.company_id,
+        "amount": payment.amount,
+        "payment_date": payment.payment_date.isoformat() if payment.payment_date else "",
+        "reference": payment.reference or "",
+        "notes": payment.notes or "",
+        "active": payment.active,
+        "inactive_date": payment.inactive_date.isoformat() if payment.inactive_date else "",
+    }
+    return render(request, "core/payment_add.html", _payment_form_context(form_data, payment=payment, company=payment.company))
+
+
+@login_required
+def payment_deactivate(request, payment_id):
+    payment = get_object_or_404(CompanyPayment, pk=payment_id)
+    if request.method == "POST" and payment.active:
+        payment.active = False
+        payment.inactive_date = timezone.now().date()
+        payment.save(update_fields=["active", "inactive_date"])
+        messages.success(request, "Η πληρωμή έγινε ανενεργή.")
+    return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
 
 # ════════════════════════════════════════════════════════════════

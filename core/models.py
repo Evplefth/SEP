@@ -46,6 +46,8 @@ class companies(models.Model):
     services         = models.TextField(blank=True, null=True)
     ekremotes_ofiles = models.TextField(blank=True, null=True)
     notes            = models.TextField(blank=True, null=True)
+    opening_invoice_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    opening_payment_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     active           = models.BooleanField(default=True)
     active_date      = models.DateField(auto_now_add=True)
     inactive_date    = models.DateField(blank=True, null=True)
@@ -57,6 +59,24 @@ class companies(models.Model):
         verbose_name        = "Εταιρεία"
         verbose_name_plural = "Εταιρείες"
         ordering            = ['name']
+
+
+class CompanyPayment(models.Model):
+    company      = models.ForeignKey('companies', on_delete=models.CASCADE, related_name='payments')
+    payment_date = models.DateField()
+    amount       = models.DecimalField(max_digits=12, decimal_places=2)
+    reference    = models.CharField(max_length=100, blank=True, null=True)
+    notes        = models.TextField(blank=True, null=True)
+    active       = models.BooleanField(default=True)
+    inactive_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.company} - {self.amount}"
+
+    class Meta:
+        verbose_name        = "Πληρωμή εταιρίας"
+        verbose_name_plural = "Πληρωμές εταιριών"
+        ordering            = ['-payment_date', '-id']
 
 
 class companies_members(models.Model):

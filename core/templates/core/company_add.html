@@ -3,19 +3,19 @@
 
 {% block content %}
 <div class="flex items-center gap-4 mb-6">
-  <a href="{% url 'core:companies_list' %}" class="text-gray-400 hover:text-gray-600 transition">
+  <a href="{% url 'core:companies_list' %}" class="text-slate-400 hover:text-slate-600 transition">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
     </svg>
   </a>
   <div>
-    <h1 class="text-2xl font-bold text-gray-800">{% if company %}Επεξεργασία Εταιρίας{% else %}Νέα Εταιρία{% endif %}</h1>
-    <p class="text-gray-500 text-sm mt-0.5">Στοιχεία εταιρίας και online καταχώριση τιμολογίων.</p>
+    <h1 class="text-2xl font-bold text-slate-900">{% if company %}Επεξεργασία Εταιρίας{% else %}Νέα Εταιρία{% endif %}</h1>
+    <p class="text-slate-500 text-sm mt-1">Στοιχεία συνεργασίας, αρχικά υπόλοιπα και τιμολόγια.</p>
   </div>
 </div>
 
 {% if error %}
-<div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-5 py-4 mb-6">
+<div class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 mb-6">
   {{ error }}
 </div>
 {% endif %}
@@ -23,66 +23,79 @@
 <form method="post" enctype="multipart/form-data" class="space-y-6">
   {% csrf_token %}
 
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <h2 class="font-semibold text-gray-800 text-sm">Στοιχεία Εταιρίας</h2>
+  <section class="rounded-2xl border border-slate-200 bg-white/90 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+      <h2 class="text-sm font-semibold text-slate-800">Στοιχεία Εταιρίας</h2>
     </div>
-    <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+    <div class="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-5">
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Επωνυμία <span class="text-red-400">*</span></label>
-        <input type="text" name="name" value="{{ form_data.name|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΦΜ <span class="text-red-400">*</span></label>
-        <input type="text" name="AFM" value="{{ form_data.AFM|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Επωνυμία <span class="text-red-400">*</span></label>
+        <input type="text" name="name" value="{{ form_data.name|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">ΔΟΥ</label>
-        <input type="text" name="DOY" value="{{ form_data.DOY|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">ΑΦΜ <span class="text-red-400">*</span></label>
+        <input type="text" name="AFM" value="{{ form_data.AFM|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Διεύθυνση</label>
-        <input type="text" name="address" value="{{ form_data.address|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div class="sm:col-span-2">
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Υπηρεσίες</label>
-        <textarea name="services" rows="3" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.services|default:'' }}</textarea>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">ΔΟΥ</label>
+        <input type="text" name="DOY" value="{{ form_data.DOY|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Εκκρεμότητες / Οφειλές</label>
-        <textarea name="ekremotes_ofiles" rows="3" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.ekremotes_ofiles|default:'' }}</textarea>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Διεύθυνση</label>
+        <input type="text" name="address" value="{{ form_data.address|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Υπηρεσίες / Περιγραφή Συνεργασίας</label>
+        <textarea name="services" rows="3" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.services|default:'' }}</textarea>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Σημειώσεις</label>
-        <textarea name="notes" rows="3" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.notes|default:'' }}</textarea>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Εκκρεμότητες / Οφειλές</label>
+        <textarea name="ekremotes_ofiles" rows="3" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.ekremotes_ofiles|default:'' }}</textarea>
       </div>
-      <label class="flex items-center gap-2 text-sm text-gray-700">
-        <input type="checkbox" name="active" id="company-active" {% if form_data.active or not company %}checked{% endif %} onchange="toggleCompanyInactive(this)" class="w-4 h-4 accent-blue-600">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Σημειώσεις</label>
+        <textarea name="notes" rows="3" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.notes|default:'' }}</textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Αρχικό σύνολο τιμολογήσεων</label>
+        <input type="number" step="0.01" min="0" name="opening_invoice_total" value="{{ form_data.opening_invoice_total|default:'0.00' }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <p class="text-xs text-slate-400 mt-1">Συνολικό ποσό που είχε ήδη τιμολογηθεί πριν περαστούν αναλυτικά τα τιμολόγια.</p>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Αρχικό σύνολο πληρωμών</label>
+        <input type="number" step="0.01" min="0" name="opening_payment_total" value="{{ form_data.opening_payment_total|default:'0.00' }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <p class="text-xs text-slate-400 mt-1">Συνολικό ποσό που είχε ήδη πληρωθεί από την εταιρία πριν ξεκινήσει η online καταγραφή.</p>
+      </div>
+      <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+        <input type="checkbox" name="active" id="company-active" {% if form_data.active or not company %}checked{% endif %} onchange="toggleCompanyInactive(this)" class="h-4 w-4 accent-blue-600">
         Ενεργή εταιρία
       </label>
       <div id="company-inactive-date-wrapper" class="{% if form_data.active or not form_data.inactive_date %}hidden{% endif %}">
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Ανενεργής</label>
-        <input type="date" name="inactive_date" id="company-inactive-date" value="{{ form_data.inactive_date|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Ημ. ανενεργής</label>
+        <input type="date" name="inactive_date" id="company-inactive-date" value="{{ form_data.inactive_date|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-      <h2 class="font-semibold text-gray-800 text-sm">Τιμολόγια</h2>
-      <button type="button" onclick="addInvoiceRow()" class="text-sm text-blue-600 font-semibold">Προσθήκη Τιμολογίου</button>
+  <section class="rounded-2xl border border-slate-200 bg-white/90 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+      <div>
+        <h2 class="text-sm font-semibold text-slate-800">Τιμολόγια</h2>
+        <p class="text-xs text-slate-500 mt-1">Αναλυτική καταχώριση όλων των τιμολογίων της εταιρίας.</p>
+      </div>
+      <button type="button" onclick="addInvoiceRow()" class="rounded-lg px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">Προσθήκη Τιμολογίου</button>
     </div>
-    <div class="px-6 py-4">
-      <div id="invoice-empty" class="text-center py-6 text-gray-400 text-sm {% if existing_invoices %}hidden{% endif %}">
+    <div class="px-6 py-5">
+      <div id="invoice-empty" class="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400 {% if existing_invoices %}hidden{% endif %}">
         Δεν έχουν καταχωρηθεί τιμολόγια.
       </div>
       <div id="invoice-rows" class="space-y-4"></div>
     </div>
-  </div>
+  </section>
 
   <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
-    <a href="{% url 'core:companies_list' %}" class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">Ακύρωση</a>
-    <button type="submit" class="px-8 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+    <a href="{% url 'core:companies_list' %}" class="rounded-xl border border-slate-200 px-6 py-2.5 text-center text-sm font-medium text-slate-600 hover:bg-slate-50">Ακύρωση</a>
+    <button type="submit" class="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
       {% if company %}Αποθήκευση Αλλαγών{% else %}Δημιουργία Εταιρίας{% endif %}
     </button>
   </div>
@@ -100,6 +113,14 @@
     }
   }
 
+  function removeRow(id, emptyId, containerId) {
+    const row = document.getElementById(id);
+    if (row) row.remove();
+    if (document.getElementById(containerId).children.length === 0) {
+      document.getElementById(emptyId).classList.remove('hidden');
+    }
+  }
+
   function addInvoiceRow(invoiceId = '', invoiceNumber = '', amount = '', serviceType = '', dateOfIssue = '', status = false, scanName = '', scanUrl = '') {
     const container = document.getElementById('invoice-rows');
     document.getElementById('invoice-empty').classList.add('hidden');
@@ -107,50 +128,42 @@
     const i = invoiceCounter++;
     const row = document.createElement('div');
     row.id = `invoice-row-${i}`;
-    row.className = 'border border-gray-200 rounded-xl p-4';
+    row.className = 'rounded-2xl border border-slate-200 p-4';
     row.innerHTML = `
       <input type="hidden" name="invoice_id_${i}" value="${invoiceId}">
       <input type="hidden" name="invoice_existing_scan_${i}" value="${scanName}">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός Τιμολογίου</label>
-          <input type="text" name="invoice_number_${i}" value="${invoiceNumber}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Αριθμός τιμολογίου</label>
+          <input type="text" name="invoice_number_${i}" value="${invoiceNumber}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ποσό</label>
-          <input type="number" step="0.01" name="invoice_amount_${i}" value="${amount}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Ποσό</label>
+          <input type="number" step="0.01" min="0" name="invoice_amount_${i}" value="${amount}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Υπηρεσία</label>
-          <input type="text" name="invoice_service_type_${i}" value="${serviceType}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Εργασία / υπηρεσία</label>
+          <input type="text" name="invoice_service_type_${i}" value="${serviceType}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ημερομηνία Έκδοσης</label>
-          <input type="date" name="invoice_date_of_issue_${i}" value="${dateOfIssue}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Ημερομηνία έκδοσης</label>
+          <input type="date" name="invoice_date_of_issue_${i}" value="${dateOfIssue}" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Scan</label>
-          <input type="file" name="invoice_scan_file_${i}" class="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm bg-white">
-          ${scanUrl ? `<a href="${scanUrl}" target="_blank" class="inline-block text-xs text-blue-600 hover:underline mt-2">Τρέχον αρχείο</a>` : scanName ? `<p class="text-xs text-gray-500 mt-2">${scanName}</p>` : ''}
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Scan</label>
+          <input type="file" name="invoice_scan_file_${i}" class="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm bg-white">
+          ${scanUrl ? `<a href="${scanUrl}" target="_blank" class="inline-block text-xs text-blue-600 hover:underline mt-2">Τρέχον αρχείο</a>` : scanName ? `<p class="text-xs text-slate-500 mt-2">${scanName}</p>` : ''}
         </div>
         <div class="flex items-center justify-between gap-3">
-          <label class="flex items-center gap-2 text-sm text-gray-700 mt-6">
-            <input type="checkbox" name="invoice_status_${i}" ${status ? 'checked' : ''} class="w-4 h-4 accent-blue-600">
+          <label class="inline-flex items-center gap-2 mt-6 text-sm text-slate-700">
+            <input type="checkbox" name="invoice_status_${i}" ${status ? 'checked' : ''} class="h-4 w-4 accent-blue-600">
             Πληρωμένο
           </label>
-          <button type="button" onclick="removeInvoiceRow(${i})" class="mt-5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">Διαγραφή</button>
+          <button type="button" onclick="removeRow('invoice-row-${i}', 'invoice-empty', 'invoice-rows')" class="mt-5 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50">Διαγραφή</button>
         </div>
       </div>
     `;
     container.appendChild(row);
-  }
-
-  function removeInvoiceRow(index) {
-    const row = document.getElementById(`invoice-row-${index}`);
-    if (row) row.remove();
-    if (document.getElementById('invoice-rows').children.length === 0) {
-      document.getElementById('invoice-empty').classList.remove('hidden');
-    }
   }
 
   {% for invoice in existing_invoices %}
