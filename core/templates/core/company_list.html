@@ -58,6 +58,12 @@
             <div class="flex items-center justify-center gap-2">
               <a href="{% url 'core:company_detail' company.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition">Στοιχεία</a>
               <a href="{% url 'core:company_update' company.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Επεξεργασία</a>
+              {% if request.user.is_staff %}
+              <form method="post" action="{% url 'core:company_delete' company.id %}" class="inline" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+              </form>
+              {% endif %}
             </div>
           </td>
         </tr>

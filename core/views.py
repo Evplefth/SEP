@@ -52,6 +52,13 @@ def home(request):
     return redirect("login")
 
 
+def _require_staff_or_redirect(request, redirect_to="core:dashboard"):
+    if request.user.is_staff:
+        return None
+    messages.error(request, "Μόνο διαχειριστές μπορούν να διαγράψουν εγγραφές.")
+    return redirect(redirect_to)
+
+
 @login_required
 @xframe_options_exempt
 def media_preview(request, path):
@@ -941,6 +948,24 @@ def user_create(request):
     return render(request, "core/user_add.html")
 
 
+@login_required
+def user_delete(request, user_id):
+    staff_redirect = _require_staff_or_redirect(request, "core:users")
+    if staff_redirect:
+        return staff_redirect
+
+    target_user = get_object_or_404(User, pk=user_id)
+    if request.method == "POST":
+        if target_user.pk == request.user.pk:
+            messages.error(request, "Δεν μπορείς να διαγράψεις τον δικό σου λογαριασμό.")
+            return redirect("core:users")
+
+        username = target_user.username
+        target_user.delete()
+        messages.success(request, f"Ο χρήστης {username} διαγράφηκε οριστικά.")
+    return redirect("core:users")
+
+
 # β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
 #  MEMBERS
 # β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
@@ -1161,6 +1186,20 @@ def member_update(request, member_id):
     ))
 
 
+@login_required
+def member_delete(request, member_id):
+    staff_redirect = _require_staff_or_redirect(request, "core:members_list")
+    if staff_redirect:
+        return staff_redirect
+
+    member = get_object_or_404(Members, pk=member_id)
+    if request.method == "POST":
+        member_name = f"{member.last_name} {member.first_name}".strip() or f"ID {member.pk}"
+        member.delete()
+        messages.success(request, f"Το μέλος {member_name} διαγράφηκε οριστικά.")
+    return redirect("core:members_list")
+
+
 # β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
 #  COMPANIES
 # β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
@@ -1328,6 +1367,20 @@ def company_update(request, company_id):
 
 
 @login_required
+def company_delete(request, company_id):
+    staff_redirect = _require_staff_or_redirect(request, "core:companies_list")
+    if staff_redirect:
+        return staff_redirect
+
+    company = get_object_or_404(companies, pk=company_id)
+    if request.method == "POST":
+        company_name = company.name or f"ID {company.pk}"
+        company.delete()
+        messages.success(request, f"Η εταιρία {company_name} διαγράφηκε οριστικά.")
+    return redirect("core:companies_list")
+
+
+@login_required
 def payment_create(request):
     company_id = (request.GET.get("company") or request.POST.get("company") or "").strip()
     selected_company = companies.objects.filter(pk=company_id).first() if company_id else None
@@ -1396,13 +1449,26 @@ def payment_deactivate(request, payment_id):
         payment.inactive_date = timezone.now().date()
         payment.save(update_fields=["active", "inactive_date"])
         _recalculate_company_payment_allocations(payment.company)
-        messages.success(request, "Η πληρωμή έγινε ανενεργή.")
+        messages.success(request, "? ??????? ????? ????????.")
     return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
 
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
-#  INVOICES
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+@login_required
+def payment_delete(request, payment_id):
+    payment = get_object_or_404(CompanyPayment.objects.select_related("company"), pk=payment_id)
+    if not request.user.is_staff:
+        messages.error(request, "???? ???????????? ??????? ?? ?????????? ????????.")
+        return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
+
+    company_id = payment.company_id
+    payment_label = payment.reference or f"{payment.amount} ?"
+    if request.method == "POST":
+        payment.delete()
+        if companies.objects.filter(pk=company_id).exists():
+            _recalculate_company_payment_allocations(companies.objects.get(pk=company_id))
+        messages.success(request, f"? ??????? {payment_label} ?????????? ????????.")
+    return redirect(f"{reverse('core:company_detail', args=[company_id])}?tab=payments")
+
 
 @login_required
 def invoice_list(request):
@@ -1487,6 +1553,24 @@ def invoice_update(request, invoice_id):
         "status":         invoice.status,
     }
     return render(request, "core/invoice_add.html", _invoice_form_context(form_data, invoice=invoice))
+
+
+@login_required
+def invoice_delete(request, invoice_id):
+    invoice = get_object_or_404(Invoices.objects.select_related("company"), pk=invoice_id)
+    redirect_url = request.META.get("HTTP_REFERER") or reverse("core:invoices_list")
+    if not request.user.is_staff:
+        messages.error(request, "Μόνο διαχειριστές μπορούν να διαγράψουν εγγραφές.")
+        return redirect(redirect_url)
+
+    company_id = invoice.company_id
+    invoice_number = invoice.invoice_number
+    if request.method == "POST":
+        invoice.delete()
+        if companies.objects.filter(pk=company_id).exists():
+            _recalculate_company_payment_allocations(companies.objects.get(pk=company_id))
+        messages.success(request, f"Το τιμολόγιο {invoice_number} διαγράφηκε οριστικά.")
+    return redirect(redirect_url)
 
 
 # β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•

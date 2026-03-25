@@ -73,7 +73,13 @@
 
   <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
     <a href="{% if company %}{% url 'core:company_detail' company.id %}?tab=payments{% else %}{% url 'core:companies_list' %}{% endif %}" class="rounded-xl border border-slate-200 px-6 py-2.5 text-center text-sm font-medium text-slate-600 hover:bg-slate-50">Ακύρωση</a>
-    <button type="submit" class="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+        {% if payment and request.user.is_staff %}
+    <form method="post" action="{% url 'core:payment_delete' payment.id %}" class="sm:mr-auto" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+      {% csrf_token %}
+      <button type="submit" class="rounded-xl bg-red-600 px-6 py-2.5 text-center text-sm font-medium text-white hover:bg-red-700">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+    </form>
+    {% endif %}
+<button type="submit" class="rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
       {% if payment %}Αποθήκευση Αλλαγών{% else %}Καταχώριση Πληρωμής{% endif %}
     </button>
   </div>

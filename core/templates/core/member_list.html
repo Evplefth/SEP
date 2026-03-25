@@ -95,6 +95,12 @@
             <div class="flex items-center justify-center gap-2">
               <a href="{% url 'core:member_detail' member.id %}" class="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-600 transition hover:bg-blue-100">Περισσότερες Πληροφορίες</a>
               <a href="{% url 'core:member_update' member.id %}" class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-200">Επεξεργασία</a>
+              {% if request.user.is_staff %}
+              <form method="post" action="{% url 'core:member_delete' member.id %}" class="inline" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+              </form>
+              {% endif %}
             </div>
           </td>
         </tr>

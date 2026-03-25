@@ -12,26 +12,31 @@ urlpatterns = [
     # ── Users ────────────────────────────────────────────────────
     path("users/",        views.user_list,   name="users"),
     path("users/create/", views.user_create, name="user_create"),
+    path("users/<int:user_id>/delete/", views.user_delete, name="user_delete"),
 
     # ── Members ──────────────────────────────────────────────────
     path("members/",                     views.member_list,   name="members_list"),
     path("members/create/",              views.member_create, name="member_create"),
     path("members/<int:member_id>/",     views.member_detail, name="member_detail"),
     path("members/<int:member_id>/edit/", views.member_update, name="member_update"),
+    path("members/<int:member_id>/delete/", views.member_delete, name="member_delete"),
 
     # ── Companies ────────────────────────────────────────────────
     path("companies/",                       views.company_list,   name="companies_list"),
     path("companies/create/",               views.company_create, name="company_create"),
     path("companies/<int:company_id>/",      views.company_detail, name="company_detail"),
     path("companies/<int:company_id>/edit/", views.company_update, name="company_update"),
+    path("companies/<int:company_id>/delete/", views.company_delete, name="company_delete"),
     path("payments/create/",                views.payment_create, name="payment_create"),
     path("payments/<int:payment_id>/edit/", views.payment_update, name="payment_update"),
     path("payments/<int:payment_id>/deactivate/", views.payment_deactivate, name="payment_deactivate"),
+    path("payments/<int:payment_id>/delete/", views.payment_delete, name="payment_delete"),
 
     # ── Invoices ─────────────────────────────────────────────────
     path("invoices/",                        views.invoice_list,   name="invoices_list"),
     path("invoices/create/",                views.invoice_create, name="invoice_create"),
     path("invoices/<int:invoice_id>/edit/",  views.invoice_update, name="invoice_update"),
+    path("invoices/<int:invoice_id>/delete/",  views.invoice_delete, name="invoice_delete"),
 
     # ── Dashboard ────────────────────────────────────────────────
     path("dashboard/", views.dashboard, name="dashboard"),

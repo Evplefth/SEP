@@ -83,6 +83,12 @@
           </td>
           <td class="px-5 py-4 text-center">
             <a href="{% url 'core:invoice_update' invoice.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Επεξεργασία</a>
+            {% if request.user.is_staff %}
+            <form method="post" action="{% url 'core:invoice_delete' invoice.id %}" class="mt-2 inline" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+              {% csrf_token %}
+              <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+            </form>
+            {% endif %}
           </td>
         </tr>
         {% empty %}

@@ -10,6 +10,12 @@
   <div class="flex gap-3">
     <a href="{% url 'core:members_list' %}" class="rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Πίσω</a>
     <a href="{% url 'core:member_update' member.id %}" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Επεξεργασία</a>
+    {% if request.user.is_staff %}
+    <form method="post" action="{% url 'core:member_delete' member.id %}" class="inline" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+      {% csrf_token %}
+      <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+    </form>
+    {% endif %}
   </div>
 </div>
 

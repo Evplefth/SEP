@@ -10,6 +10,12 @@
   <div class="flex gap-3">
     <a href="{% url 'core:companies_list' %}" class="rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Πίσω</a>
     <a href="{% url 'core:company_update' company.id %}" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Επεξεργασία</a>
+    {% if request.user.is_staff %}
+    <form method="post" action="{% url 'core:company_delete' company.id %}" class="inline" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+      {% csrf_token %}
+      <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+    </form>
+    {% endif %}
   </div>
 </div>
 
@@ -156,6 +162,12 @@
             </td>
             <td class="px-5 py-4 text-center">
               <a href="{% url 'core:invoice_update' invoice.id %}" class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200">Επεξεργασία</a>
+              {% if request.user.is_staff %}
+              <form method="post" action="{% url 'core:invoice_delete' invoice.id %}" class="mt-2 inline" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+              </form>
+              {% endif %}
             </td>
           </tr>
           {% empty %}
@@ -203,6 +215,12 @@
             <td class="px-5 py-4 text-center">
               <div class="flex items-center justify-center gap-2">
                 <a href="{% url 'core:payment_update' payment.id %}" class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200">Επεξεργασία</a>
+                {% if request.user.is_staff %}
+                <form method="post" action="{% url 'core:payment_delete' payment.id %}" class="inline" onsubmit="return confirm('&#925;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#949;&#943; &#959;&#961;&#953;&#963;&#964;&#953;&#954;&#940;;');">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex items-center rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100">&#916;&#953;&#945;&#947;&#961;&#945;&#966;&#942;</button>
+                </form>
+                {% endif %}
                 {% if payment.active %}
                 <form method="post" action="{% url 'core:payment_deactivate' payment.id %}" class="inline">
                   {% csrf_token %}
