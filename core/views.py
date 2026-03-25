@@ -1,5 +1,6 @@
 import re
 from datetime import date
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -67,6 +68,18 @@ def _country_code_from_member_nationality(member):
         if name.strip().lower() == country_name:
             return code
     return ""
+
+
+def _mitroo_expiry_state(deregistration_date):
+    if not deregistration_date:
+        return {"warning": False, "expired": False, "days_left": None}
+    today = timezone.now().date()
+    days_left = (deregistration_date - today).days
+    return {
+        "warning": days_left <= 90,
+        "expired": days_left < 0,
+        "days_left": days_left,
+    }
 
 
 # ── FIX 1: προστέθηκε existing_insurance ────────────────────────
@@ -545,7 +558,10 @@ def user_create(request):
 
 @login_required
 def member_list(request):
-    members = Members.objects.select_related("nationality", "bank").prefetch_related("companies__company").all()
+    members = Members.objects.select_related("nationality", "bank").prefetch_related(
+        "companies__company",
+        "insurance_contracts__contract__company",
+    ).all()
     query  = (request.GET.get("q") or "").strip()
     mitroo = (request.GET.get("mitroo") or "").strip()
 
@@ -566,17 +582,39 @@ def member_list(request):
     if mitroo in {"A", "B"}:
         members = members.filter(mitroo_type=mitroo)
 
+    for member in members:
+        state = _mitroo_expiry_state(member.date_of_deregistration)
+        member.has_mitroo_warning = state["warning"]
+        member.mitroo_expired = state["expired"]
+        member.mitroo_days_left = state["days_left"]
+
     return render(request, "core/member_list.html", {"members": members})
 
 
 @login_required
 def member_detail(request, member_id):
     member = get_object_or_404(
-        Members.objects.select_related("nationality", "bank").prefetch_related("companies__company", "exartomena__property"),
+        Members.objects.select_related("nationality", "bank").prefetch_related(
+            "companies__company",
+            "exartomena__property",
+            "files",
+            "insurance_contracts__contract__company",
+        ),
         pk=member_id,
     )
     company_links = member.companies.select_related("company").all().order_by("-active", "company__name")
-    return render(request, "core/member_detail.html", {"member": member, "company_links": company_links})
+    insurance_links = member.insurance_contracts.select_related("contract__company").all().order_by("-contract__active", "contract__company__name")
+    mitroo_state = _mitroo_expiry_state(member.date_of_deregistration)
+    member_files = member.files.all()
+    return render(request, "core/member_detail.html", {
+        "member": member,
+        "company_links": company_links,
+        "insurance_links": insurance_links,
+        "member_files": member_files,
+        "mitroo_warning": mitroo_state["warning"],
+        "mitroo_expired": mitroo_state["expired"],
+        "mitroo_days_left": mitroo_state["days_left"],
+    })
 
 
 @login_required
