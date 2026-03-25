@@ -363,8 +363,7 @@
         <a href="/" class="flex items-center gap-2.5">
           <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
           <span class="text-gray-900 font-semibold text-lg tracking-tight">SEP Cargo</span>
@@ -384,10 +383,13 @@
             class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
             Εταιρίες
           </a>
-          <!-- ✅ Νέο link Πρωτόκολλα -->
           <a href="{% url 'core:protocol_list' %}"
             class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
             Πρωτόκολλα
+          </a>
+          <a href="{% url 'core:insurance_company_list' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Ασφαλιστικές
           </a>
           <a href="{% url 'core:users' %}"
             class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
@@ -437,8 +439,8 @@
       <a href="{% url 'core:dashboard' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Κέντρο Ελέγχου</a>
       <a href="{% url 'core:members_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Μέλη</a>
       <a href="{% url 'core:companies_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εταιρίες</a>
-      <!-- ✅ Νέο link Πρωτόκολλα (mobile) -->
       <a href="{% url 'core:protocol_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Πρωτόκολλα</a>
+      <a href="{% url 'core:insurance_company_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Ασφαλιστικές</a>
       <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
         {% if user.is_authenticated %}
           <span class="px-3 py-2 text-sm text-gray-600">Hello, <strong>{{ user.username }}</strong></span>

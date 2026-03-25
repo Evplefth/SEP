@@ -1,0 +1,170 @@
+{% extends "core/base.html" %}
+{% block title %}{{ ins.name }}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div class="flex items-center gap-4">
+    <a href="{% url 'core:insurance_company_list' %}" class="text-gray-400 hover:text-gray-600 transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">{{ ins.name }}</h1>
+      <p class="text-gray-500 text-sm mt-0.5">Ασφαλιστική Εταιρεία</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="{% url 'core:insurance_contract_create' ins.id %}"
+       class="px-4 py-2.5 text-sm font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-lg transition flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Νέο Συμβόλαιο
+    </a>
+    <a href="{% url 'core:insurance_company_update' ins.id %}"
+       class="px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      Επεξεργασία
+    </a>
+  </div>
+</div>
+
+<!-- Στοιχεία εταιρείας -->
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+  <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+    <h2 class="font-semibold text-gray-800 text-sm">Στοιχεία Εταιρείας</h2>
+  </div>
+  <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    {% if ins.contact_person %}
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Υπεύθυνος</p>
+      <p class="text-sm text-gray-800">{{ ins.contact_person }}</p>
+    </div>
+    {% endif %}
+    {% if ins.phone %}
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Τηλέφωνο</p>
+      <p class="text-sm text-gray-800">{{ ins.phone }}</p>
+    </div>
+    {% endif %}
+    {% if ins.email %}
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Email</p>
+      <a href="mailto:{{ ins.email }}" class="text-sm text-blue-600 hover:underline">{{ ins.email }}</a>
+    </div>
+    {% endif %}
+    {% if ins.address %}
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Διεύθυνση</p>
+      <p class="text-sm text-gray-800">{{ ins.address }}</p>
+    </div>
+    {% endif %}
+    {% if ins.notes %}
+    <div class="sm:col-span-2 lg:col-span-4">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Παρατηρήσεις</p>
+      <p class="text-sm text-gray-700">{{ ins.notes }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Συμβόλαια -->
+{% if contracts %}
+  {% for contract in contracts %}
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+    <!-- Contract header -->
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center {% if contract.active %}bg-green-100{% else %}bg-gray-100{% endif %}">
+          <svg class="w-4 h-4 {% if contract.active %}text-green-600{% else %}text-gray-400{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-800 text-sm">Συμβόλαιο {{ contract.contract_number }}</h3>
+          {% if contract.coverage_type %}
+          <p class="text-xs text-gray-500">{{ contract.coverage_type }}</p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        {% if contract.active %}
+        <span class="text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">Ενεργό</span>
+        {% else %}
+        <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">Ανενεργό</span>
+        {% endif %}
+        <span class="text-sm font-semibold text-blue-700">
+          {{ contract.members.count }} μέλ{{ contract.members.count|pluralize:"ος,η" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Contract details -->
+    <div class="px-6 py-4">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+        {% if contract.amount %}
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Ποσό</p>
+          <p class="text-sm font-semibold text-gray-800">{{ contract.amount }} €</p>
+        </div>
+        {% endif %}
+        {% if contract.start_date %}
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Έναρξη</p>
+          <p class="text-sm text-gray-800">{{ contract.start_date|date:"d/m/Y" }}</p>
+        </div>
+        {% endif %}
+        {% if contract.end_date %}
+        <div>
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Λήξη</p>
+          <p class="text-sm text-gray-800">{{ contract.end_date|date:"d/m/Y" }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Members in this contract -->
+      {% if contract.members.all %}
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Μέλη</p>
+        <div class="flex flex-wrap gap-2">
+          {% for mi in contract.members.all %}
+          <a href="{% url 'core:member_detail' mi.member.id %}"
+             class="inline-flex items-center gap-1.5 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full hover:bg-blue-100 transition font-medium">
+            {{ mi.member.last_name }} {{ mi.member.first_name }}
+            {% if mi.includes_dependents %}
+            <span class="text-blue-400" title="Περιλαμβάνει εξαρτώμενα">+εξ</span>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <p class="text-xs text-gray-400 italic">Δεν υπάρχουν μέλη σε αυτό το συμβόλαιο.</p>
+      {% endif %}
+
+      {% if contract.notes %}
+      <p class="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-100">{{ contract.notes }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+{% else %}
+<div class="bg-white rounded-xl border border-gray-100 shadow-sm text-center py-12">
+  <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+  </svg>
+  <p class="text-gray-500 text-sm">Δεν υπάρχουν συμβόλαια για αυτή την εταιρεία.</p>
+  <a href="{% url 'core:insurance_contract_create' ins.id %}"
+     class="mt-3 inline-block text-sm text-blue-600 font-semibold hover:underline">
+    Προσθήκη πρώτου συμβολαίου →
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}
