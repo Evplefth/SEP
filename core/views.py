@@ -417,7 +417,7 @@ def _export_configs():
     }
 
 
-# β”€β”€ FIX 1: Ο€ΟΞΏΟƒΟ„Ξ­ΞΈΞ·ΞΊΞµ existing_insurance β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€
+# ── FIX 1: προστέθηκε existing_insurance ────────────────────────
 def _member_form_context(form_data=None, member=None, error=None,
                           existing_exartomena=None, existing_companies=None,
                           existing_insurance=None):
@@ -431,7 +431,7 @@ def _member_form_context(form_data=None, member=None, error=None,
         "error":               error,
         "existing_exartomena": existing_exartomena or [],
         "existing_companies":  existing_companies or [],
-        "existing_insurance":  existing_insurance or [],  # β† Ο€ΞΏΞ»Ξ»Ξ±Ο€Ξ»Ξ¬
+        "existing_insurance":  existing_insurance or [],  # ← πολλαπλά
     }
 
 
@@ -615,9 +615,9 @@ def _save_member_files(request, member):
         i += 1
 
 
-# β”€β”€ FIX 2: Ο€ΞΏΞ»Ξ»Ξ±Ο€Ξ»Ξ¬ ΟƒΟ…ΞΌΞ²ΟΞ»Ξ±ΞΉΞ± ΞΌΞµ _extract_row_indexes β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€
+# ── FIX 2: πολλαπλά συμβόλαια με _extract_row_indexes ──────────
 def _save_member_insurance(request, member):
-    """Ξ‘Ο€ΞΏΞΈΞ·ΞΊΞµΟΞµΞΉ Ξ ΞΞ›Ξ›Ξ‘Ξ Ξ›Ξ‘ ΞΏΞΌΞ±Ξ΄ΞΉΞΊΞ¬ ΟƒΟ…ΞΌΞ²ΟΞ»Ξ±ΞΉΞ± Ξ±Ξ½Ξ¬ ΞΌΞ­Ξ»ΞΏΟ‚."""
+    """Αποθηκεύει ΠΟΛΛΑΠΛΑ ομαδικά συμβόλαια ανά μέλος."""
     MemberInsurance.objects.filter(member=member).delete()
     for index in _extract_row_indexes(request.POST, ["insurance_contract_"]):
         contract_id         = request.POST.get(f"insurance_contract_{index}") or None
@@ -737,29 +737,29 @@ def _payment_from_post(request, payment=None):
 
 def _validate_member_post(request):
     required_fields = {
-        "first_name":   "?????",
-        "last_name":    "???????",
-        "fathers_name": "?????????",
-        "ADT":  "???",
-        "AFM":  "???",
-        "AMKA": "????",
-        "AMA":  "???",
-        "member_registry_number": "??????? ??????? ???????",
+        "first_name":   "Όνομα",
+        "last_name":    "Επώνυμο",
+        "fathers_name": "Πατρώνυμο",
+        "ADT":  "ΑΔΤ",
+        "AFM":  "ΑΦΜ",
+        "AMKA": "ΑΜΚΑ",
+        "AMA":  "ΑΜΑ",
+        "member_registry_number": "Αριθμός Βιβλίου Μητρώου",
     }
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
-        return f"?????????? ?? ??????????? ?????: {', '.join(missing)}."
+        return f"Συμπληρώστε τα υποχρεωτικά πεδία: {', '.join(missing)}."
     return None
 
 
 def _find_member_duplicate(member):
     unique_fields = {
-        "ADT":  "???",
-        "AFM":  "???",
-        "AMKA": "????",
-        "AMA":  "???",
+        "ADT":  "ΑΔΤ",
+        "AFM":  "ΑΦΜ",
+        "AMKA": "ΑΜΚΑ",
+        "AMA":  "ΑΜΑ",
         "bank_account_number": "IBAN",
-        "member_registry_number": "??????? ??????? ???????",
+        "member_registry_number": "Αριθμός Βιβλίου Μητρώου",
     }
     for field, label in unique_fields.items():
         value = getattr(member, field, None)
@@ -774,23 +774,23 @@ def _find_member_duplicate(member):
 
 
 def _validate_company_post(request):
-    required_fields = {"name": "????????", "AFM": "???"}
+    required_fields = {"name": "Επωνυμία", "AFM": "ΑΦΜ"}
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
-        return f"?????????? ?? ??????????? ?????: {', '.join(missing)}."
+        return f"Συμπληρώστε τα υποχρεωτικά πεδία: {', '.join(missing)}."
     return None
 
 
 def _validate_invoice_post(request):
     required_fields = {
-        "company":        "???????",
-        "invoice_number": "??????? ??????????",
-        "amount":         "????",
-        "date_of_issue":  "?????????? ???????",
+        "company":        "Εταιρία",
+        "invoice_number": "Αριθμός τιμολογίου",
+        "amount":         "Ποσό",
+        "date_of_issue":  "Ημερομηνία έκδοσης",
     }
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
-        return f"?????????? ?? ??????????? ?????: {', '.join(missing)}."
+        return f"Συμπληρώστε τα υποχρεωτικά πεδία: {', '.join(missing)}."
     return None
 
 
@@ -803,13 +803,13 @@ def _find_invoice_duplicate(invoice):
 
 def _validate_payment_post(request):
     required_fields = {
-        "company": "???????",
-        "amount": "????",
-        "payment_date": "?????????? ????????",
+        "company": "Εταιρία",
+        "amount": "Ποσό",
+        "payment_date": "Ημερομηνία πληρωμής",
     }
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
-        return f"?????????? ?? ??????????? ?????: {', '.join(missing)}."
+        return f"Συμπληρώστε τα υποχρεωτικά πεδία: {', '.join(missing)}."
     return None
 
 
@@ -835,9 +835,9 @@ def _protocol_from_post(request):
     }
 
 
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 #  DASHBOARD
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def dashboard(request):
@@ -874,7 +874,7 @@ def export_data(request):
                 "selected_config": selected_config,
                 "selected_field_keys": selected_field_keys,
                 "selected_export_format": export_format,
-                "error": "??????? ??????????? ??? ????? ??? ???????.",
+                "error": "Επιλέξτε τουλάχιστον ένα πεδίο για εξαγωγή.",
             })
 
         field_map = {key: (label, getter) for key, label, getter in selected_config["fields"]}
@@ -906,9 +906,9 @@ def export_data(request):
         "selected_export_format": export_format,
     })
 
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 #  USERS
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def user_list(request):
@@ -966,9 +966,9 @@ def user_delete(request, user_id):
     return redirect("core:users")
 
 
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 #  MEMBERS
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def member_list(request):
@@ -1110,7 +1110,7 @@ def member_update(request, member_id):
         messages.success(request, f"Το μέλος {member.last_name} {member.first_name} ενημερώθηκε επιτυχώς.")
         return redirect("core:members_list")
 
-    # β”€β”€ Ξ¥Ο€Ξ¬ΟΟ‡ΞΏΟ…ΟƒΞµΟ‚ Ξ±ΟƒΟ†Ξ±Ξ»Ξ―ΟƒΞµΞΉΟ‚ β€” Ξ ΞΞ›Ξ›Ξ‘Ξ Ξ›Ξ•Ξ£ β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€β”€
+    # ── Υπάρχουσες ασφαλίσεις — ΠΟΛΛΑΠΛΕΣ ──────────────────────
     existing_insurance = [
         {
             "index":               i,
@@ -1200,9 +1200,9 @@ def member_delete(request, member_id):
     return redirect("core:members_list")
 
 
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 #  COMPANIES
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def company_list(request):
@@ -1449,7 +1449,7 @@ def payment_deactivate(request, payment_id):
         payment.inactive_date = timezone.now().date()
         payment.save(update_fields=["active", "inactive_date"])
         _recalculate_company_payment_allocations(payment.company)
-        messages.success(request, "? ??????? ????? ????????.")
+        messages.success(request, "Η πληρωμή απενεργοποιήθηκε επιτυχώς.")
     return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
 
@@ -1457,16 +1457,16 @@ def payment_deactivate(request, payment_id):
 def payment_delete(request, payment_id):
     payment = get_object_or_404(CompanyPayment.objects.select_related("company"), pk=payment_id)
     if not request.user.is_staff:
-        messages.error(request, "???? ???????????? ??????? ?? ?????????? ????????.")
+        messages.error(request, "Μόνο διαχειριστές μπορούν να διαγράψουν εγγραφές.")
         return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
     company_id = payment.company_id
-    payment_label = payment.reference or f"{payment.amount} ?"
+    payment_label = payment.reference or f"{payment.amount} €"
     if request.method == "POST":
         payment.delete()
         if companies.objects.filter(pk=company_id).exists():
             _recalculate_company_payment_allocations(companies.objects.get(pk=company_id))
-        messages.success(request, f"? ??????? {payment_label} ?????????? ????????.")
+        messages.success(request, f"Η πληρωμή {payment_label} διαγράφηκε οριστικά.")
     return redirect(f"{reverse('core:company_detail', args=[company_id])}?tab=payments")
 
 
@@ -1573,9 +1573,9 @@ def invoice_delete(request, invoice_id):
     return redirect(redirect_url)
 
 
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
-#  Ξ Ξ΅Ξ©Ξ¤ΞΞΞΞ›Ξ›Ξ‘
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
+#  ΠΡΩΤΟΚΟΛΛΑ
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def protocol_list(request):
@@ -1667,9 +1667,9 @@ def protocol_update(request, protocol_id):
     return render(request, "core/protocol_create.html", {"protocol": protocol})
 
 
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
-#  Ξ‘Ξ£Ξ¦Ξ‘Ξ›Ξ™Ξ£Ξ¤Ξ™ΞΞ•Ξ£ Ξ•Ξ¤Ξ‘Ξ™Ξ΅Ξ•Ξ™Ξ•Ξ£
-# β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•β•
+# ════════════════════════════════════════════════════════════════
+#  ΑΣΦΑΛΙΣΤΙΚΕΣ ΕΤΑΙΡΕΙΕΣ
+# ════════════════════════════════════════════════════════════════
 
 @login_required
 def insurance_company_list(request):
@@ -1718,7 +1718,7 @@ def insurance_company_update(request, company_id):
         name = (request.POST.get("name") or "").strip()
         if not name:
             return render(request, "core/insurance_company_add.html", {
-                "ins": ins, "error": "Ξ— ΞµΟ€Ο‰Ξ½Ο…ΞΌΞ―Ξ± ΞµΞ―Ξ½Ξ±ΞΉ Ο…Ο€ΞΏΟ‡ΟΞµΟ‰Ο„ΞΉΞΊΞ®."
+                "ins": ins, "error": "Η επωνυμία είναι υποχρεωτική."
             })
         ins.name           = name
         ins.address        = (request.POST.get("address") or "").strip()
@@ -1727,7 +1727,7 @@ def insurance_company_update(request, company_id):
         ins.contact_person = (request.POST.get("contact_person") or "").strip()
         ins.notes          = (request.POST.get("notes") or "").strip()
         ins.save()
-        messages.success(request, f"Ξ— Ξ±ΟƒΟ†Ξ±Ξ»ΞΉΟƒΟ„ΞΉΞΊΞ® {ins.name} ΞµΞ½Ξ·ΞΌΞµΟΟΞΈΞ·ΞΊΞµ.")
+        messages.success(request, f"Η ασφαλιστική {ins.name} ενημερώθηκε.")
         return redirect("core:insurance_company_list")
 
     return render(request, "core/insurance_company_add.html", {"ins": ins})
@@ -1741,7 +1741,7 @@ def insurance_contract_create(request, company_id):
         contract_number = (request.POST.get("contract_number") or "").strip()
         if not contract_number:
             return render(request, "core/insurance_contract_add.html", {
-                "ins": ins, "error": "Ξ Ξ±ΟΞΉΞΈΞΌΟΟ‚ ΟƒΟ…ΞΌΞ²ΞΏΞ»Ξ±Ξ―ΞΏΟ… ΞµΞ―Ξ½Ξ±ΞΉ Ο…Ο€ΞΏΟ‡ΟΞµΟ‰Ο„ΞΉΞΊΟΟ‚."
+                "ins": ins, "error": "Ο αριθμός συμβολαίου είναι υποχρεωτικός."
             })
         InsuranceContract.objects.create(
             company         = ins,
@@ -1753,7 +1753,7 @@ def insurance_contract_create(request, company_id):
             active          = request.POST.get("active") == "on",
             notes           = (request.POST.get("notes") or "").strip(),
         )
-        messages.success(request, f"Ξ¤ΞΏ ΟƒΟ…ΞΌΞ²ΟΞ»Ξ±ΞΉΞΏ {contract_number} Ο€ΟΞΏΟƒΟ„Ξ­ΞΈΞ·ΞΊΞµ.")
+        messages.success(request, f"Το συμβόλαιο {contract_number} προστέθηκε.")
         return redirect("core:insurance_company_detail", company_id=ins.pk)
 
     return render(request, "core/insurance_contract_add.html", {"ins": ins})
@@ -1765,4 +1765,3 @@ def insurance_contracts_json(request, company_id):
         company_id=company_id, active=True
     ).values("id", "contract_number", "coverage_type")
     return JsonResponse({"contracts": list(contracts)})
-
