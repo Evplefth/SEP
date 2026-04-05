@@ -5,6 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}SEP Φορτοεκφορτώσεις{% endblock %}</title>
+  <script>
+    if (localStorage.getItem('sep-theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+    tailwind.config = { darkMode: 'class' };
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
@@ -322,6 +328,121 @@
     }
   </style>
   {% block extra_head %}{% endblock %}
+
+  <style>
+    /* === DARK MODE === */
+    html.dark body {
+      background:
+        radial-gradient(circle at top left, rgba(30, 64, 175, 0.22), transparent 18%),
+        radial-gradient(circle at top right, rgba(15, 23, 42, 0.9), transparent 16%),
+        radial-gradient(circle at bottom center, rgba(30, 58, 138, 0.18), transparent 24%),
+        linear-gradient(180deg, #0f172a 0%, #0d1b2e 52%, #0f172a 100%);
+      color: #e2e8f0;
+    }
+
+    html.dark .site-shell::before {
+      background-image:
+        linear-gradient(rgba(30, 64, 175, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30, 64, 175, 0.1) 1px, transparent 1px);
+    }
+
+    html.dark .app-nav {
+      background: rgba(15, 23, 42, 0.88);
+      border-bottom-color: rgba(30, 58, 138, 0.55);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    html.dark .app-footer {
+      background: rgba(15, 23, 42, 0.88);
+      border-top-color: rgba(30, 58, 138, 0.5);
+    }
+
+    html.dark .surface-card {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.88));
+      border-color: rgba(51, 65, 85, 0.55);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    html.dark .surface-card::before {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 30%),
+        linear-gradient(90deg, transparent, transparent calc(100% - 1px), rgba(96, 165, 250, 0.06) calc(100% - 1px));
+    }
+
+    html.dark .soft-panel {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.92));
+      border-color: rgba(51, 65, 85, 0.55);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    html.dark #mobile-menu {
+      background-color: #0f172a;
+      border-top-color: rgba(51, 65, 85, 0.5);
+    }
+
+    /* Text */
+    html.dark .text-slate-900, html.dark .text-gray-900 { color: #f1f5f9; }
+    html.dark .text-slate-800, html.dark .text-gray-800 { color: #e2e8f0; }
+    html.dark .text-slate-700, html.dark .text-gray-700 { color: #cbd5e1; }
+    html.dark .text-slate-600, html.dark .text-gray-600 { color: #94a3b8; }
+    html.dark .text-slate-500, html.dark .text-gray-500 { color: #64748b; }
+    html.dark .text-slate-400, html.dark .text-gray-400 { color: #94a3b8; }
+
+    /* Backgrounds */
+    html.dark .bg-white { background-color: #1e293b !important; }
+    html.dark .bg-white\/90 { background-color: rgba(30, 41, 59, 0.9) !important; }
+    html.dark .bg-slate-50, html.dark .bg-gray-50, html.dark .bg-blue-50 { background-color: rgba(15, 23, 42, 0.85) !important; }
+    html.dark .bg-slate-100, html.dark .bg-gray-100 { background-color: rgba(30, 41, 59, 0.8) !important; }
+    html.dark .bg-blue-100 { background-color: rgba(30, 58, 138, 0.35) !important; }
+    html.dark .bg-red-50\/70 { background-color: rgba(127, 29, 29, 0.2) !important; }
+    html.dark .bg-red-100 { background-color: rgba(127, 29, 29, 0.3) !important; }
+    html.dark .bg-green-50 { background-color: rgba(20, 83, 45, 0.2) !important; }
+    html.dark .bg-yellow-50 { background-color: rgba(113, 63, 18, 0.2) !important; }
+    html.dark .bg-cyan-100 { background-color: rgba(22, 78, 99, 0.35) !important; }
+
+    /* Borders */
+    html.dark .border-slate-200, html.dark .border-gray-200 { border-color: rgba(51, 65, 85, 0.6); }
+    html.dark .border-slate-100, html.dark .border-gray-100 { border-color: rgba(51, 65, 85, 0.4); }
+    html.dark .border-green-200 { border-color: rgba(22, 101, 52, 0.5); }
+    html.dark .border-red-200 { border-color: rgba(153, 27, 27, 0.5); }
+    html.dark .border-yellow-200 { border-color: rgba(133, 77, 14, 0.5); }
+    html.dark .border-blue-200 { border-color: rgba(30, 64, 175, 0.5); }
+
+    /* Dividers */
+    html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(51, 65, 85, 0.4); }
+    html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(51, 65, 85, 0.4); }
+
+    /* Badge text */
+    html.dark .text-slate-700 { color: #cbd5e1 !important; }
+    html.dark .text-blue-700 { color: #60a5fa; }
+    html.dark .text-red-700, html.dark .text-red-600 { color: #f87171; }
+    html.dark .text-green-700 { color: #4ade80; }
+    html.dark .text-yellow-700 { color: #facc15; }
+    html.dark .text-cyan-700 { color: #22d3ee; }
+
+    /* Hover states */
+    html.dark .hover\:bg-gray-100:hover { background-color: rgba(30, 41, 59, 0.8) !important; }
+    html.dark .hover\:bg-blue-50:hover { background-color: rgba(30, 58, 138, 0.2) !important; }
+    html.dark .hover\:bg-blue-50\/30:hover { background-color: rgba(30, 58, 138, 0.12) !important; }
+    html.dark .hover\:bg-red-100\/70:hover { background-color: rgba(127, 29, 29, 0.28) !important; }
+    html.dark .hover\:bg-red-50:hover { background-color: rgba(127, 29, 29, 0.2) !important; }
+
+    /* Form inputs */
+    html.dark input:not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    html.dark select,
+    html.dark textarea {
+      background-color: #1e293b;
+      border-color: rgba(51, 65, 85, 0.7);
+      color: #e2e8f0;
+    }
+    html.dark input::placeholder,
+    html.dark textarea::placeholder { color: #475569; }
+    html.dark select option { background-color: #1e293b; color: #e2e8f0; }
+
+    /* Tables */
+    html.dark thead { background-color: rgba(15, 23, 42, 0.7) !important; }
+    html.dark thead.border-b { border-color: rgba(51, 65, 85, 0.5); }
+  </style>
 </head>
 <body class="{% block body_class %}bg-blue-50{% endblock %} min-h-screen flex flex-col">
   <div class="site-shell flex min-h-screen flex-col">
@@ -402,6 +523,15 @@
         </div>
 
         <div class="hidden md:flex items-center gap-3">
+          <button onclick="toggleTheme()" title="Toggle dark/light mode"
+            class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition">
+            <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg id="theme-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
           {% if user.is_authenticated %}
             <div class="flex items-center gap-3">
               <div class="flex items-center gap-2">
@@ -447,6 +577,15 @@
       <a href="{% url 'core:insurance_company_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Ασφαλιστικές</a>
       <a href="{% url 'core:export_data' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εξαγωγή</a>
       <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
+        <button onclick="toggleTheme()" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition">
+          <svg id="theme-sun-mobile" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg id="theme-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+          <span id="theme-label-mobile">Dark Mode</span>
+        </button>
         {% if user.is_authenticated %}
           <span class="px-3 py-2 text-sm text-gray-600">Hello, <strong>{{ user.username }}</strong></span>
           <form method="post" action="{% url 'logout' %}">
@@ -513,6 +652,26 @@
   {% endif %}
 
   <script>
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('sep-theme', isDark ? 'dark' : 'light');
+      updateThemeIcons();
+    }
+
+    function updateThemeIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('theme-sun').classList.toggle('hidden', !isDark);
+      document.getElementById('theme-moon').classList.toggle('hidden', isDark);
+      const sunM = document.getElementById('theme-sun-mobile');
+      const moonM = document.getElementById('theme-moon-mobile');
+      const labelM = document.getElementById('theme-label-mobile');
+      if (sunM) sunM.classList.toggle('hidden', !isDark);
+      if (moonM) moonM.classList.toggle('hidden', isDark);
+      if (labelM) labelM.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+
+    document.addEventListener('DOMContentLoaded', updateThemeIcons);
+
     function toggleMobileMenu() {
       const menu = document.getElementById('mobile-menu');
       const open = document.getElementById('menu-open');
