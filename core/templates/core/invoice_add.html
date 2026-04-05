@@ -1,5 +1,38 @@
 {% extends "core/base.html" %}
-{% block title %}{% if invoice %}Επεξεργασία Παραστατικού{% else %}Νέο Παραστατικό{% endif %}{% endblock %}
+{% block title %}{% if invoice %}Επεξεργασία Παραστατικού{% else %}Νέο Παραστατικό{% endif %}<div id="invoice-form-preview-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 id="invoice-form-preview-title" class="text-lg font-semibold text-gray-800">Preview</h3>
+      <button type="button" onclick="closeInvoiceFormPreview()" class="text-gray-500 hover:text-gray-700">????????</button>
+    </div>
+    <div id="invoice-form-preview-body" class="flex-1 bg-gray-100 min-h-[70vh] overflow-auto"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function showInvoiceFormPreview(title, url) {
+    const modal = document.getElementById('invoice-form-preview-modal');
+    const body = document.getElementById('invoice-form-preview-body');
+    const previewTitle = document.getElementById('invoice-form-preview-title');
+    previewTitle.textContent = `Preview ???????????? ${title}`;
+    body.innerHTML = `<iframe src="${url}" class="w-full h-[70vh] bg-white" title="${title}"></iframe>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeInvoiceFormPreview() {
+    const modal = document.getElementById('invoice-form-preview-modal');
+    const body = document.getElementById('invoice-form-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
@@ -63,4 +96,37 @@
     </div>
   </form>
 </div>
+<div id="invoice-form-preview-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 id="invoice-form-preview-title" class="text-lg font-semibold text-gray-800">Preview</h3>
+      <button type="button" onclick="closeInvoiceFormPreview()" class="text-gray-500 hover:text-gray-700">????????</button>
+    </div>
+    <div id="invoice-form-preview-body" class="flex-1 bg-gray-100 min-h-[70vh] overflow-auto"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function showInvoiceFormPreview(title, url) {
+    const modal = document.getElementById('invoice-form-preview-modal');
+    const body = document.getElementById('invoice-form-preview-body');
+    const previewTitle = document.getElementById('invoice-form-preview-title');
+    previewTitle.textContent = `Preview ???????????? ${title}`;
+    body.innerHTML = `<iframe src="${url}" class="w-full h-[70vh] bg-white" title="${title}"></iframe>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeInvoiceFormPreview() {
+    const modal = document.getElementById('invoice-form-preview-modal');
+    const body = document.getElementById('invoice-form-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
 {% endblock %}

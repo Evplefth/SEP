@@ -1,5 +1,38 @@
 {% extends "core/base.html" %}
-{% block title %}{% if protocol %}Επεξεργασία Πρωτοκόλλου{% else %}Νέο Πρωτόκολλο{% endif %}{% endblock %}
+{% block title %}{% if protocol %}Επεξεργασία Πρωτοκόλλου{% else %}Νέο Πρωτόκολλο{% endif %}<div id="protocol-form-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h3 id="protocol-form-preview-title" class="text-lg font-semibold text-slate-800">Preview</h3>
+      <button type="button" onclick="closeProtocolFormPreview()" class="text-slate-500 hover:text-slate-700">????????</button>
+    </div>
+    <div id="protocol-form-preview-body" class="min-h-[70vh] flex-1 overflow-auto bg-slate-100"></div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function showProtocolFormPreview(title, url) {
+    const modal = document.getElementById('protocol-form-preview-modal');
+    const body = document.getElementById('protocol-form-preview-body');
+    const previewTitle = document.getElementById('protocol-form-preview-title');
+    previewTitle.textContent = `Preview ??????????? ${title}`;
+    body.innerHTML = `<iframe src="${url}" class="h-[70vh] w-full bg-white" title="${title}"></iframe>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProtocolFormPreview() {
+    const modal = document.getElementById('protocol-form-preview-modal');
+    const body = document.getElementById('protocol-form-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
+{% endblock %}
 
 {% block content %}
 
@@ -87,7 +120,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
             </svg>
             Υπάρχον αρχείο:
-            <a href="{{ protocol.file.url }}" target="_blank" class="text-blue-600 hover:underline">{{ protocol.file.name }}</a>
+            <button type="button" onclick="showProtocolFormPreview('{{ protocol.full_number|escapejs }}', '{% url 'core:media_preview' protocol.file.name %}')" class="text-blue-600 hover:underline">{{ protocol.file.name }}</button>
             — Επιλέξτε νέο για αντικατάσταση
           </p>
         {% endif %}
@@ -255,4 +288,37 @@
 
 </form>
 
+<div id="protocol-form-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h3 id="protocol-form-preview-title" class="text-lg font-semibold text-slate-800">Preview</h3>
+      <button type="button" onclick="closeProtocolFormPreview()" class="text-slate-500 hover:text-slate-700">????????</button>
+    </div>
+    <div id="protocol-form-preview-body" class="min-h-[70vh] flex-1 overflow-auto bg-slate-100"></div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function showProtocolFormPreview(title, url) {
+    const modal = document.getElementById('protocol-form-preview-modal');
+    const body = document.getElementById('protocol-form-preview-body');
+    const previewTitle = document.getElementById('protocol-form-preview-title');
+    previewTitle.textContent = `Preview ??????????? ${title}`;
+    body.innerHTML = `<iframe src="${url}" class="h-[70vh] w-full bg-white" title="${title}"></iframe>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProtocolFormPreview() {
+    const modal = document.getElementById('protocol-form-preview-modal');
+    const body = document.getElementById('protocol-form-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
 {% endblock %}

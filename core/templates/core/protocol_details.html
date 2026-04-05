@@ -1,5 +1,38 @@
 {% extends "core/base.html" %}
-{% block title %}Πρωτόκολλο {{ protocol.full_number }}{% endblock %}
+{% block title %}Πρωτόκολλο {{ protocol.full_number }}<div id="protocol-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h3 id="protocol-preview-title" class="text-lg font-semibold text-slate-800">Preview</h3>
+      <button type="button" onclick="closeProtocolPreview()" class="text-slate-500 hover:text-slate-700">????????</button>
+    </div>
+    <div id="protocol-preview-body" class="min-h-[70vh] flex-1 overflow-auto bg-slate-100"></div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function showProtocolPreview(title, url) {
+    const modal = document.getElementById('protocol-preview-modal');
+    const body = document.getElementById('protocol-preview-body');
+    const previewTitle = document.getElementById('protocol-preview-title');
+    previewTitle.textContent = `Preview ??????????? ${title}`;
+    body.innerHTML = `<iframe src="${url}" class="h-[70vh] w-full bg-white" title="${title}"></iframe>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProtocolPreview() {
+    const modal = document.getElementById('protocol-preview-modal');
+    const body = document.getElementById('protocol-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
+{% endblock %}
 
 {% block content %}
 
@@ -57,9 +90,9 @@
         </svg>
         <div>
           <p class="text-xs text-gray-500 mb-0.5">Επισυναπτόμενο Αρχείο</p>
-          <a href="{{ protocol.file.url }}" target="_blank" class="text-sm text-blue-600 font-medium hover:underline">
+          <button type="button" onclick="showProtocolPreview('{{ protocol.full_number|escapejs }}', '{% url 'core:media_preview' protocol.file.name %}')" class="text-sm text-blue-600 font-medium hover:underline">
             {{ protocol.file.name }}
-          </a>
+          </button>
         </div>
       </div>
       {% endif %}
@@ -116,4 +149,37 @@
 
 </div>
 
+<div id="protocol-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h3 id="protocol-preview-title" class="text-lg font-semibold text-slate-800">Preview</h3>
+      <button type="button" onclick="closeProtocolPreview()" class="text-slate-500 hover:text-slate-700">????????</button>
+    </div>
+    <div id="protocol-preview-body" class="min-h-[70vh] flex-1 overflow-auto bg-slate-100"></div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+  function showProtocolPreview(title, url) {
+    const modal = document.getElementById('protocol-preview-modal');
+    const body = document.getElementById('protocol-preview-body');
+    const previewTitle = document.getElementById('protocol-preview-title');
+    previewTitle.textContent = `Preview ??????????? ${title}`;
+    body.innerHTML = `<iframe src="${url}" class="h-[70vh] w-full bg-white" title="${title}"></iframe>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProtocolPreview() {
+    const modal = document.getElementById('protocol-preview-modal');
+    const body = document.getElementById('protocol-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
 {% endblock %}

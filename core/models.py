@@ -1,6 +1,8 @@
 ﻿from django.db import models
 from django.core.validators import MinLengthValidator
 
+from core.upload_utils import UniqueUploadTo
+
 
 class Companies_contacts(models.Model):
     name        = models.CharField(max_length=100, validators=[MinLengthValidator(2)], blank=True)
@@ -26,7 +28,7 @@ class Invoices(models.Model):
     service_type   = models.CharField(max_length=100, blank=True, null=True)
     date_of_issue  = models.DateField()
     status         = models.BooleanField(default=False)
-    scan_file      = models.FileField(upload_to='invoices/', blank=True, null=True)
+    scan_file      = models.FileField(upload_to=UniqueUploadTo('invoices/%Y/'), blank=True, null=True)
     company        = models.ForeignKey('companies', on_delete=models.CASCADE, related_name='invoices')
 
     def __str__(self):

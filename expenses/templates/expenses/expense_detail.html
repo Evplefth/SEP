@@ -1,0 +1,102 @@
+{% extends "core/base.html" %}
+{% block title %}{{ expense.expense_code }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <p class="text-sm text-slate-500">Έξοδο</p>
+      <h1 class="text-3xl font-bold text-slate-900">{{ expense.expense_code }}</h1>
+      <p class="mt-2 text-slate-600">{{ expense.description|default:"Χωρίς περιγραφή" }}</p>
+    </div>
+    <div class="flex gap-3">
+      <a href="{% url 'expenses:list' %}" class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Πίσω</a>
+      <a href="{% url 'expenses:update' expense.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Επεξεργασία</a>
+      {% if expense.pdf_file %}
+      <button type="button" onclick="openExpensePreview('{{ expense.expense_code|escapejs }}', '{% url 'core:media_preview' expense.pdf_file.name %}')" class="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50">Preview PDF</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <section class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <h2 class="text-sm font-semibold text-slate-800">Στοιχεία Εξόδου</h2>
+      </div>
+      <div class="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+        <div><span class="block text-xs font-semibold text-slate-500 mb-1">Ημερομηνία</span><span class="text-slate-800">{{ expense.expense_date|date:"d/m/Y" }}</span></div>
+        <div><span class="block text-xs font-semibold text-slate-500 mb-1">Ποσό</span><span class="text-slate-800">{{ expense.amount }} €</span></div>
+        <div><span class="block text-xs font-semibold text-slate-500 mb-1">Κατηγορία</span><span class="text-slate-800">{{ expense.get_category_display }}</span></div>
+        <div><span class="block text-xs font-semibold text-slate-500 mb-1">Υποκατηγορία</span><span class="text-slate-800">{{ expense.get_subcategory_display|default:"-" }}</span></div>
+        <div><span class="block text-xs font-semibold text-slate-500 mb-1">Είδος</span><span class="text-slate-800">{{ expense.get_detail_type_display|default:"-" }}</span></div>
+        <div><span class="block text-xs font-semibold text-slate-500 mb-1">Περίοδος</span><span class="text-slate-800">{% if expense.period_month and expense.period_year %}{{ expense.period_month }}/{{ expense.period_year }}{% elif expense.period_year %}{{ expense.period_year }}{% else %}-{% endif %}</span></div>
+        <div class="md:col-span-2"><span class="block text-xs font-semibold text-slate-500 mb-1">Σημειώσεις</span><span class="text-slate-800 whitespace-pre-line">{{ expense.notes|default:"-" }}</span></div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <h2 class="text-sm font-semibold text-slate-800">Αρχείο και Κατάσταση</h2>
+      </div>
+      <div class="px-6 py-5 space-y-4 text-sm">
+        <div>
+          <span class="block text-xs font-semibold text-slate-500 mb-1">Κατάσταση</span>
+          {% if expense.active %}
+          <span class="inline-flex px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">Ενεργό</span>
+          {% else %}
+          <span class="inline-flex px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">Ανενεργό</span>
+          {% endif %}
+        </div>
+        <div>
+          <span class="block text-xs font-semibold text-slate-500 mb-1">PDF</span>
+          {% if expense.pdf_file %}
+          <button type="button" onclick="openExpensePreview('{{ expense.expense_code|escapejs }}', '{% url 'core:media_preview' expense.pdf_file.name %}')" class="text-blue-600 hover:underline">Preview αρχείου</button>
+          {% else %}
+          <span class="text-slate-400">Δεν έχει επισυναφθεί αρχείο.</span>
+          {% endif %}
+        </div>
+        <div>
+          <span class="block text-xs font-semibold text-slate-500 mb-1">Ημ. Ανενεργού</span>
+          <span class="text-slate-800">{{ expense.inactive_date|date:"d/m/Y"|default:"-" }}</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="expense-preview-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 id="expense-preview-title" class="text-lg font-semibold text-gray-800">Preview</h3>
+      <button type="button" onclick="closeExpensePreview()" class="text-gray-500 hover:text-gray-700">Κλείσιμο</button>
+    </div>
+    <div id="expense-preview-body" class="flex-1 bg-gray-100 min-h-[70vh] overflow-auto"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openExpensePreview(title, url) {
+    const modal = document.getElementById('expense-preview-modal');
+    const body = document.getElementById('expense-preview-body');
+    const previewTitle = document.getElementById('expense-preview-title');
+
+    previewTitle.textContent = `Preview εξόδου ${title}`;
+    body.innerHTML = `<iframe src="${url}" class="w-full h-[70vh] bg-white" title="${title}"></iframe>`;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeExpensePreview() {
+    const modal = document.getElementById('expense-preview-modal');
+    const body = document.getElementById('expense-preview-body');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    body.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+</script>
+{% endblock %}
