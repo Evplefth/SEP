@@ -43,9 +43,8 @@ class Expense(models.Model):
     period_year = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name="Έτος Περιόδου")
     description = models.CharField(max_length=255, blank=True, verbose_name="Περιγραφή")
     notes = models.TextField(blank=True, verbose_name="Σημειώσεις")
+    is_paid = models.BooleanField(default=False, verbose_name="Πληρωμένο")
     pdf_file = models.FileField(upload_to=UniqueUploadTo("expenses/%Y/"), blank=True, null=True, verbose_name="PDF")
-    active = models.BooleanField(default=True, verbose_name="Ενεργό")
-    inactive_date = models.DateField(blank=True, null=True, verbose_name="Ημ. Ανενεργού")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -55,7 +54,7 @@ class Expense(models.Model):
         verbose_name_plural = "Έξοδα"
 
     def __str__(self):
-        return f"{self.expense_code} — {self.get_category_display()}"
+        return f"{self.expense_code} - {self.get_category_display()}"
 
     def clean(self):
         errors = {}
@@ -77,3 +76,53 @@ class Expense(models.Model):
         if errors:
             raise ValidationError(errors)
 
+    @property
+    def all_pdf_files(self):
+        files = []
+        if self.pdf_file:
+            files.append(
+                {
+                    "id": f"legacy-{self.pk or 'new'}",
+                    "name": self.pdf_file.name.split("/")[-1],
+                    "file": self.pdf_file,
+                    "is_legacy": True,
+                }
+            )
+        for attachment in self.attachments.all():
+            files.append(
+                {
+                    "id": attachment.id,
+                    "name": attachment.filename,
+                    "file": attachment.file,
+                    "is_legacy": False,
+                    "attachment": attachment,
+                }
+            )
+        return files
+
+    @property
+    def pdf_count(self):
+        return len(self.all_pdf_files)
+
+    @property
+    def primary_pdf(self):
+        files = self.all_pdf_files
+        return files[0] if files else None
+
+
+class ExpenseAttachment(models.Model):
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, related_name="attachments", verbose_name="Έξοδο")
+    file = models.FileField(upload_to=UniqueUploadTo("expenses/%Y/"), verbose_name="PDF")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "Συνημμένο Εξόδου"
+        verbose_name_plural = "Συνημμένα Εξόδων"
+
+    def __str__(self):
+        return f"{self.expense.expense_code} - {self.filename}"
+
+    @property
+    def filename(self):
+        return self.file.name.split("/")[-1]

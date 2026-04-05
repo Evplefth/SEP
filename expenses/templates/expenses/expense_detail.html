@@ -12,8 +12,8 @@
     <div class="flex gap-3">
       <a href="{% url 'expenses:list' %}" class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Πίσω</a>
       <a href="{% url 'expenses:update' expense.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Επεξεργασία</a>
-      {% if expense.pdf_file %}
-      <button type="button" onclick="openExpensePreview('{{ expense.expense_code|escapejs }}', '{% url 'core:media_preview' expense.pdf_file.name %}')" class="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50">Preview PDF</button>
+      {% if expense.primary_pdf %}
+      <button type="button" onclick="openExpensePreview('{{ expense.primary_pdf.name|escapejs }}', '{% url 'core:media_preview' expense.primary_pdf.file.name %}')" class="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50">Preview PDF</button>
       {% endif %}
     </div>
   </div>
@@ -27,6 +27,7 @@
         <div><span class="block text-xs font-semibold text-slate-500 mb-1">Ημερομηνία</span><span class="text-slate-800">{{ expense.expense_date|date:"d/m/Y" }}</span></div>
         <div><span class="block text-xs font-semibold text-slate-500 mb-1">Ποσό</span><span class="text-slate-800">{{ expense.amount }} €</span></div>
         <div><span class="block text-xs font-semibold text-slate-500 mb-1">Κατηγορία</span><span class="text-slate-800">{{ expense.get_category_display }}</span></div>
+        <div><span class="block text-xs font-semibold text-slate-500 mb-1">Πληρωμή</span><span class="text-slate-800">{% if expense.is_paid %}Πληρωμένο{% else %}Απλήρωτο{% endif %}</span></div>
         <div><span class="block text-xs font-semibold text-slate-500 mb-1">Υποκατηγορία</span><span class="text-slate-800">{{ expense.get_subcategory_display|default:"-" }}</span></div>
         <div><span class="block text-xs font-semibold text-slate-500 mb-1">Είδος</span><span class="text-slate-800">{{ expense.get_detail_type_display|default:"-" }}</span></div>
         <div><span class="block text-xs font-semibold text-slate-500 mb-1">Περίοδος</span><span class="text-slate-800">{% if expense.period_month and expense.period_year %}{{ expense.period_month }}/{{ expense.period_year }}{% elif expense.period_year %}{{ expense.period_year }}{% else %}-{% endif %}</span></div>
@@ -36,28 +37,31 @@
 
     <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-        <h2 class="text-sm font-semibold text-slate-800">Αρχείο και Κατάσταση</h2>
+        <h2 class="text-sm font-semibold text-slate-800">Αρχεία</h2>
       </div>
       <div class="px-6 py-5 space-y-4 text-sm">
         <div>
-          <span class="block text-xs font-semibold text-slate-500 mb-1">Κατάσταση</span>
-          {% if expense.active %}
-          <span class="inline-flex px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">Ενεργό</span>
+          <span class="block text-xs font-semibold text-slate-500 mb-1">Κατάσταση Πληρωμής</span>
+          {% if expense.is_paid %}
+          <span class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Πληρωμένο</span>
           {% else %}
-          <span class="inline-flex px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">Ανενεργό</span>
+          <span class="inline-flex px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">Απλήρωτο</span>
           {% endif %}
         </div>
         <div>
-          <span class="block text-xs font-semibold text-slate-500 mb-1">PDF</span>
-          {% if expense.pdf_file %}
-          <button type="button" onclick="openExpensePreview('{{ expense.expense_code|escapejs }}', '{% url 'core:media_preview' expense.pdf_file.name %}')" class="text-blue-600 hover:underline">Preview αρχείου</button>
+          <span class="block text-xs font-semibold text-slate-500 mb-2">PDF</span>
+          {% if expense.all_pdf_files %}
+          <div class="space-y-2">
+            {% for pdf in expense.all_pdf_files %}
+            <div class="rounded-lg border border-slate-200 px-3 py-2">
+              <div class="font-medium text-slate-800">{{ pdf.name }}</div>
+              <button type="button" onclick="openExpensePreview('{{ pdf.name|escapejs }}', '{% url 'core:media_preview' pdf.file.name %}')" class="mt-1 text-blue-600 hover:underline">Preview αρχείου</button>
+            </div>
+            {% endfor %}
+          </div>
           {% else %}
           <span class="text-slate-400">Δεν έχει επισυναφθεί αρχείο.</span>
           {% endif %}
-        </div>
-        <div>
-          <span class="block text-xs font-semibold text-slate-500 mb-1">Ημ. Ανενεργού</span>
-          <span class="text-slate-800">{{ expense.inactive_date|date:"d/m/Y"|default:"-" }}</span>
         </div>
       </div>
     </section>
@@ -82,7 +86,7 @@
     const body = document.getElementById('expense-preview-body');
     const previewTitle = document.getElementById('expense-preview-title');
 
-    previewTitle.textContent = `Preview εξόδου ${title}`;
+    previewTitle.textContent = `Preview αρχείου ${title}`;
     body.innerHTML = `<iframe src="${url}" class="w-full h-[70vh] bg-white" title="${title}"></iframe>`;
 
     modal.classList.remove('hidden');
