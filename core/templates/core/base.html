@@ -516,6 +516,10 @@
             class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
             Έξοδα
           </a>
+          <a href="{% url 'core:document_list' %}"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+            Έγγραφα
+          </a>
           <a href="{% url 'core:users' %}"
             class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
             Χρήστες
@@ -581,6 +585,7 @@
       <a href="{% url 'core:insurance_company_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Ασφαλιστικές</a>
       <a href="{% url 'expenses:list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Έξοδα</a>
       <a href="{% url 'core:export_data' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Εξαγωγή</a>
+      <a href="{% url 'core:document_list' %}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">Έγγραφα</a>
       <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
         <button onclick="toggleTheme()" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition">
           <svg id="theme-sun-mobile" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">

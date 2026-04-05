@@ -9,6 +9,9 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("auth/redirect/", views.post_login_redirect, name="post_login_redirect"),
     path("media-preview/<path:path>/", views.media_preview, name="media_preview"),
+    path("documents/", views.document_list, name="document_list"),
+    path("documents/create/", views.document_create, name="document_create"),
+    path("documents/<int:document_id>/edit/", views.document_update, name="document_update"),
 
     # ── Users ────────────────────────────────────────────────────
     path("users/",        views.user_list,   name="users"),

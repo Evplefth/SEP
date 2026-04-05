@@ -360,3 +360,29 @@ class Protocol(models.Model):
         last   = result['protocol_number__max']
         return (last or 0) + 1
 
+
+class DocumentArchive(models.Model):
+    FILE_TYPE_PDF = "pdf"
+    FILE_TYPE_EXCEL = "excel"
+    FILE_TYPE_WORD = "word"
+    FILE_TYPE_CHOICES = [
+        (FILE_TYPE_PDF, "PDF"),
+        (FILE_TYPE_EXCEL, "Excel"),
+        (FILE_TYPE_WORD, "Word"),
+    ]
+
+    name = models.CharField(max_length=200, unique=True, verbose_name="Όνομα")
+    file_code = models.CharField(max_length=100, blank=True, verbose_name="Κωδικός Αρχείου")
+    file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES, verbose_name="Τύπος Αρχείου")
+    file = models.FileField(upload_to=UniqueUploadTo('documents/%Y/'), verbose_name="Αρχείο")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Έγγραφο"
+        verbose_name_plural = "Έγγραφα"
+        ordering = ['name']
+

@@ -9,12 +9,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.static import serve
 from django_countries import countries
@@ -32,6 +34,7 @@ from two_factor.views import LoginView as TwoFactorLoginView
 from core.models import (
     Banks,
     CompanyPayment,
+    DocumentArchive,
     PaymentAllocation,
     Exartomena,
     InsuranceCompany,
@@ -217,6 +220,34 @@ def _clean_export_text(value):
         except (UnicodeEncodeError, UnicodeDecodeError):
             pass
     return text
+
+
+def _document_form_context(form_data=None, document=None, error=None):
+    return {
+        "document": document,
+        "form_data": form_data or {},
+        "error": error,
+        "file_type_choices": DocumentArchive.FILE_TYPE_CHOICES,
+    }
+
+
+def _generate_document_code():
+    while True:
+        code = f"DOC-{get_random_string(8, allowed_chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789')}"
+        if not DocumentArchive.objects.filter(file_code=code).exists():
+            return code
+
+
+def _document_from_post(request, document=None):
+    document = document or DocumentArchive()
+    document.name = (request.POST.get("name") or "").strip()
+    document.file_code = (request.POST.get("file_code") or "").strip() or _generate_document_code()
+    document.file_type = (request.POST.get("file_type") or "").strip()
+
+    if request.FILES.get("file"):
+        document.file = request.FILES["file"]
+
+    return document
 
 
 def _build_excel_response(sheet_name, filename, headers, rows):
@@ -1778,3 +1809,94 @@ def insurance_contracts_json(request, company_id):
         company_id=company_id, active=True
     ).values("id", "contract_number", "coverage_type")
     return JsonResponse({"contracts": list(contracts)})
+
+
+@login_required
+def document_list(request):
+    documents = DocumentArchive.objects.all()
+    q = (request.GET.get("q") or "").strip()
+    file_type = (request.GET.get("file_type") or "").strip()
+
+    if q:
+        documents = documents.filter(
+            Q(name__icontains=q)
+            | Q(file_code__icontains=q)
+            | Q(file_type__icontains=q)
+        )
+    if file_type:
+        documents = documents.filter(file_type__iexact=file_type)
+
+    return render(request, "core/document_list.html", {
+        "documents": documents,
+        "file_type_choices": DocumentArchive.FILE_TYPE_CHOICES,
+        "totals": {
+            "all": documents.count(),
+            "types": len(DocumentArchive.FILE_TYPE_CHOICES),
+        },
+    })
+
+
+@login_required
+def document_create(request):
+    if request.method == "POST":
+        document = _document_from_post(request)
+        if not request.FILES.get("file"):
+            return render(
+                request,
+                "core/document_form.html",
+                _document_form_context(request.POST, error="Το αρχείο είναι υποχρεωτικό."),
+            )
+
+        try:
+            document.full_clean()
+            document.save()
+        except ValidationError as exc:
+            return render(
+                request,
+                "core/document_form.html",
+                _document_form_context(request.POST, error=_validation_error_message(exc)),
+            )
+        except IntegrityError:
+            return render(
+                request,
+                "core/document_form.html",
+                _document_form_context(request.POST, error="Υπάρχει ήδη έγγραφο με αυτό το όνομα."),
+            )
+
+        messages.success(request, f"Το έγγραφο {document.name} καταχωρήθηκε επιτυχώς.")
+        return redirect("core:document_list")
+
+    return render(request, "core/document_form.html", _document_form_context())
+
+
+@login_required
+def document_update(request, document_id):
+    document = get_object_or_404(DocumentArchive, pk=document_id)
+
+    if request.method == "POST":
+        document = _document_from_post(request, document=document)
+        try:
+            document.full_clean()
+            document.save()
+        except ValidationError as exc:
+            return render(
+                request,
+                "core/document_form.html",
+                _document_form_context(request.POST, document=document, error=_validation_error_message(exc)),
+            )
+        except IntegrityError:
+            return render(
+                request,
+                "core/document_form.html",
+                _document_form_context(request.POST, document=document, error="Υπάρχει ήδη έγγραφο με αυτό το όνομα."),
+            )
+
+        messages.success(request, f"Το έγγραφο {document.name} ενημερώθηκε επιτυχώς.")
+        return redirect("core:document_list")
+
+    form_data = {
+        "name": document.name,
+        "file_code": document.file_code,
+        "file_type": document.file_type,
+    }
+    return render(request, "core/document_form.html", _document_form_context(form_data, document=document))
