@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SEP Error{% endblock %}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-a: #f8fbff;
+      --bg-b: #e9f2ff;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-border: rgba(147, 197, 253, 0.75);
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-strong: #1d4ed8;
+      --secondary: rgba(255, 255, 255, 0.65);
+      --secondary-border: rgba(148, 163, 184, 0.35);
+      --glow: rgba(37, 99, 235, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.2), transparent 18%),
+        radial-gradient(circle at top right, rgba(191, 219, 254, 0.45), transparent 16%),
+        radial-gradient(circle at bottom center, rgba(96, 165, 250, 0.14), transparent 24%),
+        linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 55%, #f9fbff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(96, 165, 250, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96, 165, 250, 0.06) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: radial-gradient(circle at center, black 24%, transparent 82%);
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid var(--panel-border);
+      background: linear-gradient(180deg, var(--panel), rgba(237, 245, 255, 0.92));
+      box-shadow:
+        0 30px 80px rgba(15, 23, 42, 0.12),
+        0 10px 24px var(--glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      padding: 40px;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.45), transparent 28%),
+        linear-gradient(90deg, transparent, transparent calc(100% - 1px), rgba(96, 165, 250, 0.12) calc(100% - 1px));
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(219, 234, 254, 0.8);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .code {
+      margin: 0;
+      font-size: clamp(56px, 11vw, 120px);
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: -0.06em;
+    }
+
+    .title {
+      margin: 14px 0 0;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.08;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      max-width: 10ch;
+    }
+
+    .message {
+      margin: 18px 0 0;
+      max-width: 56ch;
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 160px;
+      padding: 14px 20px;
+      border-radius: 16px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24);
+    }
+
+    .button-secondary {
+      color: var(--text);
+      background: var(--secondary);
+      border: 1px solid var(--secondary-border);
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .meta-card {
+      padding: 18px 18px 20px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(191, 219, 254, 0.6);
+    }
+
+    .meta-label {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .meta-text {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    @media (max-width: 720px) {
+      .panel {
+        padding: 28px;
+        border-radius: 24px;
+      }
+
+      .meta {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="panel">
+      <div class="eyebrow">{% block eyebrow %}SEP Cargo{% endblock %}</div>
+      <h1 class="code">{% block code %}Error{% endblock %}</h1>
+      <p class="title">{% block heading %}Something went wrong{% endblock %}</p>
+      <p class="message">{% block message %}The page could not be loaded right now.{% endblock %}</p>
+
+      <div class="actions">
+        <a href="/" class="button button-primary">{% block primary_action %}Home{% endblock %}</a>
+        <a href="javascript:history.back()" class="button button-secondary">{% block secondary_action %}Go Back{% endblock %}</a>
+      </div>
+
+      <div class="meta">
+        <div class="meta-card">
+          <p class="meta-label">What You Can Do</p>
+          <p class="meta-text">{% block help_text %}Go back to the previous page or return to the home screen and try again.{% endblock %}</p>
+        </div>
+        <div class="meta-card">
+          <p class="meta-label">Status</p>
+          <p class="meta-text">{% block status_text %}The server could not complete this request successfully.{% endblock %}</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
