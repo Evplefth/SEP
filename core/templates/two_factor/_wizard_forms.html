@@ -1,0 +1,72 @@
+{{ wizard.management_form }}
+
+{% if wizard.form.non_field_errors %}
+  <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+    {% for error in wizard.form.non_field_errors %}
+      <p class="text-sm text-red-700">{{ error }}</p>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="space-y-5">
+  {% for field in wizard.form %}
+    {% if field.is_hidden %}
+      {{ field }}
+    {% else %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="mb-1.5 block text-sm font-medium text-gray-700">
+          {{ field.label }}
+        </label>
+        {{ field }}
+        {% if field.help_text %}
+          <p class="mt-1.5 text-xs text-gray-500">{{ field.help_text|safe }}</p>
+        {% endif %}
+        {% if field.errors %}
+          {% for error in field.errors %}
+            <p class="mt-1.5 text-xs text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<style>
+  main form input[type="text"],
+  main form input[type="password"],
+  main form input[type="email"],
+  main form input[type="tel"],
+  main form input[type="number"],
+  main form select,
+  main form textarea {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(209 213 219);
+    background: white;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: rgb(17 24 39);
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  main form input:focus,
+  main form select:focus,
+  main form textarea:focus {
+    border-color: rgb(59 130 246);
+    box-shadow: 0 0 0 4px rgba(191, 219, 254, 0.85);
+  }
+
+  html.dark main form input[type="text"],
+  html.dark main form input[type="password"],
+  html.dark main form input[type="email"],
+  html.dark main form input[type="tel"],
+  html.dark main form input[type="number"],
+  html.dark main form select,
+  html.dark main form textarea {
+    background: rgba(15, 23, 42, 0.88);
+    color: #e2e8f0;
+    border-color: rgba(71, 85, 105, 0.9);
+  }
+  </style>

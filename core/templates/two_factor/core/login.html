@@ -1,0 +1,66 @@
+{% extends "two_factor/_base.html" %}
+{% load i18n %}
+{% load two_factor_tags %}
+
+{% block page_title %}{% trans "Login" %}{% endblock %}
+
+{% block extra_media %}
+  {{ form.media }}
+{% endblock %}
+
+{% block content_wrapper %}
+  <div class="space-y-6">
+    <div class="space-y-2">
+      <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">{% trans "Secure Access" %}</p>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">{% trans "Login" %}</h1>
+      {% if wizard.steps.current == 'auth' %}
+        <p class="text-sm text-gray-600">{% trans "Enter your username and password to continue." %}</p>
+      {% elif wizard.steps.current == 'token' %}
+        <p class="text-sm text-gray-600">{{ device|as_verbose_action }}</p>
+      {% elif wizard.steps.current == 'backup' %}
+        <p class="text-sm text-gray-600">{% blocktrans trimmed %}Use one of your backup codes to finish signing in.{% endblocktrans %}</p>
+      {% endif %}
+    </div>
+
+    <form action="" method="post" class="space-y-6">
+      {% csrf_token %}
+      {% include "two_factor/_wizard_forms.html" %}
+      <input type="submit" value="" hidden />
+
+      {% if other_devices %}
+        <div class="rounded-2xl border border-gray-200 bg-white/70 p-4">
+          <p class="mb-3 text-sm font-medium text-gray-700">{% trans "Use another authentication method" %}</p>
+          <div class="space-y-2">
+            {% for other in other_devices %}
+              <button
+                name="challenge_device"
+                value="{{ other.persistent_id }}"
+                type="submit"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                {{ other|as_action }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% include "two_factor/_wizard_actions.html" %}
+    </form>
+
+    {% if backup_tokens %}
+      <div class="rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
+        <p class="text-sm text-amber-800">{% trans "You can also use a backup token if needed." %}</p>
+        <form action="" method="post" class="mt-3">
+          {% csrf_token %}
+          <button
+            name="wizard_goto_step"
+            type="submit"
+            value="backup"
+            class="rounded-xl border border-amber-300 px-4 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-100">
+            {% trans "Use Backup Token" %}
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

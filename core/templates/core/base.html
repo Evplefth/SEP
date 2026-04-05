@@ -548,12 +548,12 @@
                 {% csrf_token %}
                 <button type="submit"
                   class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition">
-                  Logout
+                logout
                 </button>
               </form>
             </div>
           {% else %}
-            <a href="{% url 'login' %}"
+            <a href="{% url 'two_factor:login' %}"
               class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
               Sign in
             </a>
@@ -598,7 +598,7 @@
             <button type="submit" class="w-full text-left px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition">Logout</button>
           </form>
         {% else %}
-          <a href="{% url 'login' %}" class="block px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition">Sign in</a>
+          <a href="{% url 'two_factor:login' %}" class="block px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition">Sign in</a>
           <a href="#" class="block px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg text-center">Get started</a>
         {% endif %}
       </div>
@@ -688,7 +688,7 @@
 
     (function () {
       const shouldAnimate = sessionStorage.getItem('loginRockIntro') === 'pending';
-      const isLoginPage = window.location.pathname === '{% url "login" %}';
+      const isLoginPage = window.location.pathname === '{% url "two_factor:login" %}';
       const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
       const isStaff = {{ user.is_staff|yesno:"true,false" }};
       const transition = document.getElementById('impact-transition');

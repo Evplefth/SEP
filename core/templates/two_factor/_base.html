@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+
+{% block title %}{% block page_title %}Authentication{% endblock %}{% endblock %}
+{% block main_class %}flex-1 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8{% endblock %}
+
+{% block extra_head %}
+  {{ block.super }}
+  {% block extra_media %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+  <div class="w-full max-w-xl">
+    <div class="soft-panel rounded-3xl p-8 sm:p-10">
+      {% block content_wrapper %}{% endblock %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  {{ block.super }}
+  <script>
+    (function () {
+      const form = document.querySelector('main form');
+      if (!form) {
+        return;
+      }
+
+      form.addEventListener('submit', function () {
+        sessionStorage.setItem('loginRockIntro', 'pending');
+      });
+    }());
+  </script>
+{% endblock %}

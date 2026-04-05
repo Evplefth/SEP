@@ -1,0 +1,29 @@
+{% extends "two_factor/_base.html" %}
+{% load i18n %}
+
+{% block page_title %}{% trans "Two-Factor Authentication Enabled" %}{% endblock %}
+
+{% block content_wrapper %}
+  <div class="space-y-6 text-center">
+    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
+      <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+
+    <div class="space-y-2">
+      <p class="text-xs font-semibold uppercase tracking-[0.3em] text-green-600">{% trans "All Set" %}</p>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">{% trans "Two-Factor Authentication Enabled" %}</h1>
+      <p class="text-sm text-gray-600">{% blocktrans trimmed %}Your account is now protected with an extra verification step.{% endblocktrans %}</p>
+    </div>
+
+    <div class="flex items-center justify-center gap-3">
+      <a href="{% url 'core:dashboard' %}" class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
+        {% trans "Go to Dashboard" %}
+      </a>
+      <a href="{% url 'two_factor:backup_tokens' %}" class="rounded-xl border border-gray-200 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+        {% trans "Backup Codes" %}
+      </a>
+    </div>
+  </div>
+{% endblock %}

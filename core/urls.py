@@ -7,6 +7,7 @@ app_name = "core"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("auth/redirect/", views.post_login_redirect, name="post_login_redirect"),
     path("media-preview/<path:path>/", views.media_preview, name="media_preview"),
 
     # ── Users ────────────────────────────────────────────────────

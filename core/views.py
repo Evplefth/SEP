@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.static import serve
 from django_countries import countries
+from django_otp import user_has_device
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
@@ -26,6 +27,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 import datetime
+from two_factor.views import LoginView as TwoFactorLoginView
 
 from core.models import (
     Banks,
@@ -46,10 +48,21 @@ from core.models import (
 )
 
 
+class RedirectAuthenticatedLoginView(TwoFactorLoginView):
+    redirect_authenticated_user = True
+
+
 def home(request):
     if request.user.is_authenticated:
-        return redirect("core:dashboard")
-    return redirect("login")
+        return redirect("core:post_login_redirect")
+    return redirect("two_factor:login")
+
+
+@login_required
+def post_login_redirect(request):
+    if not user_has_device(request.user):
+        return redirect("two_factor:setup")
+    return redirect("core:dashboard")
 
 
 def _require_staff_or_redirect(request, redirect_to="core:dashboard"):

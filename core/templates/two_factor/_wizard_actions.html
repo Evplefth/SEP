@@ -1,0 +1,33 @@
+{% load i18n %}
+
+<div class="mt-8 flex items-center justify-between gap-3">
+  {% if wizard.steps.prev %}
+    <button
+      name="wizard_goto_step"
+      type="submit"
+      value="{{ wizard.steps.prev }}"
+      class="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-100">
+      {% trans "Back" %}
+    </button>
+  {% else %}
+    <button
+      disabled
+      type="button"
+      class="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-400 opacity-70">
+      {% trans "Back" %}
+    </button>
+  {% endif %}
+
+  <div class="flex items-center gap-3">
+    {% if cancel_url %}
+      <a href="{{ cancel_url }}" class="text-sm font-medium text-blue-600 transition hover:text-blue-700">
+        {% trans "Cancel" %}
+      </a>
+    {% endif %}
+    <button
+      type="submit"
+      class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
+      {% trans "Next" %}
+    </button>
+  </div>
+</div>
