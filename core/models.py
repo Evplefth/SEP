@@ -161,6 +161,18 @@ class nationalities(models.Model):
 class Members(models.Model):
     GENDER_CHOICES = [('M', 'Άνδρας'), ('F', 'Γυναίκα')]
     MITROO_CHOICES = [('A', 'Τύπος Α'), ('B', 'Τύπος Β')]
+    MEMBER_ROLE_CHOICES = [
+        ("president", "ΠΡΟΕΔΡΟΣ"),
+        ("vice_president", "ΑΝΤΙΠΡΟΕΔΡΟΣ"),
+        ("general_secretary", "ΓΕΝΙΚΟΣ ΓΡΑΜΜΑΤΕΑΣ"),
+        ("deputy_general_secretary", "ΑΝ. ΓΕΝ. ΓΡΑΜΜΑΤΕΑΣ"),
+        ("treasurer", "ΤΑΜΙΑΣ"),
+        ("deputy_treasurer", "ΑΝ. ΤΑΜΙΑΣ"),
+        ("board_member", "ΜΕΛΟΣ Δ.Σ."),
+        ("advisor", "ΣΥΜΒΟΥΛΟΣ"),
+        ("supervisor", "ΕΦΟΡΟΣ"),
+        ("member", "ΜΕΛΟΣ"),
+    ]
 
     # ── Προσωπικά ───────────────────────────────────────────────
     first_name    = models.CharField(max_length=30, validators=[MinLengthValidator(2)], verbose_name="Όνομα")
@@ -169,10 +181,11 @@ class Members(models.Model):
     gender        = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True, verbose_name="Φύλο")
     date_of_birth = models.DateField(blank=True, null=True, verbose_name="Ημ. Γέννησης")
     nationality   = models.ForeignKey(nationalities, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Ιθαγένεια")
+    member_role   = models.CharField(max_length=40, choices=MEMBER_ROLE_CHOICES, blank=True, null=True, verbose_name="Ιδιότητα")
     ADT           = models.CharField(max_length=20, unique=True, verbose_name="ΑΔΤ")
-    AFM           = models.CharField(max_length=20, unique=True, verbose_name="ΑΦΜ")
-    AMKA          = models.CharField(max_length=20, unique=True, verbose_name="ΑΜΚΑ")
-    AMA           = models.CharField(max_length=20, unique=True, verbose_name="ΑΜΑ")
+    AFM           = models.CharField(max_length=20, blank=True, null=True, verbose_name="ΑΦΜ")
+    AMKA          = models.CharField(max_length=20, blank=True, null=True, verbose_name="ΑΜΚΑ")
+    AMA           = models.CharField(max_length=20, blank=True, null=True, verbose_name="ΑΜΑ")
 
     # ── Μητρώο ──────────────────────────────────────────────────
     mitroo_type            = models.CharField(max_length=1, choices=MITROO_CHOICES, blank=True, null=True, verbose_name="Τύπος Μητρώου")
@@ -207,7 +220,7 @@ class Members(models.Model):
     # ── Λοιπά ───────────────────────────────────────────────────
     notes          = models.TextField(blank=True, null=True, verbose_name="Παρατηρήσεις")
     pending_issues = models.TextField(blank=True, null=True, verbose_name="Εκκρεμότητες")
-    member_registry_number = models.PositiveIntegerField(blank=True, null=True, unique=True, verbose_name="Αριθμός Βιβλίου Μητρώου Μελών")
+    member_registry_number = models.PositiveIntegerField(blank=True, null=True, verbose_name="Αριθμός Βιβλίου Μητρώου Μελών")
 
     active        = models.BooleanField(default=True)
     active_date   = models.DateField(auto_now_add=True)
@@ -312,9 +325,22 @@ class MemberInsurance(models.Model):
 # ════════════════════════════════════════════════════════════════
 
 class Protocol(models.Model):
+    TYPE_INCOMING = "incoming"
+    TYPE_OUTGOING = "outgoing"
+    TYPE_CHOICES = [
+        (TYPE_INCOMING, "Εισερχόμενο"),
+        (TYPE_OUTGOING, "Εξερχόμενο"),
+    ]
+
     protocol_number = models.PositiveIntegerField(verbose_name="Αριθμός Πρωτοκόλλου")
     year            = models.PositiveIntegerField(verbose_name="Έτος")
 
+    protocol_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default=TYPE_INCOMING,
+        verbose_name="Τύπος Πρωτοκόλλου",
+    )
     date    = models.DateField(verbose_name="Ημερομηνία")
     subject = models.CharField(max_length=500, verbose_name="Θέμα")
     file    = models.FileField(upload_to='protocols/%Y/', blank=True, null=True, verbose_name="Αρχείο")

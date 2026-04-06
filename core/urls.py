@@ -51,6 +51,7 @@ urlpatterns = [
     path("protocols/new/",                    views.protocol_create, name="protocol_create"),
     path("protocols/<int:protocol_id>/",      views.protocol_detail, name="protocol_detail"),
     path("protocols/<int:protocol_id>/edit/", views.protocol_update, name="protocol_update"),
+    path("protocols/<int:protocol_id>/delete/", views.protocol_delete, name="protocol_delete"),
 
     # ── Insurance Companies ──────────────────────────────────────
     path("insurance/",                                               views.insurance_company_list,   name="insurance_company_list"),

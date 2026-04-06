@@ -1,42 +1,7 @@
-{% extends "core/base.html" %}
-{% block title %}{% if protocol %}Επεξεργασία Πρωτοκόλλου{% else %}Νέο Πρωτόκολλο{% endif %}<div id="protocol-form-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
-  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-      <h3 id="protocol-form-preview-title" class="text-lg font-semibold text-slate-800">Preview</h3>
-      <button type="button" onclick="closeProtocolFormPreview()" class="text-slate-500 hover:text-slate-700">????????</button>
-    </div>
-    <div id="protocol-form-preview-body" class="min-h-[70vh] flex-1 overflow-auto bg-slate-100"></div>
-  </div>
-</div>
-
-{% endblock %}
-{% block extra_scripts %}
-<script>
-  function showProtocolFormPreview(title, url) {
-    const modal = document.getElementById('protocol-form-preview-modal');
-    const body = document.getElementById('protocol-form-preview-body');
-    const previewTitle = document.getElementById('protocol-form-preview-title');
-    previewTitle.textContent = `Preview ??????????? ${title}`;
-    body.innerHTML = `<iframe src="${url}" class="h-[70vh] w-full bg-white" title="${title}"></iframe>`;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeProtocolFormPreview() {
-    const modal = document.getElementById('protocol-form-preview-modal');
-    const body = document.getElementById('protocol-form-preview-body');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    body.innerHTML = '';
-    document.body.style.overflow = '';
-  }
-</script>
-{% endblock %}
+﻿{% extends "core/base.html" %}
+{% block title %}{% if protocol %}Επεξεργασία Πρωτοκόλλου{% else %}Νέο Πρωτόκολλο{% endif %}{% endblock %}
 
 {% block content %}
-
-<!-- Header -->
 <div class="flex items-center gap-4 mb-6">
   <a href="{% url 'core:protocol_list' %}" class="text-gray-400 hover:text-gray-600 transition">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,266 +11,131 @@
   <div>
     {% if protocol %}
       <h1 class="text-2xl font-bold text-gray-800">Επεξεργασία Πρωτοκόλλου</h1>
-      <p class="text-gray-500 text-sm mt-0.5">Πρωτ. <span class="font-semibold text-blue-600">{{ protocol.full_number }}</span></p>
+      <p class="text-gray-500 text-sm mt-1">Πρωτ. <span class="font-semibold text-blue-600">{{ protocol.full_number }}</span></p>
     {% else %}
       <h1 class="text-2xl font-bold text-gray-800">Νέο Πρωτόκολλο</h1>
-      <p class="text-gray-500 text-sm mt-0.5">
-        Αριθμός: <span class="font-semibold text-blue-600">{{ next_num }}/{{ year }}</span>
-        <span class="text-gray-400 ml-2">(αυτόματος — ανανεώνεται ανά έτος)</span>
-      </p>
+      <p class="text-gray-500 text-sm mt-1">Αριθμός: <span class="font-semibold text-blue-600">{{ next_num }}/{{ year }}</span></p>
     {% endif %}
   </div>
 </div>
 
 {% if error %}
-<div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-5 py-4 mb-6">
-  <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-  </svg>
-  {{ error }}
-</div>
+<div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-5 py-4 mb-6">{{ error }}</div>
 {% endif %}
 
 <form method="post" enctype="multipart/form-data" class="space-y-6">
   {% csrf_token %}
 
-  <!-- ══ 1. Βασικά Στοιχεία ══════════════════════════════════════ -->
+  <div class="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-blue-100 bg-blue-50">
+      <h2 class="font-semibold text-blue-900 text-sm">Τύπος Πρωτοκόλλου</h2>
+      <p class="text-blue-700 text-xs mt-1">Επιλέξτε πρώτα αν το πρωτόκολλο είναι εισερχόμενο ή εξερχόμενο και μετά συμπληρώστε τα υπόλοιπα στοιχεία.</p>
+    </div>
+    <div class="px-6 py-5">
+      <label for="protocol_type" class="block text-xs font-semibold text-gray-600 mb-1.5">Κατηγορία</label>
+      <select name="protocol_type" id="protocol_type" class="w-full max-w-md border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        {% for value, label in protocol_type_choices %}
+        <option value="{{ value }}" {% if request.POST.protocol_type == value %}selected{% elif protocol and protocol.protocol_type == value %}selected{% elif not protocol and value == "incoming" %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-      <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-      </div>
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Βασικά Στοιχεία</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
-
       <div>
         <label class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός Πρωτοκόλλου</label>
         <div class="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-sm font-bold text-blue-700">
           {% if protocol %}{{ protocol.full_number }}{% else %}{{ next_num }}/{{ year }}{% endif %}
         </div>
       </div>
-
       <div>
-        <label for="date" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Ημερομηνία <span class="text-red-400">*</span>
-        </label>
+        <label for="date" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημερομηνία</label>
         <input type="date" name="date" id="date"
           value="{% if protocol %}{{ protocol.date|date:'Y-m-d' }}{% else %}{{ today }}{% endif %}"
           {% if protocol %}readonly{% endif %}
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition {% if protocol %}bg-gray-50 cursor-not-allowed{% endif %}"/>
-        {% if not protocol %}
-          <p class="text-xs text-gray-400 mt-1">Ο αριθμός πρωτοκόλλου ανανεώνεται αυτόματα με βάση το έτος.</p>
-        {% endif %}
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 {% if protocol %}bg-gray-50 cursor-not-allowed{% endif %}">
       </div>
-
       <div class="sm:col-span-2">
-        <label for="subject" class="block text-xs font-semibold text-gray-600 mb-1.5">
-          Θέμα <span class="text-red-400">*</span>
-        </label>
-        <textarea name="subject" id="subject" rows="3"
-          placeholder="Περιγράψτε το θέμα του εγγράφου..."
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none">{% if protocol %}{{ protocol.subject }}{% endif %}</textarea>
+        <label for="subject" class="block text-xs font-semibold text-gray-600 mb-1.5">Θέμα</label>
+        <textarea name="subject" id="subject" rows="3" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 resize-none">{% if protocol %}{{ protocol.subject }}{% endif %}</textarea>
       </div>
-
       <div class="sm:col-span-2">
         <label for="file" class="block text-xs font-semibold text-gray-600 mb-1.5">Αρχείο</label>
-        <input type="file" name="file" id="file"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"/>
+        <input type="file" name="file" id="file" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
         {% if protocol and protocol.file %}
-          <p class="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-            </svg>
-            Υπάρχον αρχείο:
-            <button type="button" onclick="showProtocolFormPreview('{{ protocol.full_number|escapejs }}', '{% url 'core:media_preview' protocol.file.name %}')" class="text-blue-600 hover:underline">{{ protocol.file.name }}</button>
-            — Επιλέξτε νέο για αντικατάσταση
-          </p>
+        <p class="text-xs text-gray-400 mt-2">
+          Υπάρχον αρχείο:
+          <button type="button" onclick="showProtocolFormPreview('{{ protocol.full_number|escapejs }}', '{% url 'core:media_preview' protocol.file.name %}')" class="text-blue-600 hover:underline">{{ protocol.file.name }}</button>
+        </p>
         {% endif %}
       </div>
-
     </div>
   </div>
 
-  <!-- ══ 2. Στοιχεία Αποστολέα ══════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-      <div class="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
-        <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-      </div>
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Στοιχεία Αποστολέα</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-      <div>
-        <label for="sender_last_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Επώνυμο</label>
-        <input type="text" name="sender_last_name" id="sender_last_name"
-          value="{% if protocol %}{{ protocol.sender_last_name }}{% endif %}" placeholder="π.χ. Παπαδόπουλος"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="sender_first_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Όνομα</label>
-        <input type="text" name="sender_first_name" id="sender_first_name"
-          value="{% if protocol %}{{ protocol.sender_first_name }}{% endif %}" placeholder="π.χ. Γιώργος"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="sender_organization" class="block text-xs font-semibold text-gray-600 mb-1.5">Οργανισμός / Υπηρεσία</label>
-        <input type="text" name="sender_organization" id="sender_organization"
-          value="{% if protocol %}{{ protocol.sender_organization }}{% endif %}" placeholder="π.χ. ΣΕΠ"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="sender_department" class="block text-xs font-semibold text-gray-600 mb-1.5">Τμήμα</label>
-        <input type="text" name="sender_department" id="sender_department"
-          value="{% if protocol %}{{ protocol.sender_department }}{% endif %}" placeholder="π.χ. Διεύθυνση Α"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="sender_address" class="block text-xs font-semibold text-gray-600 mb-1.5">Διεύθυνση</label>
-        <input type="text" name="sender_address" id="sender_address"
-          value="{% if protocol %}{{ protocol.sender_address }}{% endif %}" placeholder="Οδός, Αριθμός, Πόλη"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="sender_tk" class="block text-xs font-semibold text-gray-600 mb-1.5">Τ.Κ.</label>
-        <input type="text" name="sender_tk" id="sender_tk"
-          value="{% if protocol %}{{ protocol.sender_tk }}{% endif %}" placeholder="π.χ. 10110"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="sender_phone" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο</label>
-        <input type="text" name="sender_phone" id="sender_phone"
-          value="{% if protocol %}{{ protocol.sender_phone }}{% endif %}" placeholder="210XXXXXXX"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="sender_email" class="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
-        <input type="email" name="sender_email" id="sender_email"
-          value="{% if protocol %}{{ protocol.sender_email }}{% endif %}" placeholder="email@example.com"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
+      <input type="text" name="sender_last_name" value="{% if protocol %}{{ protocol.sender_last_name }}{% endif %}" placeholder="Επώνυμο" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="sender_first_name" value="{% if protocol %}{{ protocol.sender_first_name }}{% endif %}" placeholder="Όνομα" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="sender_organization" value="{% if protocol %}{{ protocol.sender_organization }}{% endif %}" placeholder="Οργανισμός / Υπηρεσία" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="sender_department" value="{% if protocol %}{{ protocol.sender_department }}{% endif %}" placeholder="Τμήμα" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="sender_address" value="{% if protocol %}{{ protocol.sender_address }}{% endif %}" placeholder="Διεύθυνση" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="sender_tk" value="{% if protocol %}{{ protocol.sender_tk }}{% endif %}" placeholder="Τ.Κ." class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="sender_phone" value="{% if protocol %}{{ protocol.sender_phone }}{% endif %}" placeholder="Τηλέφωνο" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="email" name="sender_email" value="{% if protocol %}{{ protocol.sender_email }}{% endif %}" placeholder="Email" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
     </div>
   </div>
 
-  <!-- ══ 3. Στοιχεία Παραλήπτη ══════════════════════════════════ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-      <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-      </div>
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
       <h2 class="font-semibold text-gray-800 text-sm">Στοιχεία Παραλήπτη</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-      <div>
-        <label for="receiver_last_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Επώνυμο</label>
-        <input type="text" name="receiver_last_name" id="receiver_last_name"
-          value="{% if protocol %}{{ protocol.receiver_last_name }}{% endif %}" placeholder="π.χ. Παπαδόπουλος"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="receiver_first_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Όνομα</label>
-        <input type="text" name="receiver_first_name" id="receiver_first_name"
-          value="{% if protocol %}{{ protocol.receiver_first_name }}{% endif %}" placeholder="π.χ. Γιώργος"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="receiver_organization" class="block text-xs font-semibold text-gray-600 mb-1.5">Οργανισμός / Υπηρεσία</label>
-        <input type="text" name="receiver_organization" id="receiver_organization"
-          value="{% if protocol %}{{ protocol.receiver_organization }}{% endif %}" placeholder="π.χ. Υπουργείο Εργασίας"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="receiver_department" class="block text-xs font-semibold text-gray-600 mb-1.5">Τμήμα</label>
-        <input type="text" name="receiver_department" id="receiver_department"
-          value="{% if protocol %}{{ protocol.receiver_department }}{% endif %}" placeholder="π.χ. Διεύθυνση Α"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="receiver_address" class="block text-xs font-semibold text-gray-600 mb-1.5">Διεύθυνση</label>
-        <input type="text" name="receiver_address" id="receiver_address"
-          value="{% if protocol %}{{ protocol.receiver_address }}{% endif %}" placeholder="Οδός, Αριθμός, Πόλη"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="receiver_tk" class="block text-xs font-semibold text-gray-600 mb-1.5">Τ.Κ.</label>
-        <input type="text" name="receiver_tk" id="receiver_tk"
-          value="{% if protocol %}{{ protocol.receiver_tk }}{% endif %}" placeholder="π.χ. 10110"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="receiver_phone" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλέφωνο</label>
-        <input type="text" name="receiver_phone" id="receiver_phone"
-          value="{% if protocol %}{{ protocol.receiver_phone }}{% endif %}" placeholder="210XXXXXXX"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
-      <div>
-        <label for="receiver_email" class="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
-        <input type="email" name="receiver_email" id="receiver_email"
-          value="{% if protocol %}{{ protocol.receiver_email }}{% endif %}" placeholder="email@example.com"
-          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
-      </div>
-
+      <input type="text" name="receiver_last_name" value="{% if protocol %}{{ protocol.receiver_last_name }}{% endif %}" placeholder="Επώνυμο" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="receiver_first_name" value="{% if protocol %}{{ protocol.receiver_first_name }}{% endif %}" placeholder="Όνομα" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="receiver_organization" value="{% if protocol %}{{ protocol.receiver_organization }}{% endif %}" placeholder="Οργανισμός / Υπηρεσία" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="receiver_department" value="{% if protocol %}{{ protocol.receiver_department }}{% endif %}" placeholder="Τμήμα" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="receiver_address" value="{% if protocol %}{{ protocol.receiver_address }}{% endif %}" placeholder="Διεύθυνση" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="receiver_tk" value="{% if protocol %}{{ protocol.receiver_tk }}{% endif %}" placeholder="Τ.Κ." class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" name="receiver_phone" value="{% if protocol %}{{ protocol.receiver_phone }}{% endif %}" placeholder="Τηλέφωνο" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="email" name="receiver_email" value="{% if protocol %}{{ protocol.receiver_email }}{% endif %}" placeholder="Email" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
     </div>
   </div>
 
-  <!-- Buttons -->
   <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
-    <a href="{% url 'core:protocol_list' %}"
-      class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">
+    <a href="{% url 'core:protocol_list' %}" class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">
       Ακύρωση
     </a>
-    <button type="submit"
-      class="px-8 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition flex items-center justify-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-      </svg>
-      {% if protocol %}Αποθήκευση Αλλαγών{% else %}Καταχώρηση Πρωτοκόλλου{% endif %}
+    <button type="submit" class="px-8 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+      {% if protocol %}Αποθήκευση Αλλαγών{% else %}Καταχώριση Πρωτοκόλλου{% endif %}
     </button>
   </div>
-
 </form>
 
 <div id="protocol-form-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
   <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
     <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
       <h3 id="protocol-form-preview-title" class="text-lg font-semibold text-slate-800">Preview</h3>
-      <button type="button" onclick="closeProtocolFormPreview()" class="text-slate-500 hover:text-slate-700">????????</button>
+      <button type="button" onclick="closeProtocolFormPreview()" class="text-slate-500 hover:text-slate-700">Κλείσιμο</button>
     </div>
     <div id="protocol-form-preview-body" class="min-h-[70vh] flex-1 overflow-auto bg-slate-100"></div>
   </div>
 </div>
-
 {% endblock %}
+
 {% block extra_scripts %}
 <script>
   function showProtocolFormPreview(title, url) {
     const modal = document.getElementById('protocol-form-preview-modal');
     const body = document.getElementById('protocol-form-preview-body');
     const previewTitle = document.getElementById('protocol-form-preview-title');
-    previewTitle.textContent = `Preview ??????????? ${title}`;
+    previewTitle.textContent = `Preview πρωτοκόλλου ${title}`;
     body.innerHTML = `<iframe src="${url}" class="h-[70vh] w-full bg-white" title="${title}"></iframe>`;
     modal.classList.remove('hidden');
     modal.classList.add('flex');

@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 {% load countries %}
-{% block title %}{% if member %}Επεξεργασία Μέλους{% else %}Νέο Μέλος{% endif %}{% endblock %}
+{% block title %}{% if member %}ÎÏÎµÎ¾ÎµÏÎ³Î±ÏÎ¯Î± ÎÎ­Î»Î¿ÏÏ{% else %}ÎÎ­Î¿ ÎÎ­Î»Î¿Ï{% endif %}{% endblock %}
 
 {% block content %}
 <div class="flex items-center gap-4 mb-6">
@@ -10,8 +10,8 @@
     </svg>
   </a>
   <div>
-    <h1 class="text-2xl font-bold text-gray-800">{% if member %}Επεξεργασία Μέλους{% else %}Νέο Μέλος{% endif %}</h1>
-    <p class="text-gray-500 text-sm mt-0.5">Στοιχεία μέλους, εταιρείες και κατάσταση ενεργού.</p>
+    <h1 class="text-2xl font-bold text-gray-800">{% if member %}ÎÏÎµÎ¾ÎµÏÎ³Î±ÏÎ¯Î± ÎÎ­Î»Î¿ÏÏ{% else %}ÎÎ­Î¿ ÎÎ­Î»Î¿Ï{% endif %}</h1>
+    <p class="text-gray-500 text-sm mt-0.5">Î£ÏÎ¿Î¹ÏÎµÎ¯Î± Î¼Î­Î»Î¿ÏÏ, ÎµÏÎ±Î¹ÏÎ¯ÎµÏ ÎºÎ±Î¹ ÎºÎ±ÏÎ¬ÏÏÎ±ÏÎ· ÎµÎ½ÎµÏÎ³Î¿Ï.</p>
   </div>
 </div>
 
@@ -29,13 +29,13 @@
 
   <div class="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-blue-100 bg-blue-50">
-      <h2 class="font-semibold text-blue-900 text-sm">Βασική Ιδιότητα</h2>
-      <p class="text-blue-700 text-xs mt-1">Επιλέξτε την ιδιότητα του μέλους πριν συμπληρώσετε τα υπόλοιπα στοιχεία.</p>
+      <h2 class="font-semibold text-blue-900 text-sm">ÎÎ±ÏÎ¹ÎºÎ® ÎÎ´Î¹ÏÏÎ·ÏÎ±</h2>
+      <p class="text-blue-700 text-xs mt-1">ÎÏÎ¹Î»Î­Î¾ÏÎµ ??? ÎÏÎ¹Î»Î­Î¾ÏÎµ ??? ?????? ???? ÎÏÎ¹Î»Î­Î¾ÏÎµ???? ?? ??ÎÎ±ÏÎ¹ÎºÎ® ÎÎ´Î¹ÏÏÎ·ÏÎ±.</p>
     </div>
     <div class="px-6 py-5">
-      <label for="member_role" class="block text-xs font-semibold text-gray-600 mb-1.5">Ιδιότητα</label>
+      <label for="member_role" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ´Î¹ÏÏÎ·ÏÎ±</label>
       <select name="member_role" id="member_role" class="w-full max-w-md border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-        <option value="">Επιλέξτε</option>
+        <option value="">ÎÏÎ¹Î»Î­Î¾ÏÎµ</option>
         {% for value, label in member_role_choices %}
         <option value="{{ value }}" {% if form_data.member_role == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
@@ -43,55 +43,58 @@
     </div>
   </div>
 
+
+  <!-- ÎÎ±ÏÎ¬ÏÏÎ±ÏÎ· -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <h2 class="font-semibold text-gray-800 text-sm">Κατάσταση Μέλους</h2>
+      <h2 class="font-semibold text-gray-800 text-sm">ÎÎ±ÏÎ¬ÏÏÎ±ÏÎ· ÎÎ­Î»Î¿ÏÏ</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
       <label class="flex items-center gap-2 text-sm text-gray-700">
         <input type="checkbox" name="active" id="member-active" {% if form_data.active or not member %}checked{% endif %} onchange="toggleMemberInactive(this)" class="w-4 h-4 accent-blue-600">
-        Ενεργό μέλος
+        ÎÎ½ÎµÏÎ³Ï Î¼Î­Î»Î¿Ï
       </label>
       <div id="member-inactive-date-wrapper" class="{% if form_data.active or not form_data.inactive_date %}hidden{% endif %}">
-        <label for="inactive_date" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Ανενεργού</label>
+        <label for="inactive_date" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¼. ÎÎ½ÎµÎ½ÎµÏÎ³Î¿Ï</label>
         <input type="date" name="inactive_date" id="inactive_date" value="{{ form_data.inactive_date|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
     </div>
   </div>
 
+  <!-- Î ÏÎ¿ÏÏÏÎ¹ÎºÎ¬ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <h2 class="font-semibold text-gray-800 text-sm">Προσωπικά Στοιχεία</h2>
+      <h2 class="font-semibold text-gray-800 text-sm">Î ÏÎ¿ÏÏÏÎ¹ÎºÎ¬ Î£ÏÎ¿Î¹ÏÎµÎ¯Î±</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <div>
-        <label for="first_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Όνομα <span class="text-red-400">*</span></label>
+        <label for="first_name" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ½Î¿Î¼Î± <span class="text-red-400">*</span></label>
         <input type="text" name="first_name" id="first_name" value="{{ form_data.first_name|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="last_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Επώνυμο <span class="text-red-400">*</span></label>
+        <label for="last_name" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÏÏÎ½ÏÎ¼Î¿ <span class="text-red-400">*</span></label>
         <input type="text" name="last_name" id="last_name" value="{{ form_data.last_name|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="fathers_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Πατρώνυμο <span class="text-red-400">*</span></label>
+        <label for="fathers_name" class="block text-xs font-semibold text-gray-600 mb-1.5">Î Î±ÏÏÏÎ½ÏÎ¼Î¿ <span class="text-red-400">*</span></label>
         <input type="text" name="fathers_name" id="fathers_name" value="{{ form_data.fathers_name|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="gender" class="block text-xs font-semibold text-gray-600 mb-1.5">Φύλο</label>
+        <label for="gender" class="block text-xs font-semibold text-gray-600 mb-1.5">Î¦ÏÎ»Î¿</label>
         <select name="gender" id="gender" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="">Επιλέξτε</option>
-          <option value="M" {% if form_data.gender == 'M' %}selected{% endif %}>Άνδρας</option>
-          <option value="F" {% if form_data.gender == 'F' %}selected{% endif %}>Γυναίκα</option>
+          <option value="">ÎÏÎ¹Î»Î­Î¾ÏÎµ</option>
+          <option value="M" {% if form_data.gender == 'M' %}selected{% endif %}>ÎÎ½Î´ÏÎ±Ï</option>
+          <option value="F" {% if form_data.gender == 'F' %}selected{% endif %}>ÎÏÎ½Î±Î¯ÎºÎ±</option>
         </select>
       </div>
       <div>
-        <label for="date_of_birth" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Γέννησης</label>
+        <label for="date_of_birth" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¼. ÎÎ­Î½Î½Î·ÏÎ·Ï</label>
         <input type="date" name="date_of_birth" id="date_of_birth" value="{{ form_data.date_of_birth|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="nationality" class="block text-xs font-semibold text-gray-600 mb-1.5">Ιθαγένεια</label>
+        <label for="nationality" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¸Î±Î³Î­Î½ÎµÎ¹Î±</label>
         <select name="nationality" id="nationality" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="">Επιλέξτε</option>
+          <option value="">ÎÏÎ¹Î»Î­Î¾ÏÎµ</option>
           {% get_countries as country_list %}
           {% for code, country_name in country_list %}
           <option value="{{ code }}" {% if form_data.nationality == code %}selected{% endif %}>{{ country_name }}</option>
@@ -99,87 +102,91 @@
         </select>
       </div>
       <div>
-        <label for="ADT" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΔΤ <span class="text-red-400">*</span></label>
+        <label for="ADT" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎÎ¤ <span class="text-red-400">*</span></label>
         <input type="text" name="ADT" id="ADT" value="{{ form_data.ADT|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="AFM" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΦΜ</label>
+        <label for="AFM" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¦Î</label>
         <input type="text" name="AFM" id="AFM" value="{{ form_data.AFM|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="AMKA" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΜΚΑ</label>
+        <label for="AMKA" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎÎÎ</label>
         <input type="text" name="AMKA" id="AMKA" value="{{ form_data.AMKA|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="AMA" class="block text-xs font-semibold text-gray-600 mb-1.5">ΑΜΑ</label>
+        <label for="AMA" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎÎ</label>
         <input type="text" name="AMA" id="AMA" value="{{ form_data.AMA|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="member_registry_number" class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός Βιβλίου Μητρώου Μελών</label>
+        <label for="member_registry_number" class="block text-xs font-semibold text-gray-600 mb-1.5">??????? ??????? ??????? ?????</label>
         <input type="number" name="member_registry_number" id="member_registry_number" value="{{ form_data.member_registry_number|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
     </div>
   </div>
 
-<div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+  <!-- ÎÎ·ÏÏÏÎ¿ -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <h2 class="font-semibold text-gray-800 text-sm">Στοιχεία Μητρώου</h2>
+      <h2 class="font-semibold text-gray-800 text-sm">ÎÎ·ÏÏÏÎ¿</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       <div>
-        <label for="mitroo_type" class="block text-xs font-semibold text-gray-600 mb-1.5">Τύπος Μητρώου</label>
+        <label for="mitroo_type" class="block text-xs font-semibold text-gray-600 mb-1.5">Î¤ÏÏÎ¿Ï</label>
         <select name="mitroo_type" id="mitroo_type" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="">Επιλέξτε</option>
-          <option value="A" {% if form_data.mitroo_type == 'A' %}selected{% endif %}>Τύπος Α</option>
-          <option value="B" {% if form_data.mitroo_type == 'B' %}selected{% endif %}>Τύπος Β</option>
+          <option value="">ÎÏÎ¹Î»Î­Î¾ÏÎµ</option>
+          <option value="A" {% if form_data.mitroo_type == 'A' %}selected{% endif %}>Î</option>
+          <option value="B" {% if form_data.mitroo_type == 'B' %}selected{% endif %}>Î</option>
         </select>
       </div>
       <div>
-        <label for="mitroo_number" class="block text-xs font-semibold text-gray-600 mb-1.5">Αριθμός Μητρώου</label>
+        <label for="mitroo_number" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÏÎ¹Î¸Î¼ÏÏ</label>
         <input type="number" name="mitroo_number" id="mitroo_number" value="{{ form_data.mitroo_number|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="date_of_registration" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Εγγραφής</label>
+        <label for="date_of_registration" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¼. ÎÎ³Î³ÏÎ±ÏÎ®Ï</label>
         <input type="date" name="date_of_registration" id="date_of_registration" value="{{ form_data.date_of_registration|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="date_of_deregistration" class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Λήξης</label>
+        <label for="date_of_deregistration" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¼. ÎÎ®Î¾Î·Ï</label>
         <input type="date" name="date_of_deregistration" id="date_of_deregistration" value="{{ form_data.date_of_deregistration|default:'' }}" readonly class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-gray-500">
       </div>
     </div>
   </div>
 
+  <!-- ÎÏÎ±Î¹ÏÎ¯ÎµÏ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-      <h2 class="font-semibold text-gray-800 text-sm">Σύνδεση με Εταιρείες</h2>
-      <button type="button" onclick="addCompanyRow()" class="text-sm text-blue-600 font-semibold">+ Προσθήκη εταιρείας</button>
+      <h2 class="font-semibold text-gray-800 text-sm">ÎÏÎ±Î¹ÏÎ¯ÎµÏ ÎÏÎ±ÏÏÏÎ»Î·ÏÎ·Ï</h2>
+      <button type="button" onclick="addCompanyRow()" class="text-sm text-blue-600 font-semibold">Î ÏÎ¿ÏÎ¸Î®ÎºÎ· ÎÏÎ±Î¹ÏÎ¯Î±Ï</button>
     </div>
     <div class="px-6 py-4">
       <div id="company-empty" class="text-center py-6 text-gray-400 text-sm {% if existing_companies %}hidden{% endif %}">
-        Δεν έχουν συνδεθεί εταιρείες.
+        ÎÎµÎ½ Î­ÏÎ¿ÏÎ½ ÏÏÎ½Î´ÎµÎ¸ÎµÎ¯ ÎµÏÎ±Î¹ÏÎ¯ÎµÏ Î¼Îµ ÏÎ¿ Î¼Î­Î»Î¿Ï.
       </div>
       <div id="company-rows" class="space-y-4"></div>
     </div>
   </div>
 
+  <!-- ÎÎ´ÎµÎ¹ÎµÏ ÎÎ´Î®Î³Î·ÏÎ·Ï -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <h2 class="font-semibold text-gray-800 text-sm">Άδειες και Ειδικότητες</h2>
+      <h2 class="font-semibold text-gray-800 text-sm">ÎÎ´ÎµÎ¹ÎµÏ ÎÎ´Î®Î³Î·ÏÎ·Ï</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      <label class="flex items-center gap-2"><input type="checkbox" name="driver_A" {% if form_data.driver_A %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Δίπλωμα Α</label>
-      <label class="flex items-center gap-2"><input type="checkbox" name="driver_B" {% if form_data.driver_B %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Δίπλωμα Β</label>
-      <label class="flex items-center gap-2"><input type="checkbox" name="driver_C" {% if form_data.driver_C %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Δίπλωμα Γ</label>
-      <label class="flex items-center gap-2"><input type="checkbox" name="driver_D" {% if form_data.driver_D %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Δίπλωμα Δ</label>
-      <label class="flex items-center gap-2"><input type="checkbox" name="lifter" {% if form_data.lifter %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Χειριστής Ανυψωτικού</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_A" {% if form_data.driver_A %}checked{% endif %} class="w-4 h-4 accent-blue-600"> ÎÎ±ÏÎ·Î³Î¿ÏÎ¯Î± Î</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_B" {% if form_data.driver_B %}checked{% endif %} class="w-4 h-4 accent-blue-600"> ÎÎ±ÏÎ·Î³Î¿ÏÎ¯Î± Î</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_C" {% if form_data.driver_C %}checked{% endif %} class="w-4 h-4 accent-blue-600"> ÎÎ±ÏÎ·Î³Î¿ÏÎ¯Î± Î</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="driver_D" {% if form_data.driver_D %}checked{% endif %} class="w-4 h-4 accent-blue-600"> ÎÎ±ÏÎ·Î³Î¿ÏÎ¯Î± Î</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="lifter" {% if form_data.lifter %}checked{% endif %} class="w-4 h-4 accent-blue-600"> Î§ÎµÎ¹ÏÎ¹ÏÏÎ®Ï Î±Î½ÏÏÏÏÎ¹ÎºÎ¿Ï</label>
     </div>
   </div>
 
+  <!-- ââ ÎÎÎÎÎÎÎ â dynamic rows ââ -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
       <div>
-        <h2 class="font-semibold text-gray-800 text-sm">Ομαδική Ασφάλιση</h2>
-        <p class="text-xs text-gray-400 mt-0.5">Συνδέστε ασφαλιστική εταιρεία και συμβόλαιο όπου χρειάζεται.</p>
+        <h2 class="font-semibold text-gray-800 text-sm">ÎÎ¼Î±Î´Î¹ÎºÏ ÎÏÏÎ±Î»Î¹ÏÏÎ®ÏÎ¹Î¿</h2>
+        <p class="text-xs text-gray-400 mt-0.5">ÎÎ½Î± Î¼Î­Î»Î¿Ï Î¼ÏÎ¿ÏÎµÎ¯ Î½Î± Î±Î½Î®ÎºÎµÎ¹ ÏÎµ ÏÎ¿Î»Î»Î¬ ÏÏÎ¼Î²ÏÎ»Î±Î¹Î±</p>
       </div>
       <div class="flex items-center gap-4">
         <label class="flex items-center gap-2 text-sm text-gray-700">
@@ -187,68 +194,66 @@
             {% if form_data.omadiko %}checked{% endif %}
             onchange="toggleOmadiko(this)"
             class="w-4 h-4 accent-blue-600">
-          Ομαδικό
+          ÎÏÎµÎ¹ Î¿Î¼Î±Î´Î¹ÎºÏ
         </label>
         <button type="button" id="add-insurance-btn" onclick="addInsuranceRow()"
           class="text-sm text-blue-600 font-semibold {% if not form_data.omadiko %}hidden{% endif %}">
-          + Προσθήκη ασφάλισης
+          + Î ÏÎ¿ÏÎ¸Î®ÎºÎ· Î£ÏÎ¼Î²Î¿Î»Î±Î¯Î¿Ï
         </button>
       </div>
     </div>
 
     <div id="omadiko-section" class="{% if not form_data.omadiko %}hidden{% endif %}">
+      <!-- ÎÎ¼ÎµÏÎ¿Î¼Î·Î½Î¯ÎµÏ -->
       <div class="px-6 pt-5 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-5 border-b border-gray-100">
         <div>
-          <label for="omadiko_from" class="block text-xs font-semibold text-gray-600 mb-1.5">Ομαδικό από</label>
+          <label for="omadiko_from" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÏÏ</label>
           <input type="date" name="omadiko_from" id="omadiko_from"
             value="{{ form_data.omadiko_from|default:'' }}"
             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label for="omadiko_to" class="block text-xs font-semibold text-gray-600 mb-1.5">Ομαδικό έως</label>
+          <label for="omadiko_to" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÏÏ</label>
           <input type="date" name="omadiko_to" id="omadiko_to"
             value="{{ form_data.omadiko_to|default:'' }}"
             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
       </div>
 
-      <div class="px-6 py-4 border-b border-gray-100">
-        <label class="flex items-center gap-2 text-sm text-gray-700">
-          <input type="checkbox" name="omadiko_exartomena" {% if form_data.omadiko_exartomena %}checked{% endif %} class="w-4 h-4 accent-blue-600">
-          Κάλυψη εξαρτώμενων
-        </label>
-      </div>
+      <!-- Rows ÏÏÎ¼Î²Î¿Î»Î±Î¯ÏÎ½ -->
       <div class="px-6 py-4">
         <div id="insurance-empty" class="text-center py-6 text-gray-400 text-sm {% if existing_insurance %}hidden{% endif %}">
-          Δεν έχουν προστεθεί ασφαλίσεις.
+          Î Î±ÏÎ®ÏÏÎµ "+ Î ÏÎ¿ÏÎ¸Î®ÎºÎ· Î£ÏÎ¼Î²Î¿Î»Î±Î¯Î¿Ï" Î³Î¹Î± Î½Î± ÏÏÎ¿ÏÎ¸Î­ÏÎµÏÎµ Î±ÏÏÎ±Î»Î¹ÏÏÎ®ÏÎ¹Î¿.
         </div>
         <div id="insurance-rows" class="space-y-4"></div>
       </div>
     </div>
   </div>
 
+  <!-- ÎÎ¾Î±ÏÏÏÎ¼ÎµÎ½Î± -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-      <h2 class="font-semibold text-gray-800 text-sm">Εξαρτώμενα Μέλη</h2>
-      <button type="button" onclick="addExartomeno()" class="text-sm text-blue-600 font-semibold">+ Προσθήκη εξαρτώμενου</button>
+      <h2 class="font-semibold text-gray-800 text-sm">ÎÎ¾Î±ÏÏÏÎ¼ÎµÎ½Î± ÎÎ­Î»Î·</h2>
+      <button type="button" onclick="addExartomeno()" class="text-sm text-blue-600 font-semibold">Î ÏÎ¿ÏÎ¸Î®ÎºÎ·</button>
     </div>
     <div class="px-6 py-4">
       <div id="exartomena-empty" class="text-center py-6 text-gray-400 text-sm {% if existing_exartomena %}hidden{% endif %}">
-        Δεν έχουν προστεθεί εξαρτώμενα μέλη.
+        ÎÎµÎ½ Î­ÏÎ¿ÏÎ½ ÏÏÎ¿ÏÏÎµÎ¸ÎµÎ¯ ÎµÎ¾Î±ÏÏÏÎ¼ÎµÎ½Î± Î¼Î­Î»Î·.
       </div>
       <div id="exartomena-rows" class="space-y-3"></div>
     </div>
   </div>
 
+  <!-- Î¤ÏÎ¬ÏÎµÎ¶Î± & ÎÏÎ¹ÎºÎ¿Î¹Î½ÏÎ½Î¯Î± -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <h2 class="font-semibold text-gray-800 text-sm">Επικοινωνία και Τράπεζα</h2>
+      <h2 class="font-semibold text-gray-800 text-sm">Î¤ÏÎ¬ÏÎµÎ¶Î± ÎºÎ±Î¹ ÎÏÎ¹ÎºÎ¿Î¹Î½ÏÎ½Î¯Î±</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
       <div>
-        <label for="bank" class="block text-xs font-semibold text-gray-600 mb-1.5">Τράπεζα</label>
+        <label for="bank" class="block text-xs font-semibold text-gray-600 mb-1.5">Î¤ÏÎ¬ÏÎµÎ¶Î±</label>
         <select name="bank" id="bank" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="">Επιλέξτε</option>
+          <option value="">ÎÏÎ¹Î»Î­Î¾ÏÎµ</option>
           {% for bank in banks %}
           <option value="{{ bank.id }}" {% if form_data.bank == bank.id|stringformat:"s" %}selected{% endif %}>{{ bank.name }}</option>
           {% endfor %}
@@ -259,11 +264,11 @@
         <input type="text" name="bank_account_number" id="bank_account_number" value="{{ form_data.bank_account_number|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div class="sm:col-span-2">
-        <label for="address" class="block text-xs font-semibold text-gray-600 mb-1.5">Διεύθυνση</label>
+        <label for="address" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¹ÎµÏÎ¸ÏÎ½ÏÎ·</label>
         <input type="text" name="address" id="address" value="{{ form_data.address|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="tk" class="block text-xs font-semibold text-gray-600 mb-1.5">ΤΚ</label>
+        <label for="tk" class="block text-xs font-semibold text-gray-600 mb-1.5">Î¤.Î.</label>
         <input type="text" name="tk" id="tk" value="{{ form_data.tk|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
@@ -271,16 +276,17 @@
         <input type="email" name="email" id="email" value="{{ form_data.email|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="phone_number1" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλ. 1</label>
+        <label for="phone_number1" class="block text-xs font-semibold text-gray-600 mb-1.5">Î¤Î·Î»Î­ÏÏÎ½Î¿ 1</label>
         <input type="text" name="phone_number1" id="phone_number1" value="{{ form_data.phone_number1|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div>
-        <label for="phone_number2" class="block text-xs font-semibold text-gray-600 mb-1.5">Τηλ. 2</label>
+        <label for="phone_number2" class="block text-xs font-semibold text-gray-600 mb-1.5">Î¤Î·Î»Î­ÏÏÎ½Î¿ 2</label>
         <input type="text" name="phone_number2" id="phone_number2" value="{{ form_data.phone_number2|default:'' }}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
       </div>
     </div>
   </div>
 
+  <!-- ÎÏÏÎµÎ¯Î± -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
       <div class="flex items-center gap-2">
@@ -289,16 +295,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
           </svg>
         </div>
-        <h2 class="font-semibold text-gray-800 text-sm">Αρχεία Μέλους</h2>
+        <h2 class="font-semibold text-gray-800 text-sm">ÎÏÏÎµÎ¯Î±</h2>
       </div>
       <button type="button" onclick="addFileRow()" class="text-sm text-blue-600 font-semibold hover:text-blue-700 transition">
-        + Προσθήκη αρχείου
+        + Î ÏÎ¿ÏÎ¸Î®ÎºÎ· ÎÏÏÎµÎ¯Î¿Ï
       </button>
     </div>
     <div class="px-6 py-4">
       {% if member and member.files.all %}
       <div class="mb-4 space-y-2">
-        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Υπάρχοντα αρχεία</p>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Î¥ÏÎ¬ÏÏÎ¿Î½ÏÎ± ÎÏÏÎµÎ¯Î±</p>
         {% for f in member.files.all %}
         <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
           <div class="flex items-center gap-3 min-w-0">
@@ -316,32 +322,34 @@
       </div>
       {% endif %}
       <div id="file-empty" class="text-center py-6 text-gray-400 text-sm">
-        Προσθέστε νέο αρχείο με το κουμπί "+ Προσθήκη αρχείου".
+        ÎÎ¬Î½ÏÎµ ÎºÎ»Î¹Îº ÏÏÎ¿ "+ Î ÏÎ¿ÏÎ¸Î®ÎºÎ· ÎÏÏÎµÎ¯Î¿Ï" Î³Î¹Î± Î½Î± ÎµÏÎ¹ÏÏÎ½Î¬ÏÎµÏÎµ Î±ÏÏÎµÎ¯Î±.
       </div>
       <div id="file-rows" class="space-y-3"></div>
     </div>
   </div>
 
+  <!-- Î Î±ÏÎ±ÏÎ·ÏÎ®ÏÎµÎ¹Ï -->
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <h2 class="font-semibold text-gray-800 text-sm">Σημειώσεις</h2>
+      <h2 class="font-semibold text-gray-800 text-sm">Î Î±ÏÎ±ÏÎ·ÏÎ®ÏÎµÎ¹Ï</h2>
     </div>
     <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
       <div>
-        <label for="notes" class="block text-xs font-semibold text-gray-600 mb-1.5">Παρατηρήσεις</label>
+        <label for="notes" class="block text-xs font-semibold text-gray-600 mb-1.5">Î Î±ÏÎ±ÏÎ·ÏÎ®ÏÎµÎ¹Ï</label>
         <textarea name="notes" id="notes" rows="4" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.notes|default:'' }}</textarea>
       </div>
       <div>
-        <label for="pending_issues" class="block text-xs font-semibold text-gray-600 mb-1.5">Εκκρεμότητες</label>
+        <label for="pending_issues" class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎºÎºÏÎµÎ¼ÏÏÎ·ÏÎµÏ</label>
         <textarea name="pending_issues" id="pending_issues" rows="4" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ form_data.pending_issues|default:'' }}</textarea>
       </div>
     </div>
   </div>
 
+  <!-- Buttons -->
   <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
-    <a href="{% url 'core:members_list' %}" class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">Επιστροφή</a>
+    <a href="{% url 'core:members_list' %}" class="px-6 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition text-center">ÎÎºÏÏÏÏÎ·</a>
     <button type="submit" class="px-8 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
-      {% if member %}Αποθήκευση Αλλαγών{% else %}Αποθήκευση Μέλους{% endif %}
+      {% if member %}ÎÏÎ¿Î¸Î®ÎºÎµÏÏÎ· ÎÎ»Î»Î±Î³ÏÎ½{% else %}ÎÎ·Î¼Î¹Î¿ÏÏÎ³Î¯Î± ÎÎ­Î»Î¿ÏÏ{% endif %}
     </button>
   </div>
 </form>
@@ -358,7 +366,7 @@
   let insuranceCounter = {{ existing_insurance|length }};
   let fileCounter      = 0;
 
-  //   
+  // ââ ÎÎ±ÏÎ¬ÏÏÎ±ÏÎ· ââââââââââââââââââââââââââââââââââââââââââââââââ
   function toggleMemberInactive(cb) {
     document.getElementById('member-inactive-date-wrapper').classList.toggle('hidden', cb.checked);
     if (cb.checked) document.getElementById('inactive_date').value = '';
@@ -372,40 +380,39 @@
     document.getElementById('date_of_deregistration').value = d.toISOString().slice(0, 10);
   });
 
-  //   toggle 
+  // ââ ÎÎ¼Î±Î´Î¹ÎºÏ toggle âââââââââââââââââââââââââââââââââââââââââââ
   function toggleOmadiko(cb) {
     document.getElementById('omadiko-section').classList.toggle('hidden', !cb.checked);
     document.getElementById('add-insurance-btn').classList.toggle('hidden', !cb.checked);
   }
 
-  //  AJAX:  
- 
+  // ââ AJAX: ÏÏÏÏÏÏÎ· ÏÏÎ¼Î²Î¿Î»Î±Î¯ÏÎ½ âââââââââââââââââââââââââââââââââ
   async function loadContracts(companyId, selectEl, preselectId = null) {
-    selectEl.innerHTML = '<option value="">Φόρτωση...</option>';
+    selectEl.innerHTML = '<option value="">Î¦ÏÏÏÏÏÎ·...</option>';
     if (!companyId) {
-      selectEl.innerHTML = '<option value="">Επιλέξτε συμβόλαιο</option>';
+      selectEl.innerHTML = '<option value="">â ÎÏÎ¹Î»Î­Î¾ÏÎµ ÏÏÏÏÎ± Î±ÏÏÎ±Î»Î¹ÏÏÎ¹ÎºÎ® â</option>';
       return;
     }
     try {
       const resp = await fetch(`/insurance/${companyId}/contracts.json/`);
       const data = await resp.json();
-      selectEl.innerHTML = '<option value="">Επιλέξτε συμβόλαιο</option>';
+      selectEl.innerHTML = '<option value="">â ÎÏÎ¹Î»Î­Î¾ÏÎµ ÏÏÎ¼Î²ÏÎ»Î±Î¹Î¿ â</option>';
       data.contracts.forEach(c => {
         const opt = document.createElement('option');
         opt.value       = c.id;
-        opt.textContent = c.contract_number + (c.coverage_type ? ` - ${c.coverage_type}` : '');
+        opt.textContent = c.contract_number + (c.coverage_type ? ` â ${c.coverage_type}` : '');
         if (preselectId && String(c.id) === String(preselectId)) opt.selected = true;
         selectEl.appendChild(opt);
       });
       if (data.contracts.length === 0) {
-        selectEl.innerHTML = '<option value="">Δεν βρέθηκαν συμβόλαια</option>';
+        selectEl.innerHTML = '<option value="">ÎÎµÎ½ ÏÏÎ¬ÏÏÎ¿ÏÎ½ ÎµÎ½ÎµÏÎ³Î¬ ÏÏÎ¼Î²ÏÎ»Î±Î¹Î±</option>';
       }
     } catch {
-      selectEl.innerHTML = '<option value="">Σφάλμα φόρτωσης</option>';
+      selectEl.innerHTML = '<option value="">Î£ÏÎ¬Î»Î¼Î± ÏÏÏÏÏÏÎ·Ï</option>';
     }
   }
 
-  //   row  
+  // ââ Î ÏÎ¿ÏÎ¸Î®ÎºÎ· row Î±ÏÏÎ¬Î»Î¹ÏÎ·Ï âââââââââââââââââââââââââââââââââââ
   function addInsuranceRow(companyId = '', contractId = '', includesDependents = false) {
     const container = document.getElementById('insurance-rows');
     document.getElementById('insurance-empty').classList.add('hidden');
@@ -416,19 +423,19 @@
     row.innerHTML = `
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ασφαλιστική Εταιρεία</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÏÏÎ±Î»Î¹ÏÏÎ¹ÎºÎ® ÎÏÎ±Î¹ÏÎµÎ¯Î±</label>
           <select id="ins_company_${i}"
             onchange="loadContracts(this.value, document.getElementById('insurance_contract_${i}'))"
             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="">Επιλέξτε εταιρεία</option>
+            <option value="">â ÎÏÎ¹Î»Î­Î¾ÏÎµ Î±ÏÏÎ±Î»Î¹ÏÏÎ¹ÎºÎ® â</option>
             ${insuranceOptions}
           </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Συμβόλαιο</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÏÎ¹Î¸Î¼ÏÏ Î£ÏÎ¼Î²Î¿Î»Î±Î¯Î¿Ï</label>
           <select name="insurance_contract_${i}" id="insurance_contract_${i}"
             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="">Επιλέξτε συμβόλαιο</option>
+            <option value="">â ÎÏÎ¹Î»Î­Î¾ÏÎµ ÏÏÏÏÎ± Î±ÏÏÎ±Î»Î¹ÏÏÎ¹ÎºÎ® â</option>
           </select>
         </div>
         <div class="flex items-center justify-between sm:col-span-2">
@@ -436,19 +443,18 @@
             <input type="checkbox" name="insurance_includes_dependents_${i}"
               ${includesDependents ? 'checked' : ''}
               class="w-4 h-4 accent-blue-600">
-            Περιλαμβάνει εξαρτώμενα
+            Î ÎµÏÎ¹Î»Î±Î¼Î²Î¬Î½ÎµÎ¹ ÎµÎ¾Î±ÏÏÏÎ¼ÎµÎ½Î± ÏÏÎ·Î½ Î±ÏÏÎ¬Î»Î¹ÏÎ·
           </label>
           <button type="button" onclick="removeInsuranceRow(${i})"
             class="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition">
-            Αφαίρεση
+            ÎÎ¹Î±Î³ÏÎ±ÏÎ®
           </button>
         </div>
       </div>
     `;
     container.appendChild(row);
 
-    //  edit mode      
-
+    // ÎÎ½ edit mode â ÎµÏÎ¯Î»ÎµÎ¾Îµ ÎµÏÎ±Î¹ÏÎµÎ¯Î± ÎºÎ±Î¹ ÏÏÏÏÏÏÎµ ÏÏÎ¼Î²ÏÎ»Î±Î¹Î±
     const companySelect  = document.getElementById(`ins_company_${i}`);
     const contractSelect = document.getElementById(`insurance_contract_${i}`);
     if (companyId) {
@@ -465,7 +471,7 @@
     }
   }
 
-  //   
+  // ââ ÎÎ¾Î±ÏÏÏÎ¼ÎµÎ½Î± âââââââââââââââââââââââââââââââââââââââââââââââ
   function addExartomeno(name = '', propertyId = '') {
     const container = document.getElementById('exartomena-rows');
     document.getElementById('exartomena-empty').classList.add('hidden');
@@ -474,17 +480,17 @@
     row.id = `exar-row-${i}`;
     row.className = 'grid grid-cols-1 sm:grid-cols-[1fr_220px_auto] gap-3 items-center';
     row.innerHTML = `
-      <input type="text" name="exartomeno_name_${i}" value="${name}" placeholder="Ονοματεπώνυμο εξαρτώμενου" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
+      <input type="text" name="exartomeno_name_${i}" value="${name}" placeholder="ÎÎ½Î¿Î¼Î±ÏÎµÏÏÎ½ÏÎ¼Î¿ ÎµÎ¾Î±ÏÏÏÎ¼ÎµÎ½Î¿Ï" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
       <select name="exartomeno_property_${i}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-        <option value="">Ιδιότητα</option>${propertiesOptions}
+        <option value="">ÎÎ´Î¹ÏÏÎ·ÏÎ±</option>${propertiesOptions}
       </select>
-      <button type="button" onclick="removeRow('exar-row-${i}', 'exartomena-empty', 'exartomena-rows')" class="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">Αφαίρεση</button>
+      <button type="button" onclick="removeRow('exar-row-${i}', 'exartomena-empty', 'exartomena-rows')" class="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">ÎÎ¹Î±Î³ÏÎ±ÏÎ®</button>
     `;
     container.appendChild(row);
     row.querySelector(`select[name="exartomeno_property_${i}"]`).value = propertyId;
   }
 
-  //   
+  // ââ ÎÏÎ±Î¹ÏÎ¯ÎµÏ âââââââââââââââââââââââââââââââââââââââââââââââââ
   function toggleCompanyActive(index, checked) {
     document.getElementById(`company-inactive-wrapper-${index}`).classList.toggle('hidden', checked);
     const inp = document.getElementById(`company_inactive_date_${index}`);
@@ -501,28 +507,28 @@
     row.innerHTML = `
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Εταιρεία</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÏÎ±Î¹ÏÎ¯Î±</label>
           <select name="company_id_${i}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="">Επιλέξτε εταιρεία</option>${companyOptions}
+            <option value="">ÎÏÎ¹Î»Î­Î¾ÏÎµ ÎµÏÎ±Î¹ÏÎ¯Î±</option>${companyOptions}
           </select>
         </div>
         <div class="flex items-center justify-between gap-3">
           <label class="flex items-center gap-2 text-sm text-gray-700 mt-6">
             <input type="checkbox" name="company_active_${i}" ${active ? 'checked' : ''} onchange="toggleCompanyActive(${i}, this.checked)" class="w-4 h-4 accent-blue-600">
-            Ενεργή σύνδεση
+            ÎÎ½ÎµÏÎ³Î® ÏÏÎ­ÏÎ·
           </label>
-          <button type="button" onclick="removeRow('company-row-${i}', 'company-empty', 'company-rows')" class="mt-5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">Αφαίρεση</button>
+          <button type="button" onclick="removeRow('company-row-${i}', 'company-empty', 'company-rows')" class="mt-5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">ÎÎ¹Î±Î³ÏÎ±ÏÎ®</button>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Έναρξης</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¼. ÎÎ½Î±ÏÎ¾Î·Ï</label>
           <input type="date" name="company_active_date_${i}" value="${activeDate}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div id="company-inactive-wrapper-${i}" class="${active ? 'hidden' : ''}">
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ημ. Λήξης</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">ÎÎ¼. ÎÎ½ÎµÎ½ÎµÏÎ³Î®Ï Î£ÏÎ­ÏÎ·Ï</label>
           <input type="date" id="company_inactive_date_${i}" name="company_inactive_date_${i}" value="${inactiveDate}" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div class="lg:col-span-2">
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Σημειώσεις</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Î£Î·Î¼ÎµÎ¹ÏÏÎµÎ¹Ï ÏÏÎ­ÏÎ·Ï</label>
           <textarea name="company_notes_${i}" rows="2" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none">${notes}</textarea>
         </div>
       </div>
@@ -531,7 +537,7 @@
     row.querySelector(`select[name="company_id_${i}"]`).value = companyId;
   }
 
-  //   
+  // ââ ÎÏÏÎµÎ¯Î± âââââââââââââââââââââââââââââââââââââââââââââââââââ
   function addFileRow() {
     const container = document.getElementById('file-rows');
     document.getElementById('file-empty').classList.add('hidden');
@@ -541,13 +547,13 @@
     row.className = 'grid grid-cols-1 sm:grid-cols-[1fr_220px_auto] gap-3 items-center border border-gray-200 rounded-lg px-4 py-3';
     row.innerHTML = `
       <div>
-        <label class="block text-xs font-semibold text-gray-500 mb-1">Αρχείο</label>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">ÎÏÏÎµÎ¯Î¿</label>
         <input type="file" name="member_file_${i}"
           class="w-full text-sm text-gray-700 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"/>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-gray-500 mb-1">Περιγραφή</label>
-        <input type="text" name="member_file_desc_${i}" placeholder="π.χ. σύμβαση, ταυτότητα"
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Î ÎµÏÎ¹Î³ÏÎ±ÏÎ®</label>
+        <input type="text" name="member_file_desc_${i}" placeholder="Ï.Ï. Î¤Î±ÏÏÏÏÎ·ÏÎ±, Î£ÏÎ¼Î²Î±ÏÎ·..."
           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"/>
       </div>
       <button type="button" onclick="removeFileRow(${i})"
@@ -576,8 +582,7 @@
     }
   }
 
-  //   
-  
+  // ââ ÎÏÏÎ¹ÎºÎ¿ÏÎ¿Î¯Î·ÏÎ· ÏÏÎ±ÏÏÏÎ½ÏÏÎ½ Î´ÎµÎ´Î¿Î¼Î­Î½ÏÎ½ âââââââââââââââââââââââ
   {% for item in existing_exartomena %}
   addExartomeno('{{ item.name|escapejs }}', '{{ item.property_id }}');
   {% endfor %}
