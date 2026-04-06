@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Expense
+from .models import Expense, ExpenseAttachment
 
 
 def _next_expense_code():
@@ -41,26 +41,36 @@ def _expense_from_post(request, expense=None):
     expense.period_year = request.POST.get("period_year") or None
     expense.description = (request.POST.get("description") or "").strip()
     expense.notes = (request.POST.get("notes") or "").strip()
-    expense.active = request.POST.get("active", "on") == "on"
-    expense.inactive_date = request.POST.get("inactive_date") or None
+    expense.is_paid = request.POST.get("is_paid", "off") == "on"
 
-    if request.FILES.get("pdf_file"):
-        expense.pdf_file = request.FILES["pdf_file"]
-    elif request.POST.get("remove_pdf") == "on":
+    if request.POST.get("remove_pdf") == "on":
+        if expense.pk and expense.pdf_file:
+            expense.pdf_file.delete(save=False)
         expense.pdf_file = None
-
-    if expense.active:
-        expense.inactive_date = None
-    elif not expense.inactive_date:
-        expense.inactive_date = date.today()
 
     return expense
 
 
+def _sync_expense_attachments(request, expense):
+    remove_ids = []
+    for attachment_id in request.POST.getlist("remove_attachment_ids"):
+        if attachment_id.isdigit():
+            remove_ids.append(int(attachment_id))
+
+    if remove_ids:
+        for attachment in expense.attachments.filter(id__in=remove_ids):
+            if attachment.file:
+                attachment.file.delete(save=False)
+            attachment.delete()
+
+    for uploaded_file in request.FILES.getlist("pdf_files"):
+        ExpenseAttachment.objects.create(expense=expense, file=uploaded_file)
+
+
 def _expense_form_context(form_data=None, expense=None, error=None):
     form_data = form_data.copy() if form_data else {}
-    if "active" in form_data:
-        form_data["active"] = form_data.get("active") == "on"
+    if "is_paid" in form_data:
+        form_data["is_paid"] = form_data.get("is_paid") == "on"
     return {
         "expense": expense,
         "form_data": form_data or {},
@@ -81,12 +91,20 @@ def _validation_error_message(exc):
     return " ".join(exc.messages)
 
 
+def _has_pdf_after_submit(request, expense):
+    remaining_legacy_pdf = expense.pdf_file and request.POST.get("remove_pdf") != "on"
+    remaining_attachments = expense.attachments.exclude(
+        id__in=[int(value) for value in request.POST.getlist("remove_attachment_ids") if value.isdigit()]
+    ).exists()
+    new_uploads = bool(request.FILES.getlist("pdf_files"))
+    return bool(remaining_legacy_pdf or remaining_attachments or new_uploads)
+
+
 @login_required
 def expense_list(request):
-    expenses = Expense.objects.all()
+    expenses = Expense.objects.prefetch_related("attachments").order_by("is_paid", "-created_at", "-id")
     q = (request.GET.get("q") or "").strip()
     category = (request.GET.get("category") or "").strip()
-    active = (request.GET.get("active") or "").strip()
     year = (request.GET.get("year") or "").strip()
 
     if q:
@@ -97,15 +115,16 @@ def expense_list(request):
         )
     if category:
         expenses = expenses.filter(category=category)
-    if active in {"active", "inactive"}:
-        expenses = expenses.filter(active=(active == "active"))
     if year.isdigit():
         expenses = expenses.filter(period_year=int(year))
 
     totals = {
         "all": sum((expense.amount for expense in expenses), start=Decimal("0.00")),
-        "active_count": expenses.filter(active=True).count(),
-        "inactive_count": expenses.filter(active=False).count(),
+        "paid_count": expenses.filter(is_paid=True).count(),
+        "pending_amount": sum(
+            (expense.amount for expense in expenses.filter(is_paid=False)),
+            start=Decimal("0.00"),
+        ),
     }
 
     return render(
@@ -120,12 +139,111 @@ def expense_list(request):
 
 
 @login_required
+def expense_stats(request):
+    expenses = Expense.objects.all()
+    category = (request.GET.get("category") or "").strip()
+    year = (request.GET.get("year") or "").strip()
+
+    if category:
+        expenses = expenses.filter(category=category)
+    if year.isdigit():
+        expenses = expenses.filter(period_year=int(year))
+
+    total_amount = Decimal("0.00")
+    paid_amount = Decimal("0.00")
+    unpaid_amount = Decimal("0.00")
+    category_rows = []
+    subcategory_rows = []
+    year_rows = []
+
+    category_map = {}
+    subcategory_map = {}
+    year_map = {}
+
+    for expense in expenses.order_by("-created_at", "-id"):
+        amount = expense.amount or Decimal("0.00")
+        total_amount += amount
+        if expense.is_paid:
+            paid_amount += amount
+        else:
+            unpaid_amount += amount
+
+        category_key = expense.get_category_display()
+        category_entry = category_map.setdefault(
+            category_key,
+            {"label": category_key, "count": 0, "total": Decimal("0.00"), "paid": Decimal("0.00"), "unpaid": Decimal("0.00")},
+        )
+        category_entry["count"] += 1
+        category_entry["total"] += amount
+        if expense.is_paid:
+            category_entry["paid"] += amount
+        else:
+            category_entry["unpaid"] += amount
+
+        if expense.subcategory:
+            subcategory_key = f"{expense.get_category_display()} / {expense.get_subcategory_display()}"
+            subcategory_entry = subcategory_map.setdefault(
+                subcategory_key,
+                {"label": subcategory_key, "count": 0, "total": Decimal("0.00"), "paid": Decimal("0.00"), "unpaid": Decimal("0.00")},
+            )
+            subcategory_entry["count"] += 1
+            subcategory_entry["total"] += amount
+            if expense.is_paid:
+                subcategory_entry["paid"] += amount
+            else:
+                subcategory_entry["unpaid"] += amount
+
+        year_label = expense.period_year or "Χωρίς έτος"
+        year_entry = year_map.setdefault(
+            year_label,
+            {"label": year_label, "count": 0, "total": Decimal("0.00"), "paid": Decimal("0.00"), "unpaid": Decimal("0.00")},
+        )
+        year_entry["count"] += 1
+        year_entry["total"] += amount
+        if expense.is_paid:
+            year_entry["paid"] += amount
+        else:
+            year_entry["unpaid"] += amount
+
+    category_rows = sorted(category_map.values(), key=lambda row: (-row["total"], row["label"]))
+    subcategory_rows = sorted(subcategory_map.values(), key=lambda row: (-row["total"], row["label"]))
+    year_rows = sorted(
+        year_map.values(),
+        key=lambda row: (
+            row["label"] == "Χωρίς έτος",
+            -(row["label"] if isinstance(row["label"], int) else 0),
+            str(row["label"]),
+        ),
+    )
+
+    return render(
+        request,
+        "expenses/expense_stats.html",
+        {
+            "totals": {
+                "all": total_amount,
+                "paid_amount": paid_amount,
+                "unpaid_amount": unpaid_amount,
+                "count": expenses.count(),
+            },
+            "category_rows": category_rows,
+            "subcategory_rows": subcategory_rows,
+            "year_rows": year_rows,
+            "category_choices": Expense.CATEGORY_CHOICES,
+        },
+    )
+
+
+@login_required
 def expense_create(request):
     if request.method == "POST":
         expense = _expense_from_post(request)
         try:
             expense.full_clean()
+            if expense.is_paid and not _has_pdf_after_submit(request, expense):
+                raise ValidationError("Για πληρωμένο έξοδο πρέπει να επισυνάψετε τουλάχιστον ένα PDF.")
             expense.save()
+            _sync_expense_attachments(request, expense)
         except ValidationError as exc:
             return render(
                 request,
@@ -138,7 +256,7 @@ def expense_create(request):
 
     initial = {
         "expense_date": date.today().isoformat(),
-        "active": True,
+        "is_paid": False,
         "expense_code": _next_expense_code(),
     }
     return render(request, "expenses/expense_form.html", _expense_form_context(initial))
@@ -146,19 +264,22 @@ def expense_create(request):
 
 @login_required
 def expense_detail(request, expense_id):
-    expense = get_object_or_404(Expense, pk=expense_id)
+    expense = get_object_or_404(Expense.objects.prefetch_related("attachments"), pk=expense_id)
     return render(request, "expenses/expense_detail.html", {"expense": expense})
 
 
 @login_required
 def expense_update(request, expense_id):
-    expense = get_object_or_404(Expense, pk=expense_id)
+    expense = get_object_or_404(Expense.objects.prefetch_related("attachments"), pk=expense_id)
 
     if request.method == "POST":
         expense = _expense_from_post(request, expense=expense)
         try:
             expense.full_clean()
+            if expense.is_paid and not _has_pdf_after_submit(request, expense):
+                raise ValidationError("Για πληρωμένο έξοδο πρέπει να επισυνάψετε τουλάχιστον ένα PDF.")
             expense.save()
+            _sync_expense_attachments(request, expense)
         except ValidationError as exc:
             return render(
                 request,
@@ -180,7 +301,6 @@ def expense_update(request, expense_id):
         "period_year": expense.period_year or "",
         "description": expense.description,
         "notes": expense.notes,
-        "active": expense.active,
-        "inactive_date": expense.inactive_date.isoformat() if expense.inactive_date else "",
+        "is_paid": expense.is_paid,
     }
     return render(request, "expenses/expense_form.html", _expense_form_context(form_data, expense=expense))

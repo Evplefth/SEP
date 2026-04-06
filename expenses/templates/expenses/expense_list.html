@@ -7,7 +7,10 @@
     <h1 class="text-2xl font-bold text-gray-800">Έξοδα</h1>
     <p class="text-gray-500 text-sm mt-1">Καταχώριση και παρακολούθηση εισφορών και λοιπών εξόδων του φορέα.</p>
   </div>
-  <a href="{% url 'expenses:create' %}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">Νέο Έξοδο</a>
+  <div class="flex items-center gap-3">
+    <a href="{% url 'expenses:stats' %}" class="inline-flex items-center gap-2 border border-blue-200 text-blue-700 hover:bg-blue-50 text-sm font-semibold px-4 py-2.5 rounded-lg transition">Στατιστικά</a>
+    <a href="{% url 'expenses:create' %}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">Νέο Έξοδο</a>
+  </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
@@ -16,28 +19,23 @@
     <p class="mt-2 text-2xl font-bold text-slate-900">{{ totals.all }} €</p>
   </div>
   <div class="surface-card rounded-2xl px-5 py-4">
-    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Ενεργά</p>
-    <p class="mt-2 text-2xl font-bold text-slate-900">{{ totals.active_count }}</p>
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Πληρωμένα</p>
+    <p class="mt-2 text-2xl font-bold text-slate-900">{{ totals.paid_count }}</p>
   </div>
   <div class="surface-card rounded-2xl px-5 py-4">
-    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Ανενεργά</p>
-    <p class="mt-2 text-2xl font-bold text-slate-900">{{ totals.inactive_count }}</p>
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Απλήρωτα</p>
+    <p class="mt-2 text-2xl font-bold text-slate-900">{{ totals.pending_amount }} €</p>
   </div>
 </div>
 
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 mb-5">
-  <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+  <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-3">
     <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Κωδικός ή περιγραφή" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
     <select name="category" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
       <option value="">Όλες οι κατηγορίες</option>
       {% for value, label in category_choices %}
       <option value="{{ value }}" {% if request.GET.category == value %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
-    </select>
-    <select name="active" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-      <option value="">Όλες οι καταστάσεις</option>
-      <option value="active" {% if request.GET.active == "active" %}selected{% endif %}>Ενεργά</option>
-      <option value="inactive" {% if request.GET.active == "inactive" %}selected{% endif %}>Ανενεργά</option>
     </select>
     <div class="flex gap-3">
       <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">Φίλτρο</button>
@@ -56,8 +54,8 @@
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Ημερομηνία</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Περίοδος</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Ποσό</th>
+          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Πληρωμή</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">PDF</th>
-          <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Κατάσταση</th>
           <th class="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase text-center">Ενέργειες</th>
         </tr>
       </thead>
@@ -80,18 +78,19 @@
           <td class="px-5 py-4">{% if expense.period_month and expense.period_year %}{{ expense.period_month }}/{{ expense.period_year }}{% elif expense.period_year %}{{ expense.period_year }}{% else %}-{% endif %}</td>
           <td class="px-5 py-4">{{ expense.amount }} €</td>
           <td class="px-5 py-4">
-            {% if expense.pdf_file %}
-            <button type="button" class="text-blue-600 hover:underline" onclick="openExpensePreview('{{ expense.expense_code|escapejs }}', '{% url 'core:media_preview' expense.pdf_file.name %}')">Preview</button>
+            {% if expense.is_paid %}
+            <span class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Πληρωμένο</span>
             {% else %}
-            <span class="text-gray-400">-</span>
+            <span class="inline-flex px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">Απλήρωτο</span>
             {% endif %}
           </td>
           <td class="px-5 py-4">
-            {% if expense.active %}
-            <span class="inline-flex px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">Ενεργό</span>
+            {% if expense.primary_pdf %}
+            <button type="button" class="text-blue-600 hover:underline" onclick="openExpensePreview('{{ expense.primary_pdf.name|escapejs }}', '{% url 'core:media_preview' expense.primary_pdf.file.name %}')">Preview</button>
+            <p class="text-xs text-gray-400 mt-1">{{ expense.pdf_count }} PDF</p>
             {% else %}
-            <span class="inline-flex px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">Ανενεργό</span>
-            {% endif %}
+            <span class="text-gray-400">-</span>
+          {% endif %}
           </td>
           <td class="px-5 py-4 text-center">
             <a href="{% url 'expenses:update' expense.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Επεξεργασία</a>
@@ -123,7 +122,7 @@
     const body = document.getElementById('expense-preview-body');
     const previewTitle = document.getElementById('expense-preview-title');
 
-    previewTitle.textContent = `Preview εξόδου ${title}`;
+    previewTitle.textContent = `Preview αρχείου ${title}`;
     body.innerHTML = `<iframe src="${url}" class="w-full h-[70vh] bg-white" title="${title}"></iframe>`;
 
     modal.classList.remove('hidden');
