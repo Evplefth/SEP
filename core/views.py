@@ -189,11 +189,11 @@ def _attach_invoice_payment_state(invoices):
         invoice.is_paid = outstanding_amount == 0 and allocated_amount > 0
         invoice.is_partially_paid = allocated_amount > 0 and outstanding_amount > 0
         if invoice.is_paid:
-            invoice.payment_state_label = "ÎÎ¾Î¿ÏÎ»Î·Î¼Î­Î½Î¿"
+            invoice.payment_state_label = "Εξοφλημένο"
         elif invoice.is_partially_paid:
-            invoice.payment_state_label = "ÎÎµÏÎ¹ÎºÏÏ ÎµÎ¾Î¿ÏÎ»Î·Î¼Î­Î½Î¿"
+            invoice.payment_state_label = "Μερικώς εξοφλημένο"
         else:
-            invoice.payment_state_label = "ÎÎ½ÎµÎ¾ÏÏÎ»Î·ÏÎ¿"
+            invoice.payment_state_label = "Ανεξόφλητο"
 
     return invoice_list
 
@@ -202,7 +202,7 @@ def _format_export_value(value):
     if value is None:
         return ""
     if isinstance(value, bool):
-        return "ÎÎ±Î¹" if value else "ÎÏÎ¹"
+        return "Ναι" if value else "Όχι"
     if isinstance(value, (datetime.date, datetime.datetime)):
         return value.strftime("%d/%m/%Y")
     if isinstance(value, Decimal):
@@ -212,7 +212,7 @@ def _format_export_value(value):
 
 def _clean_export_text(value):
     text = _format_export_value(value)
-    if any(marker in text for marker in ("Î", "Î", "Î²âÂ¬")):
+    if any(marker in text for marker in ("\u00ce", "\u00cf", "\u00e2")):
         try:
             repaired = text.encode("latin1").decode("utf-8")
             if repaired:
@@ -370,7 +370,7 @@ def _member_company_names(member):
 
 def _payment_allocated_invoice_numbers(payment):
     return ", ".join(
-        f"{allocation.invoice.invoice_number} ({allocation.amount:.2f}â¬)"
+        f"{allocation.invoice.invoice_number} ({allocation.amount:.2f} EUR)"
         for allocation in payment.allocations.select_related("invoice").all()
     )
 
@@ -461,7 +461,7 @@ def _export_configs():
     }
 
 
-# ââ FIX 1: ÏÏÎ¿ÏÏÎ­Î¸Î·ÎºÎµ existing_insurance ââââââââââââââââââââââââ
+# Member form context includes posted insurance rows
 def _member_form_context(form_data=None, member=None, error=None,
                           existing_exartomena=None, existing_companies=None,
                           existing_insurance=None):
@@ -476,7 +476,7 @@ def _member_form_context(form_data=None, member=None, error=None,
         "error":               error,
         "existing_exartomena": existing_exartomena or [],
         "existing_companies":  existing_companies or [],
-        "existing_insurance":  existing_insurance or [],  # â ÏÎ¿Î»Î»Î±ÏÎ»Î¬
+        "existing_insurance":  existing_insurance or [],
     }
 
 
@@ -660,9 +660,9 @@ def _save_member_files(request, member):
         i += 1
 
 
-# ââ FIX 2: ÏÎ¿Î»Î»Î±ÏÎ»Î¬ ÏÏÎ¼Î²ÏÎ»Î±Î¹Î± Î¼Îµ _extract_row_indexes ââââââââââ
+# Save multiple insurance contracts from dynamic form rows
 def _save_member_insurance(request, member):
-    """ÎÏÎ¿Î¸Î·ÎºÎµÏÎµÎ¹ Î ÎÎÎÎÎ ÎÎ Î¿Î¼Î±Î´Î¹ÎºÎ¬ ÏÏÎ¼Î²ÏÎ»Î±Î¹Î± Î±Î½Î¬ Î¼Î­Î»Î¿Ï."""
+    """Save multiple group-insurance contracts for a member."""
     MemberInsurance.objects.filter(member=member).delete()
     for index in _extract_row_indexes(request.POST, ["insurance_contract_"]):
         contract_id         = request.POST.get(f"insurance_contract_{index}") or None
@@ -812,23 +812,23 @@ def _find_member_duplicate(member):
 
 
 def _validate_company_post(request):
-    required_fields = {"name": "ÎÏÏÎ½ÏÎ¼Î¯Î±", "AFM": "ÎÎ¦Î"}
+    required_fields = {"name": "Επωνυμία", "AFM": "ΑΦΜ"}
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
-        return f"Î£ÏÎ¼ÏÎ»Î·ÏÏÏÏÎµ ÏÎ± ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÎ¬ ÏÎµÎ´Î¯Î±: {', '.join(missing)}."
+        return f"Συμπληρώστε τα υποχρεωτικά πεδία: {', '.join(missing)}."
     return None
 
 
 def _validate_invoice_post(request):
     required_fields = {
-        "company":        "ÎÏÎ±Î¹ÏÎ¯Î±",
-        "invoice_number": "ÎÏÎ¹Î¸Î¼ÏÏ ÏÎ¹Î¼Î¿Î»Î¿Î³Î¯Î¿Ï",
-        "amount":         "Î Î¿ÏÏ",
-        "date_of_issue":  "ÎÎ¼ÎµÏÎ¿Î¼Î·Î½Î¯Î± Î­ÎºÎ´Î¿ÏÎ·Ï",
+        "company":        "Εταιρεία",
+        "invoice_number": "Αριθμός τιμολογίου",
+        "amount":         "Ποσό",
+        "date_of_issue":  "Ημερομηνία έκδοσης",
     }
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
-        return f"Î£ÏÎ¼ÏÎ»Î·ÏÏÏÏÎµ ÏÎ± ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÎ¬ ÏÎµÎ´Î¯Î±: {', '.join(missing)}."
+        return f"Συμπληρώστε τα υποχρεωτικά πεδία: {', '.join(missing)}."
     return None
 
 
@@ -841,13 +841,13 @@ def _find_invoice_duplicate(invoice):
 
 def _validate_payment_post(request):
     required_fields = {
-        "company": "ÎÏÎ±Î¹ÏÎ¯Î±",
-        "amount": "Î Î¿ÏÏ",
-        "payment_date": "ÎÎ¼ÎµÏÎ¿Î¼Î·Î½Î¯Î± ÏÎ»Î·ÏÏÎ¼Î®Ï",
+        "company": "Εταιρεία",
+        "amount": "Ποσό",
+        "payment_date": "Ημερομηνία πληρωμής",
     }
     missing = [label for field, label in required_fields.items() if not (request.POST.get(field) or "").strip()]
     if missing:
-        return f"Î£ÏÎ¼ÏÎ»Î·ÏÏÏÏÎµ ÏÎ± ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÎ¬ ÏÎµÎ´Î¯Î±: {', '.join(missing)}."
+        return f"Συμπληρώστε τα υποχρεωτικά πεδία: {', '.join(missing)}."
     return None
 
 
@@ -1113,7 +1113,7 @@ def member_create(request):
     return render(request, "core/member_add.html", _member_form_context())
 
 
-# Î²ââ¬Î²ââ¬ FIX 3: member_update ÎÎÎÂµ Îâ¬ÎÎÎÂ»ÎÂ»ÎÂ±Îâ¬ÎÂ»ÎÂ¬ existing_insurance Î²ââ¬Î²ââ¬Î²ââ¬Î²ââ¬Î²ââ¬Î²ââ¬Î²ââ¬Î²ââ¬Î²ââ¬
+# member_update also loads existing insurance rows
 @login_required
 def member_update(request, member_id):
     member = get_object_or_404(Members, pk=member_id)
@@ -1155,7 +1155,7 @@ def member_update(request, member_id):
         messages.success(request, f"Το μέλος {member.last_name} {member.first_name} ενημερώθηκε επιτυχώς.")
         return redirect("core:members_list")
 
-    # ââ Î¥ÏÎ¬ÏÏÎ¿ÏÏÎµÏ Î±ÏÏÎ±Î»Î¯ÏÎµÎ¹Ï â Î ÎÎÎÎÎ ÎÎÎ£ ââââââââââââââââââââââ
+    # Existing insurance rows
     existing_insurance = [
         {
             "index":               i,
@@ -1325,11 +1325,11 @@ def company_create(request):
         except IntegrityError:
             return render(request, "core/company_add.html",
                 _company_form_context(request.POST,
-                error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· ÎµÏÎ±Î¹ÏÎ¯Î± Î¼Îµ Î¯Î´Î¹Î¿ ÎÎ¦Î Î® ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ Î¼Îµ Î¯Î´Î¹Î¿ Î±ÏÎ¹Î¸Î¼Ï.",
+                error="Υπάρχει ήδη εταιρεία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
                 existing_invoices=_posted_invoices(request),
                 existing_payments=_posted_payments(request)))
 
-        messages.success(request, f"Î ÎµÏÎ±Î¹ÏÎ¯Î± {company.name} ÏÏÎ¿ÏÏÎ­Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Η εταιρεία {company.name} προστέθηκε επιτυχώς.")
         return redirect("core:companies_list")
 
     return render(request, "core/company_add.html", _company_form_context())
@@ -1355,11 +1355,11 @@ def company_update(request, company_id):
         except IntegrityError:
             return render(request, "core/company_add.html",
                 _company_form_context(request.POST, company=company,
-                error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· ÎµÏÎ±Î¹ÏÎ¯Î± Î¼Îµ Î¯Î´Î¹Î¿ ÎÎ¦Î Î® ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ Î¼Îµ Î¯Î´Î¹Î¿ Î±ÏÎ¹Î¸Î¼Ï.",
+                error="Υπάρχει ήδη εταιρεία με ίδιο ΑΦΜ ή τιμολόγιο με ίδιο αριθμό.",
                 existing_invoices=_posted_invoices(request),
                 existing_payments=_posted_payments(request)))
 
-        messages.success(request, f"Î ÎµÏÎ±Î¹ÏÎ¯Î± {company.name} ÎµÎ½Î·Î¼ÎµÏÏÎ¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Η εταιρεία {company.name} ενημερώθηκε επιτυχώς.")
         return redirect("core:companies_list")
 
     form_data = {
@@ -1422,7 +1422,7 @@ def company_delete(request, company_id):
     if request.method == "POST":
         company_name = company.name or f"ID {company.pk}"
         company.delete()
-        messages.success(request, f"Î ÎµÏÎ±Î¹ÏÎ¯Î± {company_name} Î´Î¹Î±Î³ÏÎ¬ÏÎ·ÎºÎµ Î¿ÏÎ¹ÏÏÎ¹ÎºÎ¬.")
+        messages.success(request, f"Η εταιρεία {company_name} διαγράφηκε οριστικά.")
     return redirect("core:companies_list")
 
 
@@ -1443,7 +1443,7 @@ def payment_create(request):
         payment = _payment_from_post(request)
         payment.save()
         _recalculate_company_payment_allocations(payment.company)
-        messages.success(request, "Î ÏÎ»Î·ÏÏÎ¼Î® ÎºÎ±ÏÎ±ÏÏÏÎ®Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, "Η πληρωμή καταχωρήθηκε επιτυχώς.")
         return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
     form_data = {
@@ -1472,7 +1472,7 @@ def payment_update(request, payment_id):
         if previous_company and previous_company.pk != payment.company_id:
             _recalculate_company_payment_allocations(previous_company)
         _recalculate_company_payment_allocations(payment.company)
-        messages.success(request, "Î ÏÎ»Î·ÏÏÎ¼Î® ÎµÎ½Î·Î¼ÎµÏÏÎ¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, "Η πληρωμή ενημερώθηκε επιτυχώς.")
         return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
     form_data = {
@@ -1495,7 +1495,7 @@ def payment_deactivate(request, payment_id):
         payment.inactive_date = timezone.now().date()
         payment.save(update_fields=["active", "inactive_date"])
         _recalculate_company_payment_allocations(payment.company)
-        messages.success(request, "Î ÏÎ»Î·ÏÏÎ¼Î® Î±ÏÎµÎ½ÎµÏÎ³Î¿ÏÎ¿Î¹Î®Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, "Η πληρωμή απενεργοποιήθηκε επιτυχώς.")
     return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
 
@@ -1503,16 +1503,16 @@ def payment_deactivate(request, payment_id):
 def payment_delete(request, payment_id):
     payment = get_object_or_404(CompanyPayment.objects.select_related("company"), pk=payment_id)
     if not request.user.is_staff:
-        messages.error(request, "ÎÏÎ½Î¿ Î´Î¹Î±ÏÎµÎ¹ÏÎ¹ÏÏÎ­Ï Î¼ÏÎ¿ÏÎ¿ÏÎ½ Î½Î± Î´Î¹Î±Î³ÏÎ¬ÏÎ¿ÏÎ½ ÎµÎ³Î³ÏÎ±ÏÎ­Ï.")
+        messages.error(request, "Μόνο διαχειριστές μπορούν να διαγράφουν εγγραφές.")
         return redirect(f"{reverse('core:company_detail', args=[payment.company_id])}?tab=payments")
 
     company_id = payment.company_id
-    payment_label = payment.reference or f"{payment.amount} â¬"
+    payment_label = payment.reference or f"{payment.amount} €"
     if request.method == "POST":
         payment.delete()
         if companies.objects.filter(pk=company_id).exists():
             _recalculate_company_payment_allocations(companies.objects.get(pk=company_id))
-        messages.success(request, f"Î ÏÎ»Î·ÏÏÎ¼Î® {payment_label} Î´Î¹Î±Î³ÏÎ¬ÏÎ·ÎºÎµ Î¿ÏÎ¹ÏÏÎ¹ÎºÎ¬.")
+        messages.success(request, f"Η πληρωμή {payment_label} διαγράφηκε οριστικά.")
     return redirect(f"{reverse('core:company_detail', args=[company_id])}?tab=payments")
 
 
@@ -1547,15 +1547,15 @@ def invoice_create(request):
         invoice = _invoice_from_post(request)
         if _find_invoice_duplicate(invoice):
             return render(request, "core/invoice_add.html",
-                _invoice_form_context(request.POST, error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ Î¼Îµ Î±ÏÏÏÎ½ ÏÎ¿Î½ Î±ÏÎ¹Î¸Î¼Ï."))
+                _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
         try:
             invoice.save()
             _recalculate_company_payment_allocations(invoice.company)
         except IntegrityError:
             return render(request, "core/invoice_add.html",
-                _invoice_form_context(request.POST, error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ Î¼Îµ Î±ÏÏÏÎ½ ÏÎ¿Î½ Î±ÏÎ¹Î¸Î¼Ï."))
+                _invoice_form_context(request.POST, error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
 
-        messages.success(request, f"Î¤Î¿ ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ {invoice.invoice_number} ÏÏÎ¿ÏÏÎ­Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Το τιμολόγιο {invoice.invoice_number} προστέθηκε επιτυχώς.")
         return redirect("core:invoices_list")
 
     return render(request, "core/invoice_add.html", _invoice_form_context())
@@ -1576,7 +1576,7 @@ def invoice_update(request, invoice_id):
         if _find_invoice_duplicate(invoice):
             return render(request, "core/invoice_add.html",
                 _invoice_form_context(request.POST, invoice=invoice,
-                error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ Î¼Îµ Î±ÏÏÏÎ½ ÏÎ¿Î½ Î±ÏÎ¹Î¸Î¼Ï."))
+                error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
         try:
             invoice.save()
             if previous_company and previous_company.pk != invoice.company_id:
@@ -1585,9 +1585,9 @@ def invoice_update(request, invoice_id):
         except IntegrityError:
             return render(request, "core/invoice_add.html",
                 _invoice_form_context(request.POST, invoice=invoice,
-                error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ Î¼Îµ Î±ÏÏÏÎ½ ÏÎ¿Î½ Î±ÏÎ¹Î¸Î¼Ï."))
+                error="Υπάρχει ήδη τιμολόγιο με αυτόν τον αριθμό."))
 
-        messages.success(request, f"Î¤Î¿ ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ {invoice.invoice_number} ÎµÎ½Î·Î¼ÎµÏÏÎ¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Το τιμολόγιο {invoice.invoice_number} ενημερώθηκε επιτυχώς.")
         return redirect("core:invoices_list")
 
     form_data = {
@@ -1606,7 +1606,7 @@ def invoice_delete(request, invoice_id):
     invoice = get_object_or_404(Invoices.objects.select_related("company"), pk=invoice_id)
     redirect_url = request.META.get("HTTP_REFERER") or reverse("core:invoices_list")
     if not request.user.is_staff:
-        messages.error(request, "ÎÏÎ½Î¿ Î´Î¹Î±ÏÎµÎ¹ÏÎ¹ÏÏÎ­Ï Î¼ÏÎ¿ÏÎ¿ÏÎ½ Î½Î± Î´Î¹Î±Î³ÏÎ¬ÏÎ¿ÏÎ½ ÎµÎ³Î³ÏÎ±ÏÎ­Ï.")
+        messages.error(request, "Μόνο διαχειριστές μπορούν να διαγράφουν εγγραφές.")
         return redirect(redirect_url)
 
     company_id = invoice.company_id
@@ -1615,7 +1615,7 @@ def invoice_delete(request, invoice_id):
         invoice.delete()
         if companies.objects.filter(pk=company_id).exists():
             _recalculate_company_payment_allocations(companies.objects.get(pk=company_id))
-        messages.success(request, f"Î¤Î¿ ÏÎ¹Î¼Î¿Î»ÏÎ³Î¹Î¿ {invoice_number} Î´Î¹Î±Î³ÏÎ¬ÏÎ·ÎºÎµ Î¿ÏÎ¹ÏÏÎ¹ÎºÎ¬.")
+        messages.success(request, f"Το τιμολόγιο {invoice_number} διαγράφηκε οριστικά.")
     return redirect(redirect_url)
 
 
@@ -1669,7 +1669,7 @@ def protocol_create(request):
         if not fields["subject"]:
             return render(request, "core/protocol_create.html", {
                 "next_num": chosen_num, "year": chosen_year,
-                "today": today.isoformat(), "error": "Î¤Î¿ Î¸Î­Î¼Î± ÎµÎ¯Î½Î±Î¹ ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÏ.",
+                "today": today.isoformat(), "error": "Το θέμα είναι υποχρεωτικό.",
             })
 
         protocol = Protocol(protocol_number=chosen_num, year=chosen_year, date=chosen_date, **fields)
@@ -1682,7 +1682,7 @@ def protocol_create(request):
             protocol.protocol_number = Protocol.next_number(chosen_year)
             protocol.save()
 
-        messages.success(request, f"Î¤Î¿ ÏÏÏÏÏÎºÎ¿Î»Î»Î¿ {protocol.full_number} ÎºÎ±ÏÎ±ÏÏÏÎ®Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Το πρωτόκολλο {protocol.full_number} καταχωρήθηκε επιτυχώς.")
         return redirect("core:protocol_list")
 
     return render(request, "core/protocol_create.html", {
@@ -1705,14 +1705,14 @@ def protocol_update(request, protocol_id):
         fields = _protocol_from_post(request)
         if not fields["subject"]:
             return render(request, "core/protocol_create.html", {
-                "protocol": protocol, "error": "Î¤Î¿ Î¸Î­Î¼Î± ÎµÎ¯Î½Î±Î¹ ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÏ.",
+                "protocol": protocol, "error": "Το θέμα είναι υποχρεωτικό.",
             })
         for attr, value in fields.items():
             setattr(protocol, attr, value)
         if request.FILES.get("file"):
             protocol.file = request.FILES["file"]
         protocol.save()
-        messages.success(request, f"Î¤Î¿ ÏÏÏÏÏÎºÎ¿Î»Î»Î¿ {protocol.full_number} ÎµÎ½Î·Î¼ÎµÏÏÎ¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Το πρωτόκολλο {protocol.full_number} ενημερώθηκε επιτυχώς.")
         return redirect("core:protocol_list")
 
     return render(request, "core/protocol_create.html", {
@@ -1731,7 +1731,7 @@ def protocol_delete(request, protocol_id):
     if request.method == "POST":
         protocol_label = protocol.full_number
         protocol.delete()
-        messages.success(request, f"ÃÂ¤ÃÂ¿ Ãâ¬ÃÂÃâ°ÃâÃÅÃÂºÃÂ¿ÃÂ»ÃÂ»ÃÂ¿ {protocol_label} ÃÂ´ÃÂ¹ÃÂ±ÃÂ³ÃÂÃÂ¬Ãâ ÃÂ·ÃÂºÃÂµ ÃÂ¿ÃÂÃÂ¹ÃÆÃâÃÂ¹ÃÂºÃÂ¬.")
+        messages.success(request, f"Το πρωτόκολλο {protocol_label} διαγράφηκε οριστικά.")
     return redirect("core:protocol_list")
 
 
@@ -1755,7 +1755,7 @@ def insurance_company_create(request):
     if request.method == "POST":
         name = (request.POST.get("name") or "").strip()
         if not name:
-            return render(request, "core/insurance_company_add.html", {"error": "Î ÎµÏÏÎ½ÏÎ¼Î¯Î± ÎµÎ¯Î½Î±Î¹ ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÎ®."})
+            return render(request, "core/insurance_company_add.html", {"error": "Η επωνυμία είναι υποχρεωτική."})
 
         ins = InsuranceCompany.objects.create(
             name           = name,
@@ -1765,7 +1765,7 @@ def insurance_company_create(request):
             contact_person = (request.POST.get("contact_person") or "").strip(),
             notes          = (request.POST.get("notes") or "").strip(),
         )
-        messages.success(request, f"Î Î±ÏÏÎ±Î»Î¹ÏÏÎ¹ÎºÎ® ÎµÏÎ±Î¹ÏÎ¯Î± {ins.name} ÏÏÎ¿ÏÏÎ­Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Η ασφαλιστική εταιρεία {ins.name} προστέθηκε επιτυχώς.")
         return redirect("core:insurance_company_list")
 
     return render(request, "core/insurance_company_add.html")
@@ -1786,7 +1786,7 @@ def insurance_company_update(request, company_id):
         name = (request.POST.get("name") or "").strip()
         if not name:
             return render(request, "core/insurance_company_add.html", {
-                "ins": ins, "error": "Î ÎµÏÏÎ½ÏÎ¼Î¯Î± ÎµÎ¯Î½Î±Î¹ ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÎ®."
+                "ins": ins, "error": "Η επωνυμία είναι υποχρεωτική."
             })
         ins.name           = name
         ins.address        = (request.POST.get("address") or "").strip()
@@ -1795,7 +1795,7 @@ def insurance_company_update(request, company_id):
         ins.contact_person = (request.POST.get("contact_person") or "").strip()
         ins.notes          = (request.POST.get("notes") or "").strip()
         ins.save()
-        messages.success(request, f"Î Î±ÏÏÎ±Î»Î¹ÏÏÎ¹ÎºÎ® {ins.name} ÎµÎ½Î·Î¼ÎµÏÏÎ¸Î·ÎºÎµ.")
+        messages.success(request, f"Η ασφαλιστική {ins.name} ενημερώθηκε.")
         return redirect("core:insurance_company_list")
 
     return render(request, "core/insurance_company_add.html", {"ins": ins})
@@ -1809,7 +1809,7 @@ def insurance_contract_create(request, company_id):
         contract_number = (request.POST.get("contract_number") or "").strip()
         if not contract_number:
             return render(request, "core/insurance_contract_add.html", {
-                "ins": ins, "error": "Î Î±ÏÎ¹Î¸Î¼ÏÏ ÏÏÎ¼Î²Î¿Î»Î±Î¯Î¿Ï ÎµÎ¯Î½Î±Î¹ ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÏÏ."
+                "ins": ins, "error": "Ο αριθμός συμβολαίου είναι υποχρεωτικός."
             })
         InsuranceContract.objects.create(
             company         = ins,
@@ -1821,7 +1821,7 @@ def insurance_contract_create(request, company_id):
             active          = request.POST.get("active") == "on",
             notes           = (request.POST.get("notes") or "").strip(),
         )
-        messages.success(request, f"Î¤Î¿ ÏÏÎ¼Î²ÏÎ»Î±Î¹Î¿ {contract_number} ÏÏÎ¿ÏÏÎ­Î¸Î·ÎºÎµ.")
+        messages.success(request, f"Το συμβόλαιο {contract_number} προστέθηκε.")
         return redirect("core:insurance_company_detail", company_id=ins.pk)
 
     return render(request, "core/insurance_contract_add.html", {"ins": ins})
@@ -1868,7 +1868,7 @@ def document_create(request):
             return render(
                 request,
                 "core/document_form.html",
-                _document_form_context(request.POST, error="Î¤Î¿ Î±ÏÏÎµÎ¯Î¿ ÎµÎ¯Î½Î±Î¹ ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÏ."),
+                _document_form_context(request.POST, error="Το αρχείο είναι υποχρεωτικό."),
             )
 
         try:
@@ -1884,10 +1884,10 @@ def document_create(request):
             return render(
                 request,
                 "core/document_form.html",
-                _document_form_context(request.POST, error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· Î­Î³Î³ÏÎ±ÏÎ¿ Î¼Îµ Î±ÏÏÏ ÏÎ¿ ÏÎ½Î¿Î¼Î±."),
+                _document_form_context(request.POST, error="Υπάρχει ήδη έγγραφο με αυτό το όνομα."),
             )
 
-        messages.success(request, f"Î¤Î¿ Î­Î³Î³ÏÎ±ÏÎ¿ {document.name} ÎºÎ±ÏÎ±ÏÏÏÎ®Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Το έγγραφο {document.name} καταχωρήθηκε επιτυχώς.")
         return redirect("core:document_list")
 
     return render(request, "core/document_form.html", _document_form_context())
@@ -1912,10 +1912,10 @@ def document_update(request, document_id):
             return render(
                 request,
                 "core/document_form.html",
-                _document_form_context(request.POST, document=document, error="Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· Î­Î³Î³ÏÎ±ÏÎ¿ Î¼Îµ Î±ÏÏÏ ÏÎ¿ ÏÎ½Î¿Î¼Î±."),
+                _document_form_context(request.POST, document=document, error="Υπάρχει ήδη έγγραφο με αυτό το όνομα."),
             )
 
-        messages.success(request, f"Î¤Î¿ Î­Î³Î³ÏÎ±ÏÎ¿ {document.name} ÎµÎ½Î·Î¼ÎµÏÏÎ¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Το έγγραφο {document.name} ενημερώθηκε επιτυχώς.")
         return redirect("core:document_list")
 
     form_data = {
