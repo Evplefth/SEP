@@ -23,6 +23,21 @@
           <option value="{{ key }}" {% if selected_dataset_key == key %}selected{% endif %}>{{ config.label }}</option>
           {% endfor %}
         </select>
+        {% if selected_dataset_key == "insurance_companies" %}
+        <div class="space-y-2">
+          <label for="insurance_company" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Ασφαλιστική Εταιρεία
+          </label>
+          <select id="insurance_company" name="insurance_company" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Επίλεξε εταιρεία</option>
+            {% for company in insurance_company_choices %}
+            <option value="{{ company.pk }}" {% if selected_insurance_company_id == company.pk|stringformat:"s" %}selected{% endif %}>
+              {{ company.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
         <select name="export_format" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
           <option value="pdf" {% if selected_export_format == "pdf" %}selected{% endif %}>PDF</option>
           <option value="excel" {% if selected_export_format == "excel" %}selected{% endif %}>Excel</option>
@@ -49,6 +64,9 @@
         {% csrf_token %}
         <input type="hidden" name="dataset" value="{{ selected_dataset_key }}">
         <input type="hidden" name="export_format" value="{{ selected_export_format|default:'pdf' }}">
+        {% if selected_dataset_key == "insurance_companies" %}
+        <input type="hidden" name="insurance_company" value="{{ selected_insurance_company_id }}">
+        {% endif %}
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {% for key, label, getter in selected_config.fields %}
           <label class="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50">

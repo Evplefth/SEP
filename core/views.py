@@ -3,6 +3,7 @@ from datetime import date
 from datetime import timedelta
 from decimal import Decimal
 from io import BytesIO
+from pathlib import Path
 from xml.sax.saxutils import escape
 
 from django.contrib import messages
@@ -250,20 +251,39 @@ def _document_from_post(request, document=None):
     return document
 
 
-def _build_excel_response(sheet_name, filename, headers, rows):
+def _build_excel_response(sheet_name, filename, headers, rows, extra_sections=None):
     xml_rows = []
-    header_cells = "".join(
-        f'<Cell ss:StyleID="header"><Data ss:Type="String">{escape(_clean_export_text(header))}</Data></Cell>'
-        for header in headers
-    )
-    xml_rows.append(f"<Row>{header_cells}</Row>")
+    extra_sections = extra_sections or []
 
-    for row in rows:
-        cells = "".join(
-            f'<Cell><Data ss:Type="String">{escape(_clean_export_text(value))}</Data></Cell>'
-            for value in row
+    if headers:
+        header_cells = "".join(
+            f'<Cell ss:StyleID="header"><Data ss:Type="String">{escape(_clean_export_text(header))}</Data></Cell>'
+            for header in headers
         )
-        xml_rows.append(f"<Row>{cells}</Row>")
+        xml_rows.append(f"<Row>{header_cells}</Row>")
+
+        for row in rows:
+            cells = "".join(
+                f'<Cell><Data ss:Type="String">{escape(_clean_export_text(value))}</Data></Cell>'
+                for value in row
+            )
+            xml_rows.append(f"<Row>{cells}</Row>")
+
+    for section in extra_sections:
+        xml_rows.append("<Row></Row>")
+        title_cells = f'<Cell ss:StyleID="header"><Data ss:Type="String">{escape(_clean_export_text(section["title"]))}</Data></Cell>'
+        xml_rows.append(f"<Row>{title_cells}</Row>")
+        section_header_cells = "".join(
+            f'<Cell ss:StyleID="header"><Data ss:Type="String">{escape(_clean_export_text(header))}</Data></Cell>'
+            for header in section["headers"]
+        )
+        xml_rows.append(f"<Row>{section_header_cells}</Row>")
+        for row in section["rows"]:
+            section_cells = "".join(
+                f'<Cell><Data ss:Type="String">{escape(_clean_export_text(value))}</Data></Cell>'
+                for value in row
+            )
+            xml_rows.append(f"<Row>{section_cells}</Row>")
 
     content = f"""<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
@@ -294,35 +314,24 @@ def _export_pdf_font_name():
     font_name = "ArialUnicodeSEP"
     registered_fonts = set(pdfmetrics.getRegisteredFontNames())
     if font_name not in registered_fonts:
-        pdfmetrics.registerFont(TTFont(font_name, r"C:\Windows\Fontsrial.ttf"))
+        font_candidates = [
+            Path(r"C:\Windows\Fonts\arial.ttf"),
+            Path(r"C:\Windows\Fonts\Arial.ttf"),
+            Path(r"C:\Windows\Fonts\ARIAL.TTF"),
+            Path(r"C:\Windows\Fonts\DejaVuSans.ttf"),
+        ]
+        for font_path in font_candidates:
+            if font_path.exists():
+                pdfmetrics.registerFont(TTFont(font_name, str(font_path)))
+                break
+        else:
+            raise FileNotFoundError("No compatible TrueType font found for PDF export.")
     return font_name
 
 
-def _build_pdf_response(title, filename, headers, rows):
-    buffer = BytesIO()
-    document = SimpleDocTemplate(
-        buffer,
-        pagesize=landscape(A4),
-        leftMargin=24,
-        rightMargin=24,
-        topMargin=28,
-        bottomMargin=24,
-    )
-
-    font_name = _export_pdf_font_name()
-    styles = getSampleStyleSheet()
-    title_style = styles["Heading2"].clone("export_title")
-    title_style.fontName = font_name
-    title_style.fontSize = 15
-    title_style.leading = 18
-    title_style.textColor = colors.HexColor("#0F172A")
-
-    cell_style = styles["BodyText"].clone("export_cell")
-    cell_style.fontName = font_name
-    cell_style.fontSize = 8
-    cell_style.leading = 10
-    cell_style.wordWrap = "CJK"
-
+def _build_pdf_table(headers, rows, document, cell_style, font_name):
+    if not headers:
+        return None
     table_data = [[Paragraph(_clean_export_text(header), cell_style) for header in headers]]
     for row in rows:
         table_data.append([
@@ -349,18 +358,60 @@ def _build_pdf_response(title, filename, headers, rows):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FBFF")]),
     ]))
+    return table
 
-    story = [
-        Paragraph(_clean_export_text(title), title_style),
-        Spacer(1, 12),
-        table,
-    ]
+
+def _build_pdf_response(title, filename, headers, rows, extra_sections=None):
+    buffer = BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        leftMargin=24,
+        rightMargin=24,
+        topMargin=28,
+        bottomMargin=24,
+    )
+
+    font_name = _export_pdf_font_name()
+    styles = getSampleStyleSheet()
+    title_style = styles["Heading2"].clone("export_title")
+    title_style.fontName = font_name
+    title_style.fontSize = 15
+    title_style.leading = 18
+    title_style.textColor = colors.HexColor("#0F172A")
+
+    section_title_style = styles["Heading3"].clone("export_section_title")
+    section_title_style.fontName = font_name
+    section_title_style.fontSize = 11
+    section_title_style.leading = 14
+    section_title_style.textColor = colors.HexColor("#1E3A8A")
+
+    cell_style = styles["BodyText"].clone("export_cell")
+    cell_style.fontName = font_name
+    cell_style.fontSize = 8
+    cell_style.leading = 10
+    cell_style.wordWrap = "CJK"
+
+    extra_sections = extra_sections or []
+
+    story = [Paragraph(_clean_export_text(title), title_style), Spacer(1, 12)]
+    main_table = _build_pdf_table(headers, rows, document, cell_style, font_name)
+    if main_table is not None:
+        story.append(main_table)
+    for section in extra_sections:
+        story.extend([
+            Spacer(1, 16),
+            Paragraph(_clean_export_text(section["title"]), section_title_style),
+            Spacer(1, 8),
+        ])
+        section_table = _build_pdf_table(section["headers"], section["rows"], document, cell_style, font_name)
+        if section_table is not None:
+            story.append(section_table)
     document.build(story)
 
     response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}.pdf"'
     return response
-
 
 def _member_company_names(member):
     return ", ".join(
@@ -373,6 +424,95 @@ def _payment_allocated_invoice_numbers(payment):
         f"{allocation.invoice.invoice_number} ({allocation.amount:.2f} EUR)"
         for allocation in payment.allocations.select_related("invoice").all()
     )
+
+
+def _insurance_company_contract_numbers(insurance_company):
+    return ", ".join(
+        contract.contract_number
+        for contract in insurance_company.contracts.all().order_by("contract_number")
+    )
+
+
+def _insurance_company_member_names(insurance_company):
+    members = []
+    seen = set()
+    for link in MemberInsurance.objects.select_related("member", "contract").filter(
+        contract__company=insurance_company
+    ).order_by("member__last_name", "member__first_name"):
+        member = link.member
+        key = member.pk
+        if key in seen:
+            continue
+        seen.add(key)
+        members.append(f"{member.last_name} {member.first_name}".strip())
+    return ", ".join(members)
+
+
+def _insurance_company_member_details(insurance_company):
+    member_map = {}
+    queryset = (
+        MemberInsurance.objects.select_related("member", "contract")
+        .filter(contract__company=insurance_company)
+        .order_by("member__last_name", "member__first_name", "contract__contract_number")
+    )
+
+    for link in queryset:
+        member = link.member
+        entry = member_map.setdefault(member.pk, {"member": member, "contracts": []})
+        contract_number = (link.contract.contract_number or "").strip()
+        if contract_number and contract_number not in entry["contracts"]:
+            entry["contracts"].append(contract_number)
+
+    lines = []
+    for entry in member_map.values():
+        member = entry["member"]
+        parts = [f"{member.last_name} {member.first_name}".strip()]
+        if member.ADT:
+            parts.append(f"ΑΔΤ: {member.ADT}")
+        if member.AMKA:
+            parts.append(f"ΑΜΚΑ: {member.AMKA}")
+        if member.AFM:
+            parts.append(f"ΑΦΜ: {member.AFM}")
+        if entry["contracts"]:
+            parts.append(f"Συμβόλαια: {', '.join(entry['contracts'])}")
+        lines.append(" | ".join(parts))
+
+    return "\n".join(lines)
+
+
+def _insurance_company_member_table_rows(insurance_company):
+    member_map = {}
+    queryset = (
+        MemberInsurance.objects.select_related("member", "contract")
+        .filter(contract__company=insurance_company)
+        .order_by("member__last_name", "member__first_name", "contract__contract_number")
+    )
+
+    for link in queryset:
+        member = link.member
+        entry = member_map.setdefault(
+            member.pk,
+            {
+                "member": member,
+                "contracts": [],
+            },
+        )
+        contract_number = (link.contract.contract_number or "").strip()
+        if contract_number and contract_number not in entry["contracts"]:
+            entry["contracts"].append(contract_number)
+
+    rows = []
+    for entry in member_map.values():
+        member = entry["member"]
+        rows.append([
+            f"{member.last_name} {member.first_name}".strip(),
+            member.ADT or "",
+            member.AMKA or "",
+            member.AFM or "",
+            member.phone_number1 or member.phone_number2 or "",
+            ", ".join(entry["contracts"]),
+        ])
+    return rows
 
 
 def _export_configs():
@@ -455,6 +595,26 @@ def _export_configs():
                 ("active", "Ενεργή", lambda obj: obj.active),
                 ("inactive_date", "Ημ. Ανενεργής", lambda obj: obj.inactive_date),
                 ("allocated_invoices", "Τιμολόγια που κάλυψε", _payment_allocated_invoice_numbers),
+                ("notes", "Σημειώσεις", lambda obj: obj.notes),
+            ],
+        },
+        "insurance_companies": {
+            "label": "Ασφαλιστικές",
+            "filename": "insurance_companies_export",
+            "sheet_name": "InsuranceCompanies",
+            "queryset": lambda: InsuranceCompany.objects.prefetch_related(
+                "contracts",
+                "contracts__members__member",
+            ).order_by("name"),
+            "fields": [
+                ("name", "Επωνυμία", lambda obj: obj.name),
+                ("contact_person", "Υπεύθυνος Επικοινωνίας", lambda obj: obj.contact_person),
+                ("phone", "Τηλέφωνο", lambda obj: obj.phone),
+                ("email", "Email", lambda obj: obj.email),
+                ("address", "Διεύθυνση", lambda obj: obj.address),
+                ("contracts", "Συμβόλαια", _insurance_company_contract_numbers),
+                ("members", "Μέλη", _insurance_company_member_names),
+                ("member_details", "Αναλυτική Λίστα Μελών", _insurance_company_member_details),
                 ("notes", "Σημειώσεις", lambda obj: obj.notes),
             ],
         },
@@ -892,6 +1052,11 @@ def export_data(request):
     configs = _export_configs()
     dataset_key = request.GET.get("dataset") or request.POST.get("dataset") or "members"
     export_format = (request.POST.get("export_format") or request.GET.get("export_format") or "pdf").lower()
+    selected_insurance_company_id = (
+        request.GET.get("insurance_company")
+        or request.POST.get("insurance_company")
+        or ""
+    ).strip()
     if dataset_key not in configs:
         dataset_key = "members"
     if export_format not in {"pdf", "excel"}:
@@ -904,8 +1069,20 @@ def export_data(request):
 
     valid_field_keys = {key for key, _, _ in selected_config["fields"]}
     selected_field_keys = [key for key in selected_field_keys if key in valid_field_keys]
+    insurance_company_choices = InsuranceCompany.objects.order_by("name") if dataset_key == "insurance_companies" else InsuranceCompany.objects.none()
 
     if request.method == "POST":
+        if dataset_key == "insurance_companies" and not selected_insurance_company_id:
+            return render(request, "core/export_data.html", {
+                "datasets": configs,
+                "selected_dataset_key": dataset_key,
+                "selected_config": selected_config,
+                "selected_field_keys": selected_field_keys,
+                "selected_export_format": export_format,
+                "selected_insurance_company_id": selected_insurance_company_id,
+                "insurance_company_choices": insurance_company_choices,
+                "error": "Επιλέξτε ασφαλιστική εταιρεία για την εξαγωγή.",
+            })
         if not selected_field_keys:
             return render(request, "core/export_data.html", {
                 "datasets": configs,
@@ -913,14 +1090,35 @@ def export_data(request):
                 "selected_config": selected_config,
                 "selected_field_keys": selected_field_keys,
                 "selected_export_format": export_format,
+                "selected_insurance_company_id": selected_insurance_company_id,
+                "insurance_company_choices": insurance_company_choices,
                 "error": "Επιλέξτε τουλάχιστον ένα πεδίο για εξαγωγή.",
             })
 
         field_map = {key: (label, getter) for key, label, getter in selected_config["fields"]}
-        headers = [field_map[key][0] for key in selected_field_keys]
+        include_member_details_section = dataset_key == "insurance_companies" and "member_details" in selected_field_keys
+        primary_field_keys = [
+            key for key in selected_field_keys
+            if not (dataset_key == "insurance_companies" and key == "member_details")
+        ]
+        headers = [field_map[key][0] for key in primary_field_keys]
         rows = []
-        for obj in selected_config["queryset"]():
-            rows.append([field_map[key][1](obj) for key in selected_field_keys])
+        queryset = selected_config["queryset"]()
+        if dataset_key == "insurance_companies" and selected_insurance_company_id:
+            queryset = queryset.filter(pk=selected_insurance_company_id)
+        for obj in queryset:
+            rows.append([field_map[key][1](obj) for key in primary_field_keys])
+
+        extra_sections = []
+        if dataset_key == "insurance_companies" and selected_insurance_company_id and include_member_details_section:
+            insurance_company = queryset.first()
+            member_rows = _insurance_company_member_table_rows(insurance_company) if insurance_company else []
+            if member_rows:
+                extra_sections.append({
+                    "title": "Μέλη Ασφαλιστικής",
+                    "headers": ["Ονοματεπώνυμο", "ΑΔΤ", "ΑΜΚΑ", "ΑΦΜ", "Τηλέφωνο", "Συμβόλαια"],
+                    "rows": member_rows,
+                })
 
         if export_format == "excel":
             return _build_excel_response(
@@ -928,6 +1126,7 @@ def export_data(request):
                 selected_config["filename"],
                 headers,
                 rows,
+                extra_sections=extra_sections,
             )
 
         return _build_pdf_response(
@@ -935,6 +1134,7 @@ def export_data(request):
             selected_config["filename"],
             headers,
             rows,
+            extra_sections=extra_sections,
         )
 
     return render(request, "core/export_data.html", {
@@ -943,6 +1143,8 @@ def export_data(request):
         "selected_config": selected_config,
         "selected_field_keys": selected_field_keys,
         "selected_export_format": export_format,
+        "selected_insurance_company_id": selected_insurance_company_id,
+        "insurance_company_choices": insurance_company_choices,
     })
 
 # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
