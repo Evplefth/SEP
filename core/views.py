@@ -71,7 +71,7 @@ def post_login_redirect(request):
 def _require_staff_or_redirect(request, redirect_to="core:dashboard"):
     if request.user.is_staff:
         return None
-    messages.error(request, "ÎÏÎ½Î¿ Î´Î¹Î±ÏÎµÎ¹ÏÎ¹ÏÏÎ­Ï Î¼ÏÎ¿ÏÎ¿ÏÎ½ Î½Î± Î´Î¹Î±Î³ÏÎ¬ÏÎ¿ÏÎ½ ÎµÎ³Î³ÏÎ±ÏÎ­Ï.")
+    messages.error(request, "Μόνο διαχειριστές μπορούν να διαγράφουν εγγραφές.")
     return redirect(redirect_to)
 
 
@@ -378,84 +378,84 @@ def _payment_allocated_invoice_numbers(payment):
 def _export_configs():
     return {
         "members": {
-            "label": "ÎÎ­Î»Î·",
+            "label": "Μέλη",
             "filename": "members_export",
             "sheet_name": "Members",
             "queryset": lambda: Members.objects.select_related("nationality", "bank").prefetch_related("companies__company").order_by("last_name", "first_name"),
             "fields": [
-                ("last_name", "ÎÏÏÎ½ÏÎ¼Î¿", lambda obj: obj.last_name),
-                ("first_name", "ÎÎ½Î¿Î¼Î±", lambda obj: obj.first_name),
-                ("fathers_name", "Î Î±ÏÏÏÎ½ÏÎ¼Î¿", lambda obj: obj.fathers_name),
-                ("gender", "Î¦ÏÎ»Î¿", lambda obj: obj.get_gender_display() if obj.gender else ""),
-                ("member_registry_number", "ÎÏÎ¹Î¸Î¼ÏÏ ÎÎ¹Î²Î»Î¯Î¿Ï ÎÎ·ÏÏÏÎ¿Ï", lambda obj: obj.member_registry_number),
-                ("mitroo_type", "Î¤ÏÏÎ¿Ï ÎÎ·ÏÏÏÎ¿Ï", lambda obj: obj.get_mitroo_type_display() if obj.mitroo_type else ""),
-                ("mitroo_number", "ÎÏÎ¹Î¸Î¼ÏÏ ÎÎ·ÏÏÏÎ¿Ï", lambda obj: obj.mitroo_number),
-                ("date_of_registration", "ÎÎ¼. ÎÎ³Î³ÏÎ±ÏÎ®Ï", lambda obj: obj.date_of_registration),
-                ("date_of_deregistration", "ÎÎ¼. ÎÎ®Î¾Î·Ï", lambda obj: obj.date_of_deregistration),
-                ("afm", "ÎÎ¦Î", lambda obj: obj.AFM),
-                ("amka", "ÎÎÎÎ", lambda obj: obj.AMKA),
-                ("ama", "ÎÎÎ", lambda obj: obj.AMA),
-                ("adt", "ÎÎÎ¤", lambda obj: obj.ADT),
-                ("phone_number1", "Î¤Î·Î»Î­ÏÏÎ½Î¿ 1", lambda obj: obj.phone_number1),
-                ("phone_number2", "Î¤Î·Î»Î­ÏÏÎ½Î¿ 2", lambda obj: obj.phone_number2),
+                ("last_name", "Επώνυμο", lambda obj: obj.last_name),
+                ("first_name", "Όνομα", lambda obj: obj.first_name),
+                ("fathers_name", "Πατρώνυμο", lambda obj: obj.fathers_name),
+                ("gender", "Φύλο", lambda obj: obj.get_gender_display() if obj.gender else ""),
+                ("member_registry_number", "Αριθμός Βιβλίου Μητρώου", lambda obj: obj.member_registry_number),
+                ("mitroo_type", "Τύπος Μητρώου", lambda obj: obj.get_mitroo_type_display() if obj.mitroo_type else ""),
+                ("mitroo_number", "Αριθμός Μητρώου", lambda obj: obj.mitroo_number),
+                ("date_of_registration", "Ημ. Εγγραφής", lambda obj: obj.date_of_registration),
+                ("date_of_deregistration", "Ημ. Λήξης", lambda obj: obj.date_of_deregistration),
+                ("afm", "ΑΦΜ", lambda obj: obj.AFM),
+                ("amka", "ΑΜΚΑ", lambda obj: obj.AMKA),
+                ("ama", "ΑΜΑ", lambda obj: obj.AMA),
+                ("adt", "ΑΔΤ", lambda obj: obj.ADT),
+                ("phone_number1", "Τηλέφωνο 1", lambda obj: obj.phone_number1),
+                ("phone_number2", "Τηλέφωνο 2", lambda obj: obj.phone_number2),
                 ("email", "Email", lambda obj: obj.email),
-                ("bank", "Î¤ÏÎ¬ÏÎµÎ¶Î±", lambda obj: obj.bank.name if obj.bank else ""),
+                ("bank", "Τράπεζα", lambda obj: obj.bank.name if obj.bank else ""),
                 ("iban", "IBAN", lambda obj: obj.bank_account_number),
-                ("companies", "ÎÏÎ±Î¹ÏÎ¯ÎµÏ", _member_company_names),
-                ("active", "ÎÎ½ÎµÏÎ³Ï", lambda obj: obj.active),
+                ("companies", "Εταιρείες", _member_company_names),
+                ("active", "Ενεργό", lambda obj: obj.active),
             ],
         },
         "companies": {
-            "label": "ÎÏÎ±Î¹ÏÎ¯ÎµÏ",
+            "label": "Εταιρείες",
             "filename": "companies_export",
             "sheet_name": "Companies",
             "queryset": lambda: companies.objects.order_by("name"),
             "fields": [
-                ("name", "ÎÏÏÎ½ÏÎ¼Î¯Î±", lambda obj: obj.name),
-                ("afm", "ÎÎ¦Î", lambda obj: obj.AFM),
-                ("doy", "ÎÎÎ¥", lambda obj: obj.DOY),
-                ("address", "ÎÎ¹ÎµÏÎ¸ÏÎ½ÏÎ·", lambda obj: obj.address),
-                ("services", "Î¥ÏÎ·ÏÎµÏÎ¯ÎµÏ", lambda obj: obj.services),
-                ("opening_invoice_total", "ÎÏÏÎ¹ÎºÎ­Ï Î¤Î¹Î¼Î¿Î»Î¿Î³Î®ÏÎµÎ¹Ï", lambda obj: obj.opening_invoice_total),
-                ("opening_payment_total", "ÎÏÏÎ¹ÎºÎ­Ï Î Î»Î·ÏÏÎ¼Î­Ï", lambda obj: obj.opening_payment_total),
-                ("active", "ÎÎ½ÎµÏÎ³Î®", lambda obj: obj.active),
-                ("inactive_date", "ÎÎ¼. ÎÎ½ÎµÎ½ÎµÏÎ³Î®Ï", lambda obj: obj.inactive_date),
-                ("notes", "Î£Î·Î¼ÎµÎ¹ÏÏÎµÎ¹Ï", lambda obj: obj.notes),
+                ("name", "Επωνυμία", lambda obj: obj.name),
+                ("afm", "ΑΦΜ", lambda obj: obj.AFM),
+                ("doy", "ΔΟΥ", lambda obj: obj.DOY),
+                ("address", "Διεύθυνση", lambda obj: obj.address),
+                ("services", "Υπηρεσίες", lambda obj: obj.services),
+                ("opening_invoice_total", "Αρχικές Τιμολογήσεις", lambda obj: obj.opening_invoice_total),
+                ("opening_payment_total", "Αρχικές Πληρωμές", lambda obj: obj.opening_payment_total),
+                ("active", "Ενεργή", lambda obj: obj.active),
+                ("inactive_date", "Ημ. Ανενεργής", lambda obj: obj.inactive_date),
+                ("notes", "Σημειώσεις", lambda obj: obj.notes),
             ],
         },
         "invoices": {
-            "label": "Î¤Î¹Î¼Î¿Î»ÏÎ³Î¹Î±",
+            "label": "Τιμολόγια",
             "filename": "invoices_export",
             "sheet_name": "Invoices",
             "queryset": lambda: _attach_invoice_payment_state(
                 Invoices.objects.select_related("company").order_by("-date_of_issue", "-id")
             ),
             "fields": [
-                ("invoice_number", "ÎÏÎ¹Î¸Î¼ÏÏ Î¤Î¹Î¼Î¿Î»Î¿Î³Î¯Î¿Ï", lambda obj: obj.invoice_number),
-                ("company", "ÎÏÎ±Î¹ÏÎ¯Î±", lambda obj: obj.company.name if obj.company else ""),
-                ("date_of_issue", "ÎÎ¼. ÎÎºÎ´Î¿ÏÎ·Ï", lambda obj: obj.date_of_issue),
-                ("service_type", "ÎÏÎ³Î±ÏÎ¯Î±", lambda obj: obj.service_type),
-                ("amount", "Î Î¿ÏÏ", lambda obj: obj.amount),
-                ("allocated_amount", "ÎÎ¾Î¿ÏÎ»Î·Î¼Î­Î½Î¿", lambda obj: getattr(obj, "allocated_amount", Decimal("0.00"))),
-                ("outstanding_amount", "Î¥ÏÏÎ»Î¿Î¹ÏÎ¿", lambda obj: getattr(obj, "outstanding_amount", obj.amount)),
-                ("payment_state_label", "ÎÎ±ÏÎ¬ÏÏÎ±ÏÎ· ÎÎ¾ÏÏÎ»Î·ÏÎ·Ï", lambda obj: getattr(obj, "payment_state_label", "")),
+                ("invoice_number", "Αριθμός Τιμολογίου", lambda obj: obj.invoice_number),
+                ("company", "Εταιρεία", lambda obj: obj.company.name if obj.company else ""),
+                ("date_of_issue", "Ημ. Έκδοσης", lambda obj: obj.date_of_issue),
+                ("service_type", "Εργασία", lambda obj: obj.service_type),
+                ("amount", "Ποσό", lambda obj: obj.amount),
+                ("allocated_amount", "Εξοφλημένο", lambda obj: getattr(obj, "allocated_amount", Decimal("0.00"))),
+                ("outstanding_amount", "Υπόλοιπο", lambda obj: getattr(obj, "outstanding_amount", obj.amount)),
+                ("payment_state_label", "Κατάσταση Εξόφλησης", lambda obj: getattr(obj, "payment_state_label", "")),
                 ("scan_file", "Scan", lambda obj: obj.scan_file.name if obj.scan_file else ""),
             ],
         },
         "payments": {
-            "label": "Î Î»Î·ÏÏÎ¼Î­Ï",
+            "label": "Πληρωμές",
             "filename": "payments_export",
             "sheet_name": "Payments",
             "queryset": lambda: CompanyPayment.objects.select_related("company").prefetch_related("allocations__invoice").order_by("-payment_date", "-id"),
             "fields": [
-                ("company", "ÎÏÎ±Î¹ÏÎ¯Î±", lambda obj: obj.company.name if obj.company else ""),
-                ("payment_date", "ÎÎ¼ÎµÏÎ¿Î¼Î·Î½Î¯Î±", lambda obj: obj.payment_date),
-                ("amount", "Î Î¿ÏÏ", lambda obj: obj.amount),
-                ("reference", "ÎÎ½Î±ÏÎ¿ÏÎ¬", lambda obj: obj.reference),
-                ("active", "ÎÎ½ÎµÏÎ³Î®", lambda obj: obj.active),
-                ("inactive_date", "ÎÎ¼. ÎÎ½ÎµÎ½ÎµÏÎ³Î®Ï", lambda obj: obj.inactive_date),
-                ("allocated_invoices", "Î¤Î¹Î¼Î¿Î»ÏÎ³Î¹Î± ÏÎ¿Ï ÎºÎ¬Î»ÏÏÎµ", _payment_allocated_invoice_numbers),
-                ("notes", "Î£Î·Î¼ÎµÎ¹ÏÏÎµÎ¹Ï", lambda obj: obj.notes),
+                ("company", "Εταιρεία", lambda obj: obj.company.name if obj.company else ""),
+                ("payment_date", "Ημερομηνία", lambda obj: obj.payment_date),
+                ("amount", "Ποσό", lambda obj: obj.amount),
+                ("reference", "Αναφορά", lambda obj: obj.reference),
+                ("active", "Ενεργή", lambda obj: obj.active),
+                ("inactive_date", "Ημ. Ανενεργής", lambda obj: obj.inactive_date),
+                ("allocated_invoices", "Τιμολόγια που κάλυψε", _payment_allocated_invoice_numbers),
+                ("notes", "Σημειώσεις", lambda obj: obj.notes),
             ],
         },
     }
@@ -913,7 +913,7 @@ def export_data(request):
                 "selected_config": selected_config,
                 "selected_field_keys": selected_field_keys,
                 "selected_export_format": export_format,
-                "error": "ÎÏÎ¹Î»Î­Î¾ÏÎµ ÏÎ¿ÏÎ»Î¬ÏÎ¹ÏÏÎ¿Î½ Î­Î½Î± ÏÎµÎ´Î¯Î¿ Î³Î¹Î± ÎµÎ¾Î±Î³ÏÎ³Î®.",
+                "error": "Επιλέξτε τουλάχιστον ένα πεδίο για εξαγωγή.",
             })
 
         field_map = {key: (label, getter) for key, label, getter in selected_config["fields"]}
@@ -958,7 +958,7 @@ def user_list(request):
 @login_required
 def user_create(request):
     if not request.user.is_staff:
-        messages.error(request, "ÎÏÎ½Î¿ Î´Î¹Î±ÏÎµÎ¹ÏÎ¹ÏÏÎ­Ï Î¼ÏÎ¿ÏÎ¿ÏÎ½ Î½Î± Î´Î·Î¼Î¹Î¿ÏÏÎ³Î¿ÏÎ½ Î½Î­Î¿ÏÏ ÏÏÎ®ÏÏÎµÏ.")
+        messages.error(request, "Μόνο διαχειριστές μπορούν να δημιουργούν νέους χρήστες.")
         return redirect("core:users")
 
     if request.method == "POST":
@@ -971,17 +971,17 @@ def user_create(request):
         is_staff   = request.POST.get("is_staff") == "on"
 
         if not username or not password1:
-            return render(request, "core/user_add.html", {"error": "Î¤Î¿ username ÎºÎ±Î¹ Î¿ ÎºÏÎ´Î¹ÎºÏÏ ÎµÎ¯Î½Î±Î¹ ÏÏÎ¿ÏÏÎµÏÏÎ¹ÎºÎ¬."})
+            return render(request, "core/user_add.html", {"error": "Το username και ο κωδικός είναι υποχρεωτικά."})
         if password1 != password2:
-            return render(request, "core/user_add.html", {"error": "ÎÎ¹ Î´ÏÎ¿ ÎºÏÎ´Î¹ÎºÎ¿Î¯ Î´ÎµÎ½ ÏÎ±Î¹ÏÎ¹Î¬Î¶Î¿ÏÎ½."})
+            return render(request, "core/user_add.html", {"error": "Οι δύο κωδικοί δεν ταιριάζουν."})
         if User.objects.filter(username=username).exists():
-            return render(request, "core/user_add.html", {"error": "Î¥ÏÎ¬ÏÏÎµÎ¹ Î®Î´Î· ÏÏÎ®ÏÏÎ·Ï Î¼Îµ Î±ÏÏÏ ÏÎ¿ username."})
+            return render(request, "core/user_add.html", {"error": "Υπάρχει ήδη χρήστης με αυτό το username."})
 
         user = User.objects.create_user(
             username=username, email=email, password=password1,
             first_name=first_name, last_name=last_name, is_staff=is_staff,
         )
-        messages.success(request, f"Î ÏÏÎ®ÏÏÎ·Ï {user.username} Î´Î·Î¼Î¹Î¿ÏÏÎ³Î®Î¸Î·ÎºÎµ ÎµÏÎ¹ÏÏÏÏÏ.")
+        messages.success(request, f"Ο χρήστης {user.username} δημιουργήθηκε επιτυχώς.")
         return redirect("core:users")
 
     return render(request, "core/user_add.html")
@@ -996,12 +996,12 @@ def user_delete(request, user_id):
     target_user = get_object_or_404(User, pk=user_id)
     if request.method == "POST":
         if target_user.pk == request.user.pk:
-            messages.error(request, "ÎÎµÎ½ Î¼ÏÎ¿ÏÎµÎ¯Ï Î½Î± Î´Î¹Î±Î³ÏÎ¬ÏÎµÎ¹Ï ÏÎ¿Î½ Î´Î¹ÎºÏ ÏÎ¿Ï Î»Î¿Î³Î±ÏÎ¹Î±ÏÎ¼Ï.")
+            messages.error(request, "Δεν μπορείς να διαγράψεις τον δικό σου λογαριασμό.")
             return redirect("core:users")
 
         username = target_user.username
         target_user.delete()
-        messages.success(request, f"Î ÏÏÎ®ÏÏÎ·Ï {username} Î´Î¹Î±Î³ÏÎ¬ÏÎ·ÎºÎµ Î¿ÏÎ¹ÏÏÎ¹ÎºÎ¬.")
+        messages.success(request, f"Ο χρήστης {username} διαγράφηκε οριστικά.")
     return redirect("core:users")
 
 
